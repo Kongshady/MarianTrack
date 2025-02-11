@@ -9,8 +9,11 @@ export default {
       colors: {
         "primary-color": "#B9236B",
         "secondary-color": "#058890",
-        "text-color": "#DCDCDC",
+        "text-color": "white",
       },
+      backgroundImage: {
+        "banner-img": "url('/src/assets/images/MarianBackgroundImage.jpg')",
+      }
     },
   },
   plugins: [],
