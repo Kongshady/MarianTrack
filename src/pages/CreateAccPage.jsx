@@ -4,28 +4,20 @@ import { useState } from "react"
 
 function CreateAccPage() {
     return (
-        <div className="flex items-center justify-center h-svh bg-gray-400">
+        <div className="flex items-center justify-center h-svh ">
             <form action="" method="post" className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-2xl">
                 <h1 className='text-center text-2xl font-bold pb-3'>Create Account</h1>
                 <div className="flex gap-2">
-                    <CustomInput type="text" placeholder="Name" className="border" />
-                    <CustomInput type="text" placeholder="Lastname" className="border" />
+                    <input type="text" placeholder="Name" className="p-2 border" />
+                    <input type="text" placeholder="Lastname" className="p-2 border" />
                 </div>
                 <Dropdown className={'border'}/>
                 <input type="text" placeholder="Mobile Number" maxLength={11} className="p-2 border" />
                 <input type="password" placeholder="Password" className="p-2 border" />
                 <input type="password" placeholder="Confirm Password" className="p-2 border" />
-                <CustomButton text={'Create Account'} className={'bg-primary-color text-white'} />
+                <CustomButton text={'Create Account'} className={'bg-primary-color text-white hover:bg-white hover:text-primary-color transition-all'} />
             </form>
         </div>
-    );
-}
-
-// Customized Inputs
-function CustomInput({ placeholder, className }) {
-    return (
-        <input type="text" placeholder={`${placeholder}`} className={`p-2 ${className}`} />
-
     );
 }
 
