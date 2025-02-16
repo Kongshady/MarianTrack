@@ -1,21 +1,24 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Home from '../components/Home';
-import About from '../components/About';
-import Contact from '../components/Contact';
-import NotFound from '../components/NotFound';
+import { Routes, Route } from "react-router-dom";
+import LandingPage from "../pages/LandingPage.jsx";
+import LoginPage from "../pages/LoginPage.jsx";
+import PasswordReset from "../pages/PasswordReset.jsx";
+import SignupPage from "../pages/SignUpPage.jsx";
+import EmailVerification from "../pages/EmailVerification.jsx";
+import StDashboard from "../pages/student/StDashboard.jsx";
+import EmDashboard from "../pages/employee/EmDashboard.jsx";
 
 function AppRoutes() {
-    return (
-        <Router>
-            <Switch>
-                <Route exact path="/" component={Home} />
-                <Route path="/about" component={About} />
-                <Route path="/contact" component={Contact} />
-                <Route component={NotFound} />
-            </Switch>
-        </Router>
-    );
-};
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/password-reset" element={<PasswordReset />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/verification" element={<EmailVerification />} />
+      <Route path="/student-dashboard" element={<StDashboard />} />
+      <Route path="/employee-dashboard" element={<EmDashboard />} />
+    </Routes>
+  );
+}
 
 export default AppRoutes;
