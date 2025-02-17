@@ -1,7 +1,8 @@
+import { Link } from "react-router-dom";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
-import { IoLogOutSharp } from "react-icons/io5";
+import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 
 function EmSideBar() {
   return (
@@ -16,15 +17,16 @@ function EmSideBar() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="">
+      <nav className="mt-6">
         <ul className="space">
-          <MenuItem icon={<MdDashboard />} text="Dashboard" />
-          <MenuItem icon={<MdGroups />} text="Groups" />
-          <MenuItem icon={<GiProgression />} text="Progress" />
-          <MenuItem icon={<MdManageAccounts />} text="Account Approval" />
-          <MenuItem icon={<IoMdNotifications />} text="Notification" />
-          <MenuItem icon={<IoMdSettings />} text="Settings" />
-          <MenuItem icon={<IoLogOutSharp />} text="Log Out" />
+          <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
+          <MenuItem to={"/employee-groups"} icon={<MdGroups />} text="Groups" />
+          <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
+          <MenuItem to={"/employee-approval"} icon={<MdManageAccounts />} text="Account Approval" />
+          <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
+          <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
+          <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
+          <MenuItem to={""} icon={<IoLogOutSharp />} text="Log Out" />
         </ul>
       </nav>
     </div>
@@ -32,13 +34,15 @@ function EmSideBar() {
 }
 
 /* Reusable Menu Item Component */
-function MenuItem({ icon, text }) {
+function MenuItem({ to, icon, text }) {
   return (
-    <li className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
-      <span className="text-2xl">{icon}</span>
-      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        {text}
-      </span>
+    <li>
+      <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
+        <span className="text-2xl">{icon}</span>
+        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {text}
+        </span>
+      </Link>
     </li>
   );
 }
