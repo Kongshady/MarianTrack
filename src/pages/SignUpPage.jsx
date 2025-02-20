@@ -6,7 +6,7 @@ function CreateAccPage() {
     return (
         <div className="flex items-center justify-center h-svh ">
             <form action="" method="post" className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-2xl">
-                <h1 className='text-center text-2xl font-bold pb-3'>Create Account</h1>
+                <h1 className='text-center text-2xl font-bold pb-3'>Create an Account</h1>
                 <div className="flex gap-2">
                     <input type="text" placeholder="Name" className="p-2 border" />
                     <input type="text" placeholder="Lastname" className="p-2 border" />

@@ -18,13 +18,13 @@ function StSideBar() {
 
       {/* Navigation Menu */}
       <nav className="mt-6">
-        <ul className="space">
+        <ul className="space-y-1">
           <MenuItem to={"/student-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/student-group"} icon={<MdGroups />} text="My Group" />
           <MenuItem to={"/student-notification"} icon={<IoMdNotifications />} text="Notifications" />
           <MenuItem to={"/student-chat"} icon={<IoChatbox />} text="Chats" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={""} icon={<IoLogOutSharp />} text="Log Out" />
+          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="Log Out" />
         </ul>
       </nav>
     </div>

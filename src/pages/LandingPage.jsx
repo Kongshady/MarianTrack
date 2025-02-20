@@ -1,10 +1,11 @@
+import { Link } from "react-router-dom";
 import CustomButton from "../components/CustomButton.jsx";
 import MarianLogo from "../assets/images/MarianLogoWtext.png";
 import { FcGoogle } from "react-icons/fc";
 
-function LoginPage() {
+function LandingPage() {
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-row-reverse h-screen">
       {/* Left Section - Login Buttons */}
       <div className="flex flex-col w-1/2 gap-6 items-center justify-center p-10">
         <img src={MarianLogo} alt="MarianTBI-logo" className="w-28 p-2" />
@@ -14,32 +15,40 @@ function LoginPage() {
           <CustomButton text="Login as Employee" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all" />
           <CustomButton text="Login as Student" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all" />
           <TextDivider />
-          <FcGoogle className="w-12 h-12 mx-auto bg-white p-2 border-2 rounded cursor-pointer transition hover:scale-105" />
+          <button className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+            <FcGoogle className="w-6 h-6" />
+            <span className="text-gray-600">Sign in with Google</span>
+          </button>
         </div>
 
         {/* Create Account Link */}
-        <a href="#" className="text-blue-600 hover:underline">
+        <Link to="/signup" className="text-blue-600 hover:underline">
           Create Account
-        </a>
+        </Link>
       </div>
 
       {/* Right Section - Greetings */}
-      <div className="bg-banner-img w-1/2 flex flex-col justify-center gap-5 p-10 bg-cover bg-center bg-no-repeat text-text-color">
-        <h1 className="text-lg font-semibold">University of the Immaculate Conception</h1>
+      <div className="relative w-1/2 flex flex-col justify-center gap-5 p-10 text-text-color bg-banner-img bg-cover bg-center bg-no-repeat">
+        {/* Dark Overlay for Better Readability */}
+        <div className="absolute inset-0 bg-black opacity-40"></div>
 
-        <div>
-          <h1 className="text-7xl font-bold">MARIAN</h1>
-          <h2 className="text-4xl font-bold">Technology</h2>
-          <h2 className="text-4xl font-bold">Business</h2>
-          <h2 className="text-4xl font-bold">Incubator</h2>
+        <div className="relative z-10">
+          <h1 className="text-lg font-semibold">University of the Immaculate Conception</h1>
+
+          <div>
+            <h1 className="text-7xl font-bold">MARIAN</h1>
+            <h2 className="text-4xl font-bold">Technology</h2>
+            <h2 className="text-4xl font-bold">Business</h2>
+            <h2 className="text-4xl font-bold">Incubator</h2>
+          </div>
+
+          <p className="text-sm leading-relaxed">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque
+            dolores iure odio numquam aliquam recusandae fuga impedit, eius totam
+            perspiciatis modi placeat mollitia, officiis vel ut rerum debitis
+            exercitationem? Dolore.
+          </p>
         </div>
-
-        <p className="text-sm leading-relaxed">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque
-          dolores iure odio numquam aliquam recusandae fuga impedit, eius totam
-          perspiciatis modi placeat mollitia, officiis vel ut rerum debitis
-          exercitationem? Dolore.
-        </p>
       </div>
     </div>
   );
@@ -56,4 +65,4 @@ function TextDivider() {
   );
 }
 
-export default LoginPage;
+export default LandingPage

@@ -18,7 +18,7 @@ function EmSideBar() {
 
       {/* Navigation Menu */}
       <nav className="mt-6">
-        <ul className="space">
+        <ul className="space-y-1">
           <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/employee-groups"} icon={<MdGroups />} text="Groups" />
           <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
@@ -26,7 +26,7 @@ function EmSideBar() {
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={""} icon={<IoLogOutSharp />} text="Log Out" />
+          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="Log Out" />
         </ul>
       </nav>
     </div>
