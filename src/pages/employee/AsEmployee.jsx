@@ -15,12 +15,15 @@ function LoginAsEmployee() {
                     <h1 className="text-center font-bold text-xl">Login As Employee</h1>
                     <input type="text" placeholder="Email or Mobile-number" className="bg-gray-200 p-3 rounded" />
                     <input type="password" placeholder="Password" className="bg-gray-200 p-3 rounded" />
-                    
+
                     <CustomButton text="Log In" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all" />
 
                     <TextDivider />
 
-                    <FcGoogle className="w-12 h-12 mx-auto bg-white p-2 border-2 rounded cursor-pointer transition hover:scale-105" />
+                    <button className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+                        <FcGoogle className="w-6 h-6" />
+                        <span className="text-gray-600">Sign in with Google</span>
+                    </button>
                 </div>
 
                 {/* Forgot Password & Create Account Links */}

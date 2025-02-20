@@ -6,7 +6,7 @@ import { IoLogOutSharp, IoChatbox  } from "react-icons/io5";
 
 function StSideBar() {
   return (
-    <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
+    <div className="group w-[4rem] hover:w-1/4 h-screen bg-secondary-color overflow-hidden transition-all duration-300">
       {/* Logo & Menu Button */}
       <div className="flex gap-3 p-3 items-center">
         <GiHamburgerMenu className="text-5xl text-white" />
@@ -24,7 +24,7 @@ function StSideBar() {
           <MenuItem to={"/student-notification"} icon={<IoMdNotifications />} text="Notifications" />
           <MenuItem to={"/student-chat"} icon={<IoChatbox />} text="Chats" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="Log Out" />
+          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="LogOut" />
         </ul>
       </nav>
     </div>
@@ -35,7 +35,7 @@ function StSideBar() {
 function MenuItem({ to, icon, text }) {
   return (
     <li>
-      <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
+      <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-secondary-color cursor-pointer transition-all text-white">
         <span className="text-2xl">{icon}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           {text}

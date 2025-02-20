@@ -12,8 +12,12 @@ function LandingPage() {
 
         {/* Login Buttons */}
         <div className="flex flex-col gap-3 w-full max-w-xs">
-          <CustomButton text="Login as Employee" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all" />
-          <CustomButton text="Login as Student" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all" />
+          <Link to={"/employee-login"}>
+            <CustomButton text="Login as Employee" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all w-full" />
+          </Link>
+          <Link to={"/student-login"}>
+            <CustomButton text="Login as Student" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
+          </Link>
           <TextDivider />
           <button className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
             <FcGoogle className="w-6 h-6" />

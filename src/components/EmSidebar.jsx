@@ -26,7 +26,7 @@ function EmSideBar() {
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="Log Out" />
+          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="LogOut" />
         </ul>
       </nav>
     </div>
