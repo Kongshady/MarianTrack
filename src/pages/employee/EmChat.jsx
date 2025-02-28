@@ -1,11 +1,11 @@
-import EmSideBar from "../../components/EmSidebar.jsx";
+import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
 
 function EmChat() {
   return (
     <div className="flex">
-        <EmSideBar />
+        <EmployeeSidebar />
         <div className="flex flex-col items-center justify-center h-screen w-full">
-            <h1 className="text-4xl font-bold">Chat</h1>
+            <h1 className="text-4xl font-bold">Employee Chat</h1>
         </div>
     </div>
   );

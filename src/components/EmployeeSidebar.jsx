@@ -11,7 +11,7 @@ function EmSideBar() {
       <div className="flex gap-3 p-3 items-center">
         <GiHamburgerMenu className="text-5xl text-white" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
-          <h1 className="text-base font-bold">Temporary Name Head</h1>
+          <h1 className="text-base font-bold">Employee Name Head</h1>
           <p className="text-sm">Role</p>
         </div>
       </div>
@@ -22,7 +22,6 @@ function EmSideBar() {
           <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/employee-groups"} icon={<MdGroups />} text="Groups" />
           <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
-          <MenuItem to={"/employee-approval"} icon={<MdManageAccounts />} text="Account Approval" />
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />

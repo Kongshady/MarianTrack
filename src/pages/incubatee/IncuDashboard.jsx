@@ -1,9 +1,9 @@
-import StSideBar from "../../components/StSidebar.jsx";
+import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
 
-function StDashboard() {
+function IncuDashboard() {
     return (
         <div className="flex">
-            <StSideBar />
+            <IncubateeSidebar />
             <div className="flex flex-col items-center justify-center h-screen w-full">
                 <h1 className="text-4xl font-bold">Dashboard</h1>
             </div>
@@ -11,4 +11,4 @@ function StDashboard() {
     );
 }
 
-export default StDashboard
+export default IncuDashboard

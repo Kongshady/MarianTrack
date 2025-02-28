@@ -15,7 +15,7 @@ function LandingPage() {
           <Link to={"/employee-login"}>
             <CustomButton text="Login as Employee" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all w-full" />
           </Link>
-          <Link to={"/student-login"}>
+          <Link to={"/incubatee-login"}>
             <CustomButton text="Login as Student" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
           </Link>
           <TextDivider />

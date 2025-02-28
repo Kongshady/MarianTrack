@@ -10,21 +10,3 @@ function App() {
 }
 
 export default App
-
-// LoginPage (Done)
-// CreateAccountPage (Done)
-// PasswordReset (Done)
-// EmailVerification (Done)
-// EmDashboard (Pending)
-// EmGroups (Pending)
-// EmProgress (Pending)
-// EmAccountApproval (Pending)
-// EmNotification (Pending)
-// EmChat (Pending)
-// Working Logout
-
-// StDashboard (Pending)
-// StGroups (Pending)
-// Notifications (Pending)
-// StChat (Pending)
-// Working Logout

@@ -3,7 +3,7 @@ import CustomButton from "../../components/CustomButton";
 import MarianLogo from "../../assets/images/MarianLogoWtext.png";
 import { FcGoogle } from "react-icons/fc";
 
-function LoginAsStudent() {
+function LoginAsIncubatee() {
     return (
         <div className="flex flex-row-reverse h-screen">
             {/* Left Section - Login Form */}
@@ -12,7 +12,7 @@ function LoginAsStudent() {
 
                 {/* Login Form */}
                 <div className="flex flex-col gap-3 w-full max-w-xs">
-                    <h1 className="text-center font-bold text-xl">Login As Student</h1>
+                    <h1 className="text-center font-bold text-xl">Login As Incubatee</h1>
                     <input type="text" placeholder="Email or Mobile-number" className="bg-gray-200 p-3 rounded" />
                     <input type="password" placeholder="Password" className="bg-gray-200 p-3 rounded" />
 
@@ -75,4 +75,4 @@ function TextDivider() {
     );
 }
 
-export default LoginAsStudent
+export default LoginAsIncubatee
