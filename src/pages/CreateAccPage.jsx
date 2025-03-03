@@ -54,14 +54,12 @@ function CreateAccPage() {
 
     return (
         <div className="flex items-center justify-center h-svh">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-2xl">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-2xl max-w-lg">
                 <h1 className="text-center text-2xl font-bold pb-3">Create an Account</h1>
 
-                {error && <p className="text-red-500 text-center">{error}</p>}
-
-                <div className="flex gap-2">
-                    <input type="text" placeholder="Name" className="p-2 border" required value={name} onChange={(e) => setName(e.target.value)} />
-                    <input type="text" placeholder="Lastname" className="p-2 border" required value={lastname} onChange={(e) => setLastname(e.target.value)} />
+                <div className="flex gap-2 ">
+                    <input type="text" placeholder="Name" className="p-2 border w-full" required value={name} onChange={(e) => setName(e.target.value)} />
+                    <input type="text" placeholder="Lastname" className="p-2 border w-full" required value={lastname} onChange={(e) => setLastname(e.target.value)} />
                 </div>
 
                 <Dropdown setRole={setRole} role={role} className="border" />
@@ -70,6 +68,8 @@ function CreateAccPage() {
                 <input type="text" placeholder="Mobile Number" maxLength={11} className="p-2 border" required value={mobile} onChange={(e) => setMobile(e.target.value)} />
                 <input type="password" placeholder="Password" className="p-2 border" required value={password} onChange={(e) => setPassword(e.target.value)} />
                 <input type="password" placeholder="Confirm Password" className="p-2 border" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+
+                {error && <p className="text-red-500 text-center">{error}</p>}
 
                 <CustomButton text={"Create Account"} className={"bg-primary-color text-white hover:bg-white hover:text-primary-color transition-all"} />
             </form>
