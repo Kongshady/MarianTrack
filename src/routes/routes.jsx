@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "../pages/LandingPage.jsx";
 import PasswordReset from "../pages/PasswordReset.jsx";
-import SignupPage from "../pages/SignUpPage.jsx";
-import EmailVerification from "../pages/EmailVerification.jsx";
+import CreateAccount from "../pages/CreateAccPage.jsx";
+import WaitingForApproval from "../pages/WaitingForApproval.jsx";
 // Incubatee Pages
 import LogAsIncubatee from "../pages/incubatee/AsIncubatee.jsx";
 import IncuDashboard from "../pages/incubatee/IncuDashboard.jsx";
@@ -31,8 +31,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/password-reset" element={<PasswordReset />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/verification" element={<EmailVerification />} />
+      <Route path="/create-account" element={<CreateAccount />} />
+      <Route path="/waiting-for-approval" element={<WaitingForApproval />} />
 
       {/* Incubatee Routes */}
       <Route path="/incubatee-login" element={<LogAsIncubatee />} />

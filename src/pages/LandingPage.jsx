@@ -16,7 +16,7 @@ function LandingPage() {
             <CustomButton text="Login as Employee" className="bg-primary-color text-text-color hover:bg-white hover:text-primary-color transition-all w-full" />
           </Link>
           <Link to={"/incubatee-login"}>
-            <CustomButton text="Login as Student" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
+            <CustomButton text="Login as Incubatee" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
           </Link>
           <TextDivider />
           <button className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
@@ -26,7 +26,7 @@ function LandingPage() {
         </div>
 
         {/* Create Account Link */}
-        <Link to="/signup" className="text-blue-600 hover:underline">
+        <Link to="/create-account" className="text-blue-600 hover:underline">
           Create Account
         </Link>
       </div>
