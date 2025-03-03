@@ -1,9 +1,37 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { auth, db } from "../config/marian-config.js";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import CustomButton from "../components/CustomButton.jsx";
 import MarianLogo from "../assets/images/MarianLogoWtext.png";
 import { FcGoogle } from "react-icons/fc";
 
 function LandingPage() {
+  const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check user status and role in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.status === "approved") {
+          navigate("/dashboard");
+        } else {
+          alert("Your account is pending approval.");
+        }
+      } else {
+        alert("User not found. Please contact admin.");
+      }
+    } catch (error) {
+      alert("Google Sign-In failed. Try again.");
+    }
+  };
+
   return (
     <div className="flex flex-row-reverse h-screen">
       {/* Left Section - Login Buttons */}
@@ -19,7 +47,7 @@ function LandingPage() {
             <CustomButton text="Login as Incubatee" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
           </Link>
           <TextDivider />
-          <button className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+          <button onClick={handleGoogleSignIn} className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
             <FcGoogle className="w-6 h-6" />
             <span className="text-gray-600">Sign in with Google</span>
           </button>
@@ -69,4 +97,4 @@ function TextDivider() {
   );
 }
 
-export default LandingPage
+export default LandingPage;

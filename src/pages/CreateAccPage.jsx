@@ -81,11 +81,11 @@ function Dropdown({ setRole, role, className }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     const roles = [
-        "Project Development Officer",
+        "TBI Manager",
         "Portfolio Manager",
         "Project Manager",
         "System Analyst",
-        "Developer / Programmer"
+        "Developer"
     ];
 
     useEffect(() => {

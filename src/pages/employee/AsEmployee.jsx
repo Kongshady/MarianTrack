@@ -27,7 +27,7 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    navigate("/dashboard"); // Redirect to dashboard if approved and role is valid
+                    navigate("/employee-dashboard"); // Redirect to dashboard if approved and role is valid
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");
                 }
@@ -50,7 +50,7 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    navigate("/dashboard");
+                    navigate("/employee-dashboard");
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");
                 }
@@ -79,7 +79,7 @@ function LoginAsEmployee() {
 
                 <TextDivider />
 
-                <button onClick={handleGoogleLogin} className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+                <button onClick={handleGoogleLogin} className="flex items-center justify-center gap-2 bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
                     <FcGoogle className="w-6 h-6" />
                     <span className="text-gray-600">Sign in with Google</span>
                 </button>
@@ -89,7 +89,7 @@ function LoginAsEmployee() {
                     <Link to="/password-reset" className="text-blue-600 hover:underline">
                         Forgot Password?
                     </Link>
-                    <Link to="/signup" className="text-blue-600 hover:underline">
+                    <Link to="/create-account" className="text-blue-600 hover:underline">
                         Create Account
                     </Link>
                 </div>
