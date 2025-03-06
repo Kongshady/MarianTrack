@@ -89,7 +89,7 @@ function LoginAsIncubatee() {
                     <Link to="/password-reset" className="text-blue-600 hover:underline">
                         Forgot Password?
                     </Link>
-                    <Link to="/create-account" className="text-blue-600 hover:underline">
+                    <Link to="/incubatee-create-account" className="text-blue-600 hover:underline">
                         Create Account
                     </Link>
                 </div>

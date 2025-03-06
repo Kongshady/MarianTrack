@@ -4,12 +4,14 @@ import PasswordReset from "../pages/PasswordReset.jsx";
 import CreateAccount from "../pages/CreateAccPage.jsx";
 import WaitingForApproval from "../pages/WaitingForApproval.jsx";
 // Incubatee Pages
+import IncubateeCreateAccount from "../pages/incubatee/IncubateeCreateAccount.jsx";
 import LogAsIncubatee from "../pages/incubatee/AsIncubatee.jsx";
 import IncuDashboard from "../pages/incubatee/IncuDashboard.jsx";
 import IncuGroups from "../pages/incubatee/IncuGroups.jsx";
 import IncuNotifications from "../pages/incubatee/IncuNotifications.jsx";
 import IncuChat from "../pages/incubatee/IncuChat.jsx";
 // Employee Pages
+import EmployeeCreateAccount from "../pages/employee/EmployeeCreateAccount.jsx";
 import LogAsEmployee from "../pages/employee/AsEmployee.jsx";
 import EmDashboard from "../pages/employee/EmDashboard.jsx";
 import EmGroups from "../pages/employee/EmGroups.jsx";
@@ -36,6 +38,7 @@ function AppRoutes() {
 
       {/* Incubatee Routes */}
       <Route path="/incubatee-login" element={<LogAsIncubatee />} />
+      <Route path="/incubatee-create-account" element={<IncubateeCreateAccount />} />
       <Route path="/incubatee-dashboard" element={<IncuDashboard />} />
       <Route path="/incubatee-group" element={<IncuGroups />} />
       <Route path="/incubatee-notification" element={<IncuNotifications />} />
@@ -43,6 +46,7 @@ function AppRoutes() {
 
       {/* Employee Routes */}
       <Route path="/employee-login" element={<LogAsEmployee />} />
+      <Route path="/employee-create-account" element={<EmployeeCreateAccount />} />
       <Route path="/employee-dashboard" element={<EmDashboard />} />
       <Route path="/employee-groups" element={<EmGroups />} />
       <Route path="/employee-progress" element={<EmProgress />} />

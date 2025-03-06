@@ -89,7 +89,7 @@ function LoginAsEmployee() {
                     <Link to="/password-reset" className="text-blue-600 hover:underline">
                         Forgot Password?
                     </Link>
-                    <Link to="/create-account" className="text-blue-600 hover:underline">
+                    <Link to="/employee-create-account" className="text-blue-600 hover:underline">
                         Create Account
                     </Link>
                 </div>
