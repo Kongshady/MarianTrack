@@ -19,29 +19,31 @@ function AdGroups() {
   const [availableSystemAnalysts, setAvailableSystemAnalysts] = useState([]);
   const [availableDevelopers, setAvailableDevelopers] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      setAvailableManagers(users.filter(user => user.role === "Portfolio Manager" && user.status === "approved"));
-      setAvailableProjectManagers(users.filter(user => user.role === "Project Manager" && user.status === "approved"));
-      setAvailableSystemAnalysts(users.filter(user => user.role === "System Analyst" && user.status === "approved"));
-      setAvailableDevelopers(users.filter(user => user.role === "Developer" && user.status === "approved"));
-    };
-    
-    fetchUsers();
-  }, []);
+    const fetchUsersAndGroups = async () => {
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const groupsSnapshot = await getDocs(collection(db, "groups"));
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      const querySnapshot = await getDocs(collection(db, "groups"));
-      const groupsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setGroups(groupsData);
+      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const groups = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const assignedUserIds = new Set();
+      groups.forEach(group => {
+        group.members.forEach(member => assignedUserIds.add(member));
+      });
+
+      const availableUsers = users.filter(user => user.status === "approved");
+
+      setAvailableManagers(availableUsers.filter(user => user.role === "Portfolio Manager"));
+      setAvailableProjectManagers(availableUsers.filter(user => user.role === "Project Manager" && !assignedUserIds.has(user.id)));
+      setAvailableSystemAnalysts(availableUsers.filter(user => user.role === "System Analyst" && !assignedUserIds.has(user.id)));
+      setAvailableDevelopers(availableUsers.filter(user => user.role === "Developer" && !assignedUserIds.has(user.id)));
+      setGroups(groups);
     };
 
-    fetchGroups();
+    fetchUsersAndGroups();
   }, []);
 
   const handleImageUpload = (event) => {
@@ -53,6 +55,12 @@ function AdGroups() {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
+    if (!portfolioManager) {
+      setError("Please assign a Portfolio Manager.");
+      return;
+    }
+    setError(""); // Clear any previous errors
+
     let uploadedImageUrl = "";
     
     if (image) {
@@ -89,7 +97,7 @@ function AdGroups() {
   return (
     <div className="flex">
       <AdminSidebar />
-      <div className="flex flex-col items-center justify-center h-screen w-full">
+      <div className="flex flex-col items-center justify-center h-screen w-full overflow-x-auto">
         <h1 className="text-4xl font-bold mb-5">Admin Groups</h1>
         <button
           onClick={() => setIsPopupOpen(true)}
@@ -98,15 +106,15 @@ function AdGroups() {
           Create Group
         </button>
 
-        {/* IN THIS PART THIS IS WHERE YOU SHOULD PUT THE LIST OF THE GROUPS THAT HAVE BEEN CREATED */}
+        {/* Displays The Created Groups */}
         <div className="mt-5 w-full px-10">
           {groups.map(group => (
-            <div key={group.id} className="bg-white p-4 rounded-lg shadow mb-4">
-              <h2 className="text-2xl font-bold">{group.name}</h2>
-              <p>{group.description}</p>
-              {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
-              <p className="mt-2">Portfolio Manager: {group.portfolioManager}</p>
-              <p>Members: {group.members.join(", ")}</p>
+            <div key={group.id} className="bg-white p-4 rounded-lg shadow mb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="w-20 h-20 object-cover rounded-lg mr-4" />}
+                <h2 className="text-2xl font-bold">{group.name}</h2>
+              </div>
+              <button className="bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition">View</button>
             </div>
           ))}
         </div>
@@ -116,6 +124,8 @@ function AdGroups() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-lg shadow-lg transform scale-95 transition-all animate-fade-in w-[500px]">
             <h2 className="text-xl font-bold mb-4 text-center">Create a Group</h2>
+            
+            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
             <label className="block mb-3 cursor-pointer text-center border border-gray-400 p-3 rounded-lg">
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
