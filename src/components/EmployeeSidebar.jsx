@@ -7,7 +7,7 @@ import { MdDashboard, MdGroups } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 
-function EmSideBar() {
+function EmSideBar({ onUserFetched }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
 
@@ -17,14 +17,15 @@ function EmSideBar() {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          const userData = userDoc.data();
+          const userData = { id: userDoc.id, ...userDoc.data() };
           setUserName(`${userData.name} ${userData.lastname}`);
           setUserRole(userData.role);
+          onUserFetched(userData); // Pass user data to the parent component
         }
       }
     };
     fetchUserData();
-  }, []);
+  }, [onUserFetched]);
 
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
