@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
 
 function EmDashboard(){
+    useEffect(() => {
+        document.title = "Employee | Dashboard"; // Set the page title
+    }, []);
+
     return(
         <div className="flex">
         <EmployeeSidebar />

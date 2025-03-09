@@ -10,6 +10,10 @@ function AdminAccountApproval() {
     const [activeTab, setActiveTab] = useState("pending");
 
     useEffect(() => {
+        document.title = "Admin | Account Approval"; // Set the page title
+    }, []);
+
+    useEffect(() => {
         // Fetch users with 'pending' and 'approved' status
         const fetchUsers = async () => {
             const querySnapshot = await getDocs(collection(db, "users"));

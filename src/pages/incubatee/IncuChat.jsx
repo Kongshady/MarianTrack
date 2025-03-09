@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
 
 function IncuChat() {
+    useEffect(() => {
+        document.title = "Incubatee | Chats"; // Set the page title
+    }, []);
+
     return (
         <div className="flex">
             <IncubateeSidebar />
@@ -11,4 +16,4 @@ function IncuChat() {
     );
 }
 
-export default IncuChat
+export default IncuChat;

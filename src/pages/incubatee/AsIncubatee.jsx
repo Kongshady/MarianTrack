@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js";
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -14,6 +14,10 @@ function LoginAsIncubatee() {
     const navigate = useNavigate();
 
     const allowedRoles = ["Project Manager", "System Analyst", "Developer"];
+
+    useEffect(() => {
+            document.title = "Incubatee Login"; // Set the page title
+        }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();

@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
 
 function IncuNotification() {
+    useEffect(() => {
+        document.title = "Incubatee | Notifications"; // Set the page title
+    }, []);
+
     return (
         <div className="flex">
             <IncubateeSidebar />

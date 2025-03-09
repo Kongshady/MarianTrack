@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar.jsx";
 
 function AdNotification() {
+  useEffect(() => {
+          document.title = "Admin | Notifications"; // Set the page title
+      }, []);
+
   return (
     <div className="flex">
         <AdminSidebar />

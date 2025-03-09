@@ -1,9 +1,14 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import CustomButton from "../../components/CustomButton";
 import MarianLogo from "../../assets/images/MarianLogoWtext.png";
 import { FcGoogle } from "react-icons/fc";
 
 function LoginAsAdmin() {
+    useEffect(() => {
+            document.title = "Login as Admin"; // Set the page title
+        }, []);
+
     return (
         <div className="flex flex-row-reverse h-screen">
             {/* Left Section - Login Form */}

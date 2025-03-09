@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import AdminSidebar from "../../components/AdminSidebar.jsx";
 
 function AdProgress() {
+  useEffect(() => {
+          document.title = "Admin | Progress"; // Set the page title
+      }, []);
+
   return (
     <div className="flex">
         <AdminSidebar />

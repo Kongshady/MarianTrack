@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
 
 function EmChat() {
+  useEffect(() => {
+    document.title = "Employee | Chats"; // Set the page title
+}, []);
+
   return (
     <div className="flex">
         <EmployeeSidebar />

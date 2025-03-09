@@ -8,6 +8,10 @@ function EmGroups() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    document.title = "Employee | Groups"; // Set the page title
+  }, []);
+
+  useEffect(() => {
     if (user && user.role === "Portfolio Manager") {
       const fetchUserGroups = async () => {
         try {

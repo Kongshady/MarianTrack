@@ -16,6 +16,10 @@ function IncubateeCreateAccount() {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        document.title = "Create Account as Incubatee"; // Set the page title
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);

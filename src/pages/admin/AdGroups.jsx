@@ -23,23 +23,27 @@ function AdGroups() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    document.title = "Admin | Groups"; // Set the page title
+  }, []);
+
+  useEffect(() => {
     const fetchUsersAndGroups = async () => {
       try {
         const usersSnapshot = await getDocs(collection(db, "users"));
         const groupsSnapshot = await getDocs(collection(db, "groups"));
-  
+
         const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const groups = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
+
         const assignedUserIds = new Set();
         groups.forEach(group => {
           if (group.members) {
             group.members.forEach(member => assignedUserIds.add(member.id));
           }
         });
-  
+
         const availableUsers = users.filter(user => user.status === "approved" && !assignedUserIds.has(user.id));
-  
+
         setAvailableManagers(availableUsers.filter(user => user.role === "Portfolio Manager"));
         setAvailableProjectManagers(availableUsers.filter(user => user.role === "Project Manager"));
         setAvailableSystemAnalysts(availableUsers.filter(user => user.role === "System Analyst"));
@@ -52,7 +56,7 @@ function AdGroups() {
         console.error("Error fetching users and groups:", error);
       }
     };
-  
+
     fetchUsersAndGroups();
   }, []);
 

@@ -16,6 +16,10 @@ function EmployeeCreateAccount() {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    useEffect(() => {
+        document.title = "Create Account as Employee"; // Set the page title
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
