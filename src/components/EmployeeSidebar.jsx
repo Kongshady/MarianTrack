@@ -13,23 +13,53 @@ function EmSideBar({ onUserFetched }) {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = auth.currentUser;
+      const storedUser = sessionStorage.getItem("currentUser");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        setUserName(`${userData.name} ${userData.lastname}`);
+        setUserRole(userData.role);
+        onUserFetched(userData);
+      } else {
+        const user = auth.currentUser;
+        if (user) {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const userData = { id: userDoc.id, ...userDoc.data() };
+            sessionStorage.setItem("currentUser", JSON.stringify(userData));
+            setUserName(`${userData.name} ${userData.lastname}`);
+            setUserRole(userData.role);
+            onUserFetched(userData);
+          }
+        }
+      }
+    };
+
+    const handleAuthStateChanged = async (user) => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const userData = { id: userDoc.id, ...userDoc.data() };
+          sessionStorage.setItem("currentUser", JSON.stringify(userData));
           setUserName(`${userData.name} ${userData.lastname}`);
           setUserRole(userData.role);
-          onUserFetched(userData); // Pass user data to the parent component
+          onUserFetched(userData);
         }
+      } else {
+        sessionStorage.removeItem("currentUser");
+        setUserName("Loading...");
+        setUserRole("Loading...");
+        onUserFetched(null);
       }
     };
+
     fetchUserData();
+    const unsubscribe = auth.onAuthStateChanged(handleAuthStateChanged);
+
+    return () => unsubscribe();
   }, [onUserFetched]);
 
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
-      {/* Logo & Menu Button */}
       <div className="flex gap-3 p-3 items-center">
         <GiHamburgerMenu className="text-5xl text-white" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
@@ -37,8 +67,6 @@ function EmSideBar({ onUserFetched }) {
           <p className="text-sm">{userRole}</p>
         </div>
       </div>
-
-      {/* Navigation Menu */}
       <nav className="mt-6">
         <ul className="space-y-1">
           <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
@@ -54,15 +82,12 @@ function EmSideBar({ onUserFetched }) {
   );
 }
 
-/* Reusable Menu Item Component */
 function MenuItem({ to, icon, text }) {
   return (
     <li>
       <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
         <span className="text-2xl">{icon}</span>
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {text}
-        </span>
+        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">{text}</span>
       </Link>
     </li>
   );

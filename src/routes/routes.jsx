@@ -10,6 +10,9 @@ import IncuDashboard from "../pages/incubatee/IncuDashboard.jsx";
 import IncuGroups from "../pages/incubatee/IncuGroups.jsx";
 import IncuNotifications from "../pages/incubatee/IncuNotifications.jsx";
 import IncuChat from "../pages/incubatee/IncuChat.jsx";
+
+import IncuViewGroup from "../components/semi-pages/IncuViewGroups.jsx";
+
 // Employee Pages
 import EmployeeCreateAccount from "../pages/employee/EmployeeCreateAccount.jsx";
 import LogAsEmployee from "../pages/employee/AsEmployee.jsx";
@@ -18,6 +21,8 @@ import EmGroups from "../pages/employee/EmGroups.jsx";
 import EmNotification from "../pages/employee/EmNotification.jsx";
 import EmProgress from "../pages/employee/EmProgress.jsx";
 import EmChat from "../pages/employee/EmChat.jsx";
+
+import EmViewGroup from "../components/semi-pages/EmViewGroups.jsx";
 // Admin Pages
 import LogAsAdmin from "../pages/admin/AsAdmin.jsx";
 import AdDashboard from "../pages/admin/AdDashboard.jsx";
@@ -44,6 +49,8 @@ function AppRoutes() {
       <Route path="/incubatee-notification" element={<IncuNotifications />} />
       <Route path="/incubatee-chat" element={<IncuChat />} />
 
+      <Route path="/incubatee/view-group/:groupId" element={<IncuViewGroup />} />
+
       {/* Employee Routes */}
       <Route path="/employee-login" element={<LogAsEmployee />} />
       <Route path="/employee-create-account" element={<EmployeeCreateAccount />} />
@@ -52,6 +59,8 @@ function AppRoutes() {
       <Route path="/employee-progress" element={<EmProgress />} />
       <Route path="/employee-notification" element={<EmNotification />} />
       <Route path="/employee-chat" element={<EmChat />} />
+
+      <Route path="/employee/view-group/:groupId" element={<EmViewGroup />} />
 
       {/* Admin Routes */}
       <Route path="/admin-login" element={<LogAsAdmin />} />

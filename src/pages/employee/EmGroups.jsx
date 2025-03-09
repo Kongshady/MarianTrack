@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
@@ -6,25 +7,39 @@ import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
 function EmGroups() {
   const [groups, setGroups] = useState([]);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Employee | Groups"; // Set the page title
   }, []);
 
   useEffect(() => {
-    if (user && user.role === "Portfolio Manager") {
-      const fetchUserGroups = async () => {
-        try {
-          const q = query(collection(db, "groups"), where("portfolioManager.id", "==", user.id));
+    const fetchGroups = async () => {
+      try {
+        let q;
+        if (user.role === "TBI Manager") {
+          q = query(collection(db, "groups"));
+        } else if (user.role === "Portfolio Manager") {
+          q = query(collection(db, "groups"), where("portfolioManager.id", "==", user.id));
+        }
+
+        if (q) {
           const querySnapshot = await getDocs(q);
           setGroups(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        } catch (error) {
-          console.error("Error fetching user groups:", error);
         }
-      };
-      fetchUserGroups();
+      } catch (error) {
+        console.error("Error fetching user groups:", error);
+      }
+    };
+
+    if (user) {
+      fetchGroups();
     }
   }, [user]);
+
+  const handleViewGroup = (groupId) => {
+    navigate(`/employee/view-group/${groupId}`);
+  };
 
   return (
     <div className="flex">
@@ -46,6 +61,12 @@ function EmGroups() {
                     ))}
                   </ul>
                 </div>
+                <button
+                  onClick={() => handleViewGroup(group.id)}
+                  className="mt-4 bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+                >
+                  View Group
+                </button>
               </div>
             ))
           ) : (
