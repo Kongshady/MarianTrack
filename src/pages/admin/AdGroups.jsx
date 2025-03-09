@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { db, storage } from "../../config/marian-config.js";
 import { collection, addDoc, getDocs, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -21,6 +22,7 @@ function AdGroups() {
   const [availableDevelopers, setAvailableDevelopers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Admin | Groups"; // Set the page title
@@ -107,6 +109,14 @@ function AdGroups() {
         createdAt: serverTimestamp()
       });
 
+      // Create a notification for the portfolio manager
+      await addDoc(collection(db, "notifications"), {
+        userId: portfolioManager,
+        message: `You have been assigned as the portfolio manager for the group "${groupName}".`,
+        timestamp: serverTimestamp(),
+        read: false
+      });
+
       setGroupName("");
       setDescription("");
       setImage(null);
@@ -124,6 +134,10 @@ function AdGroups() {
       console.error("Error creating group:", error);
       setError("An error occurred while creating the group. Please try again.");
     }
+  };
+
+  const handleViewGroup = (groupId) => {
+    navigate(`/admin/view-group/${groupId}`);
   };
 
   return (
@@ -150,7 +164,12 @@ function AdGroups() {
                   <h2 className="text-xl font-bold">{group.name}</h2>
                   <p className="text-sm">{group.description}</p>
                 </div>
-                <button className="bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition">View</button>
+                <button
+                  onClick={() => handleViewGroup(group.id)}
+                  className="bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+                >
+                  View
+                </button>
               </li>
             ))}
           </ul>

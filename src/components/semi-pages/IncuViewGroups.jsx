@@ -62,6 +62,22 @@ function IncuViewGroup() {
         dateEntry: serverTimestamp(),
         groupId
       });
+
+      // Fetch the group details to get the portfolio manager
+      const groupDoc = await getDoc(doc(db, "groups", groupId));
+      if (groupDoc.exists()) {
+        const groupData = groupDoc.data();
+        const portfolioManagerId = groupData.portfolioManager.id;
+
+        // Create a notification for the portfolio manager
+        await addDoc(collection(db, "notifications"), {
+          userId: portfolioManagerId,
+          message: `A new request has been submitted for the group "${groupData.name}".`,
+          timestamp: serverTimestamp(),
+          read: false
+        });
+      }
+
       setIsModalOpen(false);
       alert("Request submitted successfully!");
     } catch (error) {
@@ -91,7 +107,7 @@ function IncuViewGroup() {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="mt-4 bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+          className="mt-4 bg-secondary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
         >
           Request Needs
         </button>
@@ -205,7 +221,7 @@ function IncuViewGroup() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-color text-white rounded-lg hover:bg-opacity-80 transition"
+                  className="px-4 py-2 bg-secondary-color text-white rounded-lg hover:bg-opacity-80 transition"
                 >
                   Submit Request
                 </button>

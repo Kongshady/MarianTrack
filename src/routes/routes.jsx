@@ -32,6 +32,7 @@ import AdGroups from "../pages/admin/AdGroups.jsx";
 import AdProgress from "../pages/admin/AdProgress.jsx";
 import AdAccApproval from "../pages/admin/AdAccountApproval.jsx";
 
+import AdViewGroups from "../components/semi-pages/AdViewGroups.jsx";
 
 function AppRoutes() {
   return (
@@ -70,6 +71,8 @@ function AppRoutes() {
       <Route path="/admin-approval" element={<AdAccApproval />} />
       <Route path="/admin-notification" element={<AdNotification />} />
       <Route path="/admin-chat" element={<AdChat />} />
+
+      <Route path="/admin/view-group/:groupId" element={<AdViewGroups />} />
     </Routes>
   );
 }

@@ -16,8 +16,8 @@ function LoginAsIncubatee() {
     const allowedRoles = ["Project Manager", "System Analyst", "Developer"];
 
     useEffect(() => {
-            document.title = "Incubatee Login"; // Set the page title
-        }, []);
+        document.title = "Incubatee Login"; // Set the page title
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -25,7 +25,7 @@ function LoginAsIncubatee() {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            
+
             // Check user status and role in Firestore
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
@@ -48,7 +48,7 @@ function LoginAsIncubatee() {
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-            
+
             // Check user status and role in Firestore
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {

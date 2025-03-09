@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../config/marian-config.js";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -8,6 +9,10 @@ import { FcGoogle } from "react-icons/fc";
 
 function LandingPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "MarianTBI | Home"; // Set the page title
+  }, []);
 
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
