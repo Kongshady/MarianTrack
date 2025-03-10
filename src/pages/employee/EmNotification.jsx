@@ -41,7 +41,7 @@ function EmNotification() {
     <div className="flex">
       <EmployeeSidebar />
       <div className="flex flex-col items-start p-10 h-screen w-full">
-        <h1 className="text-4xl font-bold mb-5">Employee Notification</h1>
+        <h1 className="text-4xl font-bold mb-5">Notifications</h1>
         <ul className="w-full">
           {notifications.map(notification => (
             <li key={notification.id} className={`p-4 border rounded flex flex-row items-center justify-between ${notification.read ? 'bg-gray-200' : 'bg-white'}`}>

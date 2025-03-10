@@ -6,7 +6,6 @@ import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
 
 function IncuGroups() {
   const [groups, setGroups] = useState([]);
-  const [userEmail, setUserEmail] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,15 +16,18 @@ function IncuGroups() {
     const fetchUserGroups = async () => {
       const user = auth.currentUser;
       if (user) {
-        setUserEmail(user.email); // Get the logged-in user's email
-
         try {
           const querySnapshot = await getDocs(collection(db, "groups"));
           const filteredGroups = querySnapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(group => group.members.some(member => member.email === user.email)); // Check if the user's email exists in the members array
 
-          setGroups(filteredGroups);
+          if (filteredGroups.length > 0) {
+            // Automatically navigate to the first group found
+            navigate(`/incubatee/view-group/${filteredGroups[0].id}`);
+          } else {
+            setGroups(filteredGroups);
+          }
         } catch (error) {
           console.error("Error fetching user groups:", error);
         }
@@ -33,11 +35,7 @@ function IncuGroups() {
     };
 
     fetchUserGroups();
-  }, []);
-
-  const handleViewGroup = (groupId) => {
-    navigate(`/incubatee/view-group/${groupId}`);
-  };
+  }, [navigate]);
 
   return (
     <div className="flex">
@@ -66,7 +64,7 @@ function IncuGroups() {
                   </ul>
                 </div>
                 <button
-                  onClick={() => handleViewGroup(group.id)}
+                  onClick={() => navigate(`/incubatee/view-group/${group.id}`)}
                   className="mt-4 bg-secondary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
                 >
                   View Group

@@ -81,7 +81,7 @@ function AdminAccountApproval() {
                 <h1 className="text-3xl font-bold mb-5">Admin Account Approval</h1>
 
                 {/* Tab Navigation */}
-                <div className="flex mb-3">
+                <div className="flex mb-3 text-xs">
                     <button
                         className={`px-6 py-2 ${activeTab === "pending" ? "bg-primary-color text-white" : "bg-white text-primary-color border border-primary-color"}`}
                         onClick={() => setActiveTab("pending")}
@@ -98,8 +98,8 @@ function AdminAccountApproval() {
 
                 {/* Role Filter Dropdown */}
                 <div className="mb-3">
-                    <label htmlFor="roleFilter" className="mr-2">Filter by Role:</label>
-                    <select id="roleFilter" value={selectedRole} onChange={handleRoleChange} className="p-2 border rounded">
+                    <label htmlFor="roleFilter" className="mr-2 text-sm">Filter by Role:</label>
+                    <select id="roleFilter" value={selectedRole} onChange={handleRoleChange} className="p-2 border rounded-sm text-sm">
                         <option value="All">All</option>
                         <option value="TBI Manager">TBI Manager</option>
                         <option value="TBI Assistant">TBI Assistant</option>
@@ -116,7 +116,7 @@ function AdminAccountApproval() {
                         <div className="overflow-x-auto mb-8">
                             <table className="min-w-full bg-white border rounded-lg">
                                 <thead>
-                                    <tr className="bg-primary-color text-white">
+                                    <tr className="bg-primary-color text-white text-xs">
                                         <th className="p-2 border">Name</th>
                                         <th className="p-2 border">Email</th>
                                         <th className="p-2 border">Role</th>
@@ -159,7 +159,7 @@ function AdminAccountApproval() {
                         <div className="overflow-x-auto h-96">
                             <table className="min-w-full bg-white border rounded-lg">
                                 <thead className="sticky top-0">
-                                    <tr className="bg-primary-color text-white">
+                                    <tr className="bg-primary-color text-white text-xs">
                                         <th className="p-2 border">Name</th>
                                         <th className="p-2 border">Email</th>
                                         <th className="p-2 border">Role</th>
@@ -170,7 +170,7 @@ function AdminAccountApproval() {
                                 </thead>
                                 <tbody>
                                     {filterUsersByRole(approvedUsers).map(user => (
-                                        <tr key={user.id} className="text-center border">
+                                        <tr key={user.id} className="text-center border text-xs">
                                             <td className="p-2 border">{user.name} {user.lastname}</td>
                                             <td className="p-2 border">{user.email}</td>
                                             <td className="p-2 border">{user.role}</td>
@@ -178,7 +178,7 @@ function AdminAccountApproval() {
                                             <td className="p-2 border">{user.groupName}</td>
                                             <td className="p-2 border flex justify-center">
                                                 <button
-                                                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center justify-center gap-1 text-center"
+                                                    className="bg-red-500 text-white px-3 py-1 rounded-sm hover:bg-red-600 flex items-center justify-center gap-1 text-center"
                                                     onClick={() => handleRemoveUser(user.id)}
                                                 >
                                                     <FaRegTrashCan />

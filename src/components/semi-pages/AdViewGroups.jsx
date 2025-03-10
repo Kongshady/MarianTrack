@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, getDocs, collection, deleteDoc } from "firebase/firestore";
 import AdminSidebar from "../../components/AdminSidebar.jsx";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { MdEdit } from "react-icons/md";
 
 function AdViewGroups() {
   const { groupId } = useParams();
@@ -46,10 +48,11 @@ function AdViewGroups() {
           }
         });
 
-        const availableUsers = users.filter(user => 
-          user.status === "approved" && 
-          !assignedUserIds.has(user.id) && 
-          user.role !== "TBI Manager" && 
+        const availableUsers = users.filter(user =>
+          user.status === "approved" &&
+          !assignedUserIds.has(user.id) &&
+          user.role !== "TBI Manager" &&
+          user.role !== "TBI Assistant" &&
           user.role !== "Portfolio Manager"
         );
         setAvailableUsers(availableUsers);
@@ -133,12 +136,13 @@ function AdViewGroups() {
       <AdminSidebar />
       <div className="flex flex-col items-start h-screen w-full p-10">
         <div className="flex justify-between w-full">
-          <h1 className="text-4xl font-bold mb-5">{group.name}</h1>
+          <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
           <div>
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition mr-2"
+              className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition mr-2 flex flex-row items-center gap-2"
             >
+              <MdEdit className="text-sm" />
               Edit Group
             </button>
           </div>
@@ -159,27 +163,56 @@ function AdViewGroups() {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[600px]">
-            <h2 className="text-xl font-bold mb-4 text-center">Edit Group</h2>
-            <div className="mb-4">
-              <label className="block mb-1">Group Name</label>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-center">Edit Group</h2>
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                >
+                  <FaRegTrashCan />
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-2">
+              <label className="block text-sm">Group Name</label>
               <input
                 type="text"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm"
               />
             </div>
-            <div className="mb-4">
-              <label className="block mb-1">Description</label>
+            <div className="mb-2">
+              <label className="block text-sm">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm"
               ></textarea>
             </div>
-            <h3 className="text-lg font-bold mb-2">Members</h3>
-            <table className="min-w-full bg-white border border-gray-200 text-center">
+            <h3 className="text-lg font-bold">Members</h3>
+            <div className="flex items-center mb-2 gap-2">
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="w-full p-2 border rounded text-sm"
+              >
+                <option value="">Select Available Members</option>
+                {availableUsers.map(user => (
+                  <option key={user.id} value={user.id}>{user.name} {user.lastname}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddMember}
+                className="bg-primary-color text-white text-xs p-1 rounded-sm hover:bg-opacity-80 transition"
+              >
+                Add Member
+              </button>
+            </div>
+            <table className="min-w-full bg-white text-center">
               <thead>
                 <tr>
                   <th className="py-2 px-4 border-b">Members</th>
@@ -189,61 +222,31 @@ function AdViewGroups() {
               <tbody>
                 {group.members.map(member => (
                   <tr key={member.id}>
-                    <td className="py-2 px-4 border-b">{member.name} {member.lastname}</td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="p-2 text-sm">{member.name} {member.lastname}</td>
+                    <td className="p-2">
                       <button
                         onClick={() => handleRemoveMember(member.id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded-lg hover:bg-red-600 transition"
+                        className="bg-red-500 text-white p-1 px-2 rounded-sm text-sm hover:bg-red-600 transition"
                       >
                         Remove
                       </button>
                     </td>
                   </tr>
                 ))}
-                <tr>
-                  <td className="py-2 px-4 border-b">
-                    <select
-                      value={selectedUser}
-                      onChange={(e) => setSelectedUser(e.target.value)}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="">Select User</option>
-                      {availableUsers.map(user => (
-                        <option key={user.id} value={user.id}>{user.name} {user.lastname}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    <button
-                      onClick={handleAddMember}
-                      className="bg-primary-color text-white px-2 py-1 rounded-lg hover:bg-opacity-80 transition"
-                    >
-                      Add Member
-                    </button>
-                  </td>
-                </tr>
               </tbody>
             </table>
-            <div className="flex justify-between mt-4">
+            <div className="flex justify-center gap-3 mt-4">
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+                className="p-3 px-6 bg-gray-500 text-white text-sm rounded-sm hover:bg-gray-600 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateGroup}
-                className="px-4 py-2 bg-primary-color text-white rounded-lg hover:bg-opacity-80 transition"
+                className="p-3 px-6 bg-primary-color text-white text-sm rounded-sm hover:bg-opacity-80 transition"
               >
                 Confirm
-              </button>
-            </div>
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-              >
-                Delete Group
               </button>
             </div>
           </div>
@@ -252,10 +255,10 @@ function AdViewGroups() {
 
       {isDeleteModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px]">
             <h2 className="text-xl font-bold mb-4 text-center">Delete Group</h2>
-            <p className="mb-4 text-center">Are you sure you want to delete this group? This action cannot be undone.</p>
-            <div className="mb-4 flex items-center justify-center">
+            <p className="mb-4 text-start">Are you sure you want to delete this group? This action cannot be undone.</p>
+            <div className="mb-4 flex items-center justify-start">
               <input
                 type="checkbox"
                 id="agreeToDelete"

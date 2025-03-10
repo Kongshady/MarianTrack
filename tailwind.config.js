@@ -12,7 +12,7 @@ export default {
         "text-color": "white",
       },
       backgroundImage: {
-        "banner-img": "url('/src/assets/images/MarianBackgroundImage.jpg')",
+        "banner-img": "url('/src/assets/images/MarianTBI_background.png')",
       }
     },
   },

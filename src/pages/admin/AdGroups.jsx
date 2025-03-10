@@ -144,14 +144,14 @@ function AdGroups() {
     <div className="flex">
       <AdminSidebar />
       <div className="flex flex-col items-start h-screen w-full overflow-x-auto p-10">
-        <div className="flex flex-row justify-between w-full">
+        <div className="flex flex-row justify-between items-center w-full">
           <h1 className="text-4xl font-bold mb-5">Groups</h1>
           <button
             onClick={() => setIsPopupOpen(true)}
-            className="bg-primary-color text-white p-2 rounded-lg hover:bg-opacity-80 transition-all flex items-center justify-center gap-1"
+            className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition-all flex items-center justify-center gap-1"
           >
             Create New Group
-            <IoAddOutline />
+            <IoAddOutline className="text-xl" />
           </button>
         </div>
 
@@ -161,14 +161,14 @@ function AdGroups() {
             {groups.map(group => (
               <li key={group.id} className="bg-white p-4 shadow flex justify-between items-center">
                 <div>
-                  <h2 className="text-xl font-bold">{group.name}</h2>
-                  <p className="text-sm">{group.description}</p>
+                  <h2 className="text-sm font-bold">{group.name}</h2>
+                  <p className="text-xs">{group.description}</p>
                 </div>
                 <button
                   onClick={() => handleViewGroup(group.id)}
-                  className="bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+                  className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition"
                 >
-                  View
+                  Group Details
                 </button>
               </li>
             ))}
