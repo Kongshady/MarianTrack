@@ -8,6 +8,7 @@ function AdminAccountApproval() {
     const [pendingUsers, setPendingUsers] = useState([]);
     const [approvedUsers, setApprovedUsers] = useState([]);
     const [activeTab, setActiveTab] = useState("pending");
+    const [selectedRole, setSelectedRole] = useState("All");
 
     useEffect(() => {
         document.title = "Admin | Account Approval"; // Set the page title
@@ -29,6 +30,25 @@ function AdminAccountApproval() {
         fetchUsers();
     }, []);
 
+    useEffect(() => {
+        // Fetch group information for approved users
+        const fetchGroups = async () => {
+            const groupsSnapshot = await getDocs(collection(db, "groups"));
+            const groups = groupsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            setApprovedUsers(prevApprovedUsers =>
+                prevApprovedUsers.map(user => {
+                    const userGroup = groups.find(group => group.members.some(member => member.id === user.id));
+                    return { ...user, groupName: userGroup ? userGroup.name : "No Group" };
+                })
+            );
+        };
+        fetchGroups();
+    }, [approvedUsers]);
+
     const handleApproval = async (userId, status) => {
         await updateDoc(doc(db, "users", userId), { status });
         setPendingUsers(pendingUsers.filter(user => user.id !== userId));
@@ -41,6 +61,17 @@ function AdminAccountApproval() {
     const handleRemoveUser = async (userId) => {
         await deleteDoc(doc(db, "users", userId));
         setApprovedUsers(approvedUsers.filter(user => user.id !== userId));
+    };
+
+    const handleRoleChange = (e) => {
+        setSelectedRole(e.target.value);
+    };
+
+    const filterUsersByRole = (users) => {
+        if (selectedRole === "All") {
+            return users;
+        }
+        return users.filter(user => user.role === selectedRole);
     };
 
     return (
@@ -65,6 +96,20 @@ function AdminAccountApproval() {
                     </button>
                 </div>
 
+                {/* Role Filter Dropdown */}
+                <div className="mb-3">
+                    <label htmlFor="roleFilter" className="mr-2">Filter by Role:</label>
+                    <select id="roleFilter" value={selectedRole} onChange={handleRoleChange} className="p-2 border rounded">
+                        <option value="All">All</option>
+                        <option value="TBI Manager">TBI Manager</option>
+                        <option value="TBI Assistant">TBI Assistant</option>
+                        <option value="Portfolio Manager">Portfolio Manager</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="System Analyst">System Analyst</option>
+                        <option value="Developer">Developer</option>
+                    </select>
+                </div>
+
                 {activeTab === "pending" && (
                     <div>
                         <h2 className="text-1xl font-semibold mb-3">Pending Users</h2>
@@ -80,7 +125,7 @@ function AdminAccountApproval() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {pendingUsers.map(user => (
+                                    {filterUsersByRole(pendingUsers).map(user => (
                                         <tr key={user.id} className="text-center border">
                                             <td className="p-2 border">{user.name} {user.lastname}</td>
                                             <td className="p-2 border">{user.email}</td>
@@ -111,24 +156,26 @@ function AdminAccountApproval() {
                 {activeTab === "approved" && (
                     <div>
                         <h2 className="text-1xl font-semibold mb-3">Approved Users</h2>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto h-96">
                             <table className="min-w-full bg-white border rounded-lg">
-                                <thead>
+                                <thead className="sticky top-0">
                                     <tr className="bg-primary-color text-white">
                                         <th className="p-2 border">Name</th>
                                         <th className="p-2 border">Email</th>
                                         <th className="p-2 border">Role</th>
                                         <th className="p-2 border">Time Registered</th>
+                                        <th className="p-2 border">In a Group?</th>
                                         <th className="p-2 border">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {approvedUsers.map(user => (
+                                    {filterUsersByRole(approvedUsers).map(user => (
                                         <tr key={user.id} className="text-center border">
                                             <td className="p-2 border">{user.name} {user.lastname}</td>
                                             <td className="p-2 border">{user.email}</td>
                                             <td className="p-2 border">{user.role}</td>
                                             <td className="p-2 border">{user.timestamp}</td>
+                                            <td className="p-2 border">{user.groupName}</td>
                                             <td className="p-2 border flex justify-center">
                                                 <button
                                                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center justify-center gap-1 text-center"

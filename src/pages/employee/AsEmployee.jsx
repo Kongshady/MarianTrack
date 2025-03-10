@@ -13,7 +13,7 @@ function LoginAsEmployee() {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const allowedRoles = ["TBI Manager", "Portfolio Manager"];
+    const allowedRoles = ["TBI Manager", "Portfolio Manager", "TBI Assistant"];
 
     useEffect(() => {
         document.title = "Employee Login"; // Set the page title
@@ -31,7 +31,11 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    navigate("/employee-dashboard"); // Redirect to dashboard if approved and role is valid
+                    if (userData.role === "TBI Assistant") {
+                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Assistant
+                    } else {
+                        navigate("/employee-dashboard"); // Redirect to employee dashboard for other roles
+                    }
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");
                 }
@@ -54,7 +58,11 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    navigate("/employee-dashboard");
+                    if (userData.role === "TBI Assistant") {
+                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Assistant
+                    } else {
+                        navigate("/employee-dashboard"); // Redirect to employee dashboard for other roles
+                    }
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");
                 }

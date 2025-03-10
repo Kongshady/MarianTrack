@@ -1,18 +1,52 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
+import { auth, db } from "../config/marian-config.js";
+import { doc, getDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 
 function AdminSideBar() {
+  const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
       {/* Logo & Menu Button */}
       <div className="flex gap-3 p-3 items-center">
         <GiHamburgerMenu className="text-5xl text-white" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
-          <h1 className="text-base font-bold">Admin Name Head</h1>
-          <p className="text-sm">Role</p>
+          {userData && (
+            <>
+              <h1 className="text-base font-bold">{userData.name} {userData.lastname}</h1>
+              <p className="text-sm">{userData.role}</p>
+            </>
+          )}
         </div>
       </div>
 
@@ -26,7 +60,17 @@ function AdminSideBar() {
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="LogOut" />
+          <li>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white"
+            >
+              <IoLogOutSharp className="text-2xl" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                LogOut
+              </span>
+            </button>
+          </li>
         </ul>
       </nav>
     </div>

@@ -86,6 +86,7 @@ function Dropdown({ setRole, role, className }) {
     const dropdownRef = useRef(null);
     const roles = [
         "TBI Manager",
+        "TBI Assistant",
         "Portfolio Manager"
     ];
 

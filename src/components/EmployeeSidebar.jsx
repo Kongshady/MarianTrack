@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../config/marian-config.js";
 import { doc, getDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
@@ -10,6 +11,7 @@ import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 function EmSideBar({ onUserFetched }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,6 +60,16 @@ function EmSideBar({ onUserFetched }) {
     return () => unsubscribe();
   }, [onUserFetched]);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      sessionStorage.removeItem("currentUser");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
       <div className="flex gap-3 p-3 items-center">
@@ -75,7 +87,17 @@ function EmSideBar({ onUserFetched }) {
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
-          <MenuItem to={"/"} icon={<IoLogOutSharp />} text="LogOut" />
+          <li>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white"
+            >
+              <IoLogOutSharp className="text-2xl" />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                LogOut
+              </span>
+            </button>
+          </li>
         </ul>
       </nav>
     </div>
