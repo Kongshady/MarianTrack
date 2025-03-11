@@ -54,12 +54,12 @@ function LandingPage() {
           <TextDivider />
           <button onClick={handleGoogleSignIn} className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
             <FcGoogle className="w-6 h-6" />
-            <span className="text-gray-600">Sign in with Google</span>
+            <span className="text-gray-600 text-xs">Sign in with Google</span>
           </button>
         </div>
 
         {/* Create Account Link */}
-        <Link to="/create-account" className="text-blue-600 hover:underline">
+        <Link to="/create-account" className="text-blue-600 hover:underline text-xs">
           Create Account
         </Link>
       </div>
@@ -80,10 +80,7 @@ function LandingPage() {
           </div>
 
           <p className="text-sm leading-relaxed">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Itaque
-            dolores iure odio numquam aliquam recusandae fuga impedit, eius totam
-            perspiciatis modi placeat mollitia, officiis vel ut rerum debitis
-            exercitationem? Dolore.
+          "Empowering startups through innovation, collaboration, and cutting-edge technology. Marian TBI provides mentorship, resources, and a thriving ecosystem for aspiring entrepreneurs to turn ideas into reality."
           </p>
         </div>
       </div>
@@ -96,7 +93,7 @@ function TextDivider() {
   return (
     <div className="flex items-center w-full">
       <div className="flex-grow border-t border-gray-400"></div>
-      <span className="mx-4 text-gray-600">Or</span>
+      <span className="mx-4 text-gray-600 text-xs">Or</span>
       <div className="flex-grow border-t border-gray-400"></div>
     </div>
   );

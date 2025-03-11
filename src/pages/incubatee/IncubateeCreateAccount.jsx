@@ -58,20 +58,20 @@ function IncubateeCreateAccount() {
 
     return (
         <div className="flex items-center justify-center h-svh">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-2xl max-w-lg">
-                <h1 className="text-center text-2xl font-bold pb-3">Create Account as Incubatee</h1>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-xl max-w-lg">
+                <h1 className="text-center text-lg font-bold pb-3">Create Account as Incubatee</h1>
 
                 <div className="flex gap-2 ">
-                    <input type="text" placeholder="Name" className="p-2 border w-full" required value={name} onChange={(e) => setName(e.target.value)} />
-                    <input type="text" placeholder="Lastname" className="p-2 border w-full" required value={lastname} onChange={(e) => setLastname(e.target.value)} />
+                    <input type="text" placeholder="Name" className="p-2 border w-full text-sm" required value={name} onChange={(e) => setName(e.target.value)} />
+                    <input type="text" placeholder="Lastname" className="p-2 border w-full text-sm" required value={lastname} onChange={(e) => setLastname(e.target.value)} />
                 </div>
 
-                <Dropdown setRole={setRole} role={role} className="border" />
+                <Dropdown setRole={setRole} role={role} className="border text-sm" />
 
-                <input type="email" placeholder="Email" className="p-2 border" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                <input type="text" placeholder="Mobile Number" maxLength={11} className="p-2 border" required value={mobile} onChange={(e) => setMobile(e.target.value)} />
-                <input type="password" placeholder="Password" className="p-2 border" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                <input type="password" placeholder="Confirm Password" className="p-2 border" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <input type="email" placeholder="Email" className="p-2 border text-sm" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="text" placeholder="Mobile Number" maxLength={11} className="p-2 border text-sm" required value={mobile} onChange={(e) => setMobile(e.target.value)} />
+                <input type="password" placeholder="Password" className="p-2 border text-sm" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <input type="password" placeholder="Confirm Password" className="p-2 border text-sm" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
 
                 {error && <p className="text-red-500 text-center">{error}</p>}
 

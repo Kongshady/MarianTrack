@@ -55,11 +55,17 @@ function EmGroups() {
                 {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
                 <div className="mt-2">
                   <h3 className="font-bold text-sm">Members:</h3>
-                  <ul className="text-xs">
-                    {group.members.map(member => (
-                      <li key={member.id}>{member.name} {member.lastname}</li>
-                    ))}
-                  </ul>
+                  <div className="flex flex-row text-xs">
+                    <ul className="flex-1">
+                      {group.members.map(member => (
+                        <li key={member.id}>{member.name} {member.lastname}</li>
+                      ))}
+                    </ul>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm">Assigned PM:</h3>
+                      <p>{group.portfolioManager.name} {group.portfolioManager.lastname}</p>
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleViewGroup(group.id)}
