@@ -45,17 +45,17 @@ function EmGroups() {
     <div className="flex">
       <EmployeeSidebar onUserFetched={setUser} />
       <div className="flex flex-col items-start h-screen w-full p-10">
-        <h1 className="text-4xl font-bold mb-5">Assigned Groups</h1>
+        <h1 className="text-4xl font-bold mb-5">All Groups</h1>
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.length > 0 ? (
             groups.map(group => (
-              <div key={group.id} className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-xl font-bold">{group.name}</h2>
-                <p className="text-sm">{group.description}</p>
+              <div key={group.id} className="bg-white p-4 rounded-sm shadow">
+                <h2 className="text-md font-bold">{group.name}</h2>
+                <p className="text-xs">{group.description}</p>
                 {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
                 <div className="mt-2">
                   <h3 className="font-bold text-sm">Members:</h3>
-                  <ul className="text-sm">
+                  <ul className="text-xs">
                     {group.members.map(member => (
                       <li key={member.id}>{member.name} {member.lastname}</li>
                     ))}
@@ -63,7 +63,7 @@ function EmGroups() {
                 </div>
                 <button
                   onClick={() => handleViewGroup(group.id)}
-                  className="mt-4 bg-primary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+                  className="mt-4 bg-primary-color text-white px-4 p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
                 >
                   View Group
                 </button>

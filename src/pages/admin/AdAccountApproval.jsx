@@ -126,20 +126,20 @@ function AdminAccountApproval() {
                                 </thead>
                                 <tbody>
                                     {filterUsersByRole(pendingUsers).map(user => (
-                                        <tr key={user.id} className="text-center border">
+                                        <tr key={user.id} className="text-center border text-xs">
                                             <td className="p-2 border">{user.name} {user.lastname}</td>
                                             <td className="p-2 border">{user.email}</td>
                                             <td className="p-2 border">{user.role}</td>
                                             <td className="p-2 border">{user.timestamp}</td>
                                             <td className="p-2 border">
                                                 <button
-                                                    className="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600"
+                                                    className="bg-green-500 text-white px-3 py-1 rounded-sm mr-2 hover:bg-green-600"
                                                     onClick={() => handleApproval(user.id, "approved")}
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
-                                                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                                    className="bg-red-500 text-white px-3 py-1 rounded-sm hover:bg-red-600"
                                                     onClick={() => handleApproval(user.id, "rejected")}
                                                 >
                                                     Reject
