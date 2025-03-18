@@ -13,6 +13,7 @@ import IncuGroups from "../pages/incubatee/IncuGroups.jsx";
 import IncuNotifications from "../pages/incubatee/IncuNotifications.jsx";
 import IncuChat from "../pages/incubatee/IncuChat.jsx";
 import IncuViewGroup from "../components/semi-pages/IncuViewGroups.jsx";
+import IncuEditProfile from "../components/edit-profile/IncuEditProfile.jsx";
 
 // Employee Pages
 import EmployeeCreateAccount from "../pages/employee/EmployeeCreateAccount.jsx";
@@ -23,6 +24,8 @@ import EmNotification from "../pages/employee/EmNotification.jsx";
 import EmProgress from "../pages/employee/EmProgress.jsx";
 import EmChat from "../pages/employee/EmChat.jsx";
 import EmViewGroup from "../components/semi-pages/EmViewGroups.jsx";
+import EmEditProfile from "../components/edit-profile/EmEditProfile.jsx";
+
 
 // Admin Pages
 import LogAsAdmin from "../pages/admin/AsAdmin.jsx";
@@ -33,6 +36,8 @@ import AdGroups from "../pages/admin/AdGroups.jsx";
 import AdProgress from "../pages/admin/AdProgress.jsx";
 import AdAccApproval from "../pages/admin/AdAccountApproval.jsx";
 import AdViewGroups from "../components/semi-pages/AdViewGroups.jsx";
+import AdEditProfile from "../components/edit-profile/AdEditProfile.jsx";
+
 
 function AppRoutes() {
   return (
@@ -48,7 +53,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-dashboard"
         element={
-          <ProtectedRoute allowedRoles={["Portfolio Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
             <IncuDashboard />
           </ProtectedRoute>
         }
@@ -56,7 +61,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-group"
         element={
-          <ProtectedRoute allowedRoles={["Portfolio Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
             <IncuGroups />
           </ProtectedRoute>
         }
@@ -64,7 +69,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-notification"
         element={
-          <ProtectedRoute allowedRoles={["Portfolio Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
             <IncuNotifications />
           </ProtectedRoute>
         }
@@ -72,7 +77,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-chat"
         element={
-          <ProtectedRoute allowedRoles={["Portfolio Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
             <IncuChat />
           </ProtectedRoute>
         }
@@ -80,11 +85,20 @@ function AppRoutes() {
       <Route
         path="/incubatee/view-group/:groupId"
         element={
-          <ProtectedRoute allowedRoles={["Portfolio Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
             <IncuViewGroup />
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/incubatee-editprofile"
+        element={
+          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+            <IncuEditProfile />
+          </ProtectedRoute>
+        }
+      />
+
 
       {/* Employee Routes */}
       <Route path="/employee-login" element={<LogAsEmployee />} />
@@ -137,6 +151,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/employee-editprofile"
+        element={
+          <ProtectedRoute allowedRoles={["TBI Manager", "Portfolio Manager", "TBI Assistant"]}>
+            <EmEditProfile />
+          </ProtectedRoute>
+        }
+      />
+
 
       {/* Admin Routes */}
       <Route path="/admin-login" element={<LogAsAdmin />} />
@@ -193,6 +216,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
             <AdViewGroups />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin-editprofile"
+        element={
+          <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
+            <AdEditProfile />
           </ProtectedRoute>
         }
       />

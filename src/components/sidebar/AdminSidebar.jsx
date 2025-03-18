@@ -4,7 +4,7 @@ import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
-import { auth, db } from "../config/marian-config.js";
+import { auth, db } from "../../config/marian-config.js";
 import { doc, getDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
@@ -54,9 +54,9 @@ function AdminSideBar() {
       <nav className="mt-6">
         <ul className="space-y-1">
           <MenuItem to={"/admin-dashboard"} icon={<MdDashboard />} text="Dashboard" />
-          <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Groups" />
+          <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
           <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
-          <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="Account Approval" />
+          <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="User Management" />
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />

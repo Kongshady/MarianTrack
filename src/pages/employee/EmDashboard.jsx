@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
+import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 
 function EmDashboard(){
     useEffect(() => {

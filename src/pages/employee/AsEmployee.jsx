@@ -31,10 +31,10 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    if (userData.role === "TBI Assistant") {
-                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Assistant
-                    } else {
-                        navigate("/employee-dashboard"); // Redirect to employee dashboard for other roles
+                    if (userData.role === "TBI Manager" || userData.role === "TBI Assistant") {
+                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Manager or TBI Assistant
+                    } else if (userData.role === "Portfolio Manager") {
+                        navigate("/employee-dashboard"); // Redirect to employee dashboard for Portfolio Manager
                     }
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");
@@ -58,10 +58,10 @@ function LoginAsEmployee() {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    if (userData.role === "TBI Assistant") {
-                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Assistant
-                    } else {
-                        navigate("/employee-dashboard"); // Redirect to employee dashboard for other roles
+                    if (userData.role === "TBI Manager" || userData.role === "TBI Assistant") {
+                        navigate("/admin-dashboard"); // Redirect to admin dashboard if role is TBI Manager or TBI Assistant
+                    } else if (userData.role === "Portfolio Manager") {
+                        navigate("/employee-dashboard"); // Redirect to employee dashboard for Portfolio Manager
                     }
                 } else {
                     setError("Access denied. Your account is either pending approval or you do not have permission.");

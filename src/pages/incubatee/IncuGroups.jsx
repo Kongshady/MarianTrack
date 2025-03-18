@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "../../config/marian-config.js";
 import { collection, getDocs } from "firebase/firestore";
-import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
+import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
 
 function IncuGroups() {
   const [groups, setGroups] = useState([]);

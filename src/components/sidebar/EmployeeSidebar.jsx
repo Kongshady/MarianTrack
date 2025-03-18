@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, db } from "../config/marian-config.js";
+import { auth, db } from "../../config/marian-config.js";
 import { doc, getDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { GiHamburgerMenu } from "react-icons/gi";
+import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 
-function IncubateeSidebar({ onUserFetched }) {
+function EmSideBar({ onUserFetched }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ function IncubateeSidebar({ onUserFetched }) {
   };
 
   return (
-    <div className="group w-[4rem] hover:w-1/4 h-screen bg-secondary-color overflow-hidden transition-all duration-300">
+    <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
       <div className="flex gap-3 p-3 items-center">
         <GiHamburgerMenu className="text-5xl text-white" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
@@ -81,15 +81,16 @@ function IncubateeSidebar({ onUserFetched }) {
       </div>
       <nav className="mt-6">
         <ul className="space-y-1">
-          <MenuItem to={"/incubatee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
-          <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="My Group" />
-          <MenuItem to={"/incubatee-notification"} icon={<IoMdNotifications />} text="Notifications" />
-          <MenuItem to={"/incubatee-chat"} icon={<IoChatbox />} text="Chats" />
+          <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
+          <MenuItem to={"/employee-groups"} icon={<MdGroups />} text="Incubatees" />
+          <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
+          <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
+          <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
           <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
           <li>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-4 p-4 w-full text-left hover:bg-white hover:text-secondary-color cursor-pointer transition-all text-white"
+              className="flex items-center gap-4 p-4 w-full text-left hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white"
             >
               <IoLogOutSharp className="text-2xl" />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -106,7 +107,7 @@ function IncubateeSidebar({ onUserFetched }) {
 function MenuItem({ to, icon, text }) {
   return (
     <li>
-      <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-secondary-color cursor-pointer transition-all text-white">
+      <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
         <span className="text-2xl">{icon}</span>
         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">{text}</span>
       </Link>
@@ -114,4 +115,4 @@ function MenuItem({ to, icon, text }) {
   );
 }
 
-export default IncubateeSidebar;
+export default EmSideBar;

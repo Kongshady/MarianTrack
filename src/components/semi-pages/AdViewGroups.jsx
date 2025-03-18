@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, getDocs, collection, deleteDoc } from "firebase/firestore";
-import AdminSidebar from "../../components/AdminSidebar.jsx";
+import AdminSidebar from "../sidebar/AdminSidebar.jsx";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { MdEdit } from "react-icons/md";
 
@@ -154,7 +154,7 @@ function AdViewGroups() {
           <ul className="text-sm">
             {group.members.map(member => (
               <li key={member.id}>
-                {member.name} {member.lastname}
+                {member.name} {member.lastname} - {member.role}
               </li>
             ))}
           </ul>
@@ -165,11 +165,12 @@ function AdViewGroups() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-center">Edit Group</h2>
+              <h2 className="text-2xl font-bold text-center">Edit Incubatee</h2>
               <div className="flex justify-center">
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
                   className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  title="Delete Group"
                 >
                   <FaRegTrashCan />
                 </button>
@@ -222,7 +223,7 @@ function AdViewGroups() {
               <tbody>
                 {group.members.map(member => (
                   <tr key={member.id}>
-                    <td className="p-2 text-sm">{member.name} {member.lastname}</td>
+                    <td className="p-2 text-sm">{member.name} {member.lastname} - {member.role}</td>
                     <td className="p-2">
                       <button
                         onClick={() => handleRemoveMember(member.id)}

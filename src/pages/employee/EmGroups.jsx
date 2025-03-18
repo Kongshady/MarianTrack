@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
+import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 
 function EmGroups() {
   const [groups, setGroups] = useState([]);
@@ -45,7 +45,7 @@ function EmGroups() {
     <div className="flex">
       <EmployeeSidebar onUserFetched={setUser} />
       <div className="flex flex-col items-start h-screen w-full p-10">
-        <h1 className="text-4xl font-bold mb-5">All Groups</h1>
+        <h1 className="text-4xl font-bold mb-5">Incubatees</h1>
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.length > 0 ? (
             groups.map(group => (

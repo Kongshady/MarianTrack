@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
+import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
 
 function IncuDashboard() {
     useEffect(() => {

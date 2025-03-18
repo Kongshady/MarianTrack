@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
-import EmployeeSidebar from "../../components/EmployeeSidebar.jsx";
+import EmployeeSidebar from "../sidebar/EmployeeSidebar.jsx";
 
 function EmViewGroup() {
   const { groupId } = useParams();
@@ -50,7 +50,9 @@ function EmViewGroup() {
   };
 
   if (!group) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-svh">
+      Loading... Please Wait.
+    </div>;
   }
 
   return (
@@ -64,7 +66,7 @@ function EmViewGroup() {
           <h3 className="font-bold text-sm">Members:</h3>
           <ul className="text-sm">
             {group.members.map(member => (
-              <li key={member.id}>{member.name} {member.lastname}</li>
+              <li key={member.id}>{member.name} {member.lastname} - {member.role}</li>
             ))}
           </ul>
         </div>
@@ -78,7 +80,7 @@ function EmViewGroup() {
           </button>
           {showRequests && (
             <div className="overflow-y-auto h-96 mt-1">
-              <table className="min-w-full bg-white border border-gray-200 text-xs">
+              <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
                     <th className="py-2 px-4 border-b">Responsible Team Member</th>

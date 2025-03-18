@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import AdminSideBar from "../../components/AdminSidebar.jsx";
+import AdminSideBar from "../../components/sidebar/AdminSidebar.jsx";
 
 function AdDashboard() {
     useEffect(() => {

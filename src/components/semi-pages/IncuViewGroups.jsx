@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../../config/marian-config.js";
 import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
-import IncubateeSidebar from "../../components/IncubateeSidebar.jsx";
+import IncubateeSidebar from "../sidebar/IncubateeSidebar.jsx";
 
 function IncuViewGroup() {
   const { groupId } = useParams();
@@ -24,6 +24,7 @@ function IncuViewGroup() {
   });
   const [isEditing, setIsEditing] = useState(false); // State to manage edit mode
   const [currentRequestId, setCurrentRequestId] = useState(null); // State to store the current request ID being edited
+  const [userRole, setUserRole] = useState(""); // State to store the user's role
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -36,6 +37,7 @@ function IncuViewGroup() {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
               const userData = userDoc.data();
+              setUserRole(userData.role); // Set the user's role
               setRequestData((prevData) => ({
                 ...prevData,
                 responsibleTeamMember: `${userData.name} ${userData.lastname}`
@@ -106,7 +108,7 @@ function IncuViewGroup() {
           // Create a notification for the portfolio manager
           await addDoc(collection(db, "notifications"), {
             userId: portfolioManagerId,
-            message: `A new request has been submitted for the group "${groupData.name}".`,
+            message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
             timestamp: serverTimestamp(),
             read: false
           });
@@ -144,7 +146,9 @@ function IncuViewGroup() {
   };
 
   if (!group) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center h-svh">
+      Loading... Please Wait.
+    </div>;
   }
 
   return (
@@ -158,53 +162,55 @@ function IncuViewGroup() {
           <h3 className="font-bold text-sm">Members:</h3>
           <ul className="text-sm">
             {group.members.map(member => (
-              <li key={member.id}>{member.name} {member.lastname}</li>
+              <li key={member.id}>{member.name} {member.lastname} - {member.role}</li>
             ))}
           </ul>
         </div>
-        <div className="flex flex-row gap-2">
-          <button
-            onClick={() => {
-              const user = auth.currentUser;
-              if (user) {
-                const userDoc = getDoc(doc(db, "users", user.uid));
-                userDoc.then((docSnapshot) => {
-                  if (docSnapshot.exists()) {
-                    const userData = docSnapshot.data();
-                    setRequestData({
-                      responsibleTeamMember: `${userData.name} ${userData.lastname}`,
-                      description: "",
-                      technicalRequirement: "",
-                      dateEntry: new Date().toISOString().split("T")[0],
-                      dateNeeded: "",
-                      resourceToolNeeded: "",
-                      prospectResourcePerson: "",
-                      priorityLevel: "low",
-                      remarks: "",
-                      status: "Pending"
-                    });
-                  }
-                });
-              }
-              setIsModalOpen(true);
-              setIsEditing(false);
-            }}
-            className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
-          >
-            Request Needs
-          </button>
-          <button
-            onClick={() => {
-              setIsRequestsTableOpen(!isRequestsTableOpen);
-              if (!isRequestsTableOpen) {
-                fetchRequests();
-              }
-            }}
-            className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
-          >
-            {isRequestsTableOpen ? "Hide My Requests" : "Show My Requests"}
-          </button>
-        </div>
+        {userRole === "Project Manager" && (
+          <div className="flex flex-row gap-2">
+            <button
+              onClick={() => {
+                const user = auth.currentUser;
+                if (user) {
+                  const userDoc = getDoc(doc(db, "users", user.uid));
+                  userDoc.then((docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                      const userData = docSnapshot.data();
+                      setRequestData({
+                        responsibleTeamMember: `${userData.name} ${userData.lastname}`,
+                        description: "",
+                        technicalRequirement: "",
+                        dateEntry: new Date().toISOString().split("T")[0],
+                        dateNeeded: "",
+                        resourceToolNeeded: "",
+                        prospectResourcePerson: "",
+                        priorityLevel: "low",
+                        remarks: "",
+                        status: "Pending"
+                      });
+                    }
+                  });
+                }
+                setIsModalOpen(true);
+                setIsEditing(false);
+              }}
+              className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
+            >
+              Request Needs
+            </button>
+            <button
+              onClick={() => {
+                setIsRequestsTableOpen(!isRequestsTableOpen);
+                if (!isRequestsTableOpen) {
+                  fetchRequests();
+                }
+              }}
+              className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
+            >
+              {isRequestsTableOpen ? "Hide My Requests" : "Show My Requests"}
+            </button>
+          </div>
+        )}
         {isRequestsTableOpen && (
           <div className="overflow-y-auto h-96 mt-2 w-full">
             <table className="min-w-full bg-white border border-gray-200 text-xs">
