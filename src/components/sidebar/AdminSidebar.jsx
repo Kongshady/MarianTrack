@@ -5,7 +5,7 @@ import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications, IoMdSettings } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 import { auth, db } from "../../config/marian-config.js";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
 function AdminSideBar() {
@@ -13,13 +13,17 @@ function AdminSideBar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserData = () => {
       const user = auth.currentUser;
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data());
-        }
+        const userDocRef = doc(db, "users", user.uid);
+        const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            setUserData(docSnapshot.data());
+          }
+        });
+
+        return () => unsubscribe();
       }
     };
 

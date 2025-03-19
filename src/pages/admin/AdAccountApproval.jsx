@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../../config/marian-config.js"; // Firestore connection
-import { collection, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaCheck } from "react-icons/fa";
@@ -25,9 +25,8 @@ function AdminAccountApproval() {
     }, []);
 
     useEffect(() => {
-        // Fetch users with 'pending' and 'approved' status
-        const fetchUsers = async () => {
-            const querySnapshot = await getDocs(collection(db, "users"));
+        // Listen for real-time updates to the users collection
+        const unsubscribeUsers = onSnapshot(collection(db, "users"), (querySnapshot) => {
             const users = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -43,14 +42,14 @@ function AdminAccountApproval() {
 
             setPendingUsers(users.filter(user => user.status === "pending"));
             setApprovedUsers(users.filter(user => user.status === "approved"));
-        };
-        fetchUsers();
+        });
+
+        return () => unsubscribeUsers();
     }, []);
 
     useEffect(() => {
-        // Fetch group information for approved users
-        const fetchGroups = async () => {
-            const groupsSnapshot = await getDocs(collection(db, "groups"));
+        // Listen for real-time updates to the groups collection
+        const unsubscribeGroups = onSnapshot(collection(db, "groups"), (groupsSnapshot) => {
             const groups = groupsSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -62,8 +61,9 @@ function AdminAccountApproval() {
                     return { ...user, groupName: userGroup ? userGroup.name : "No Group" };
                 })
             );
-        };
-        fetchGroups();
+        });
+
+        return () => unsubscribeGroups();
     }, [approvedUsers]);
 
     const handleApproval = async (userId, status) => {
@@ -88,7 +88,7 @@ function AdminAccountApproval() {
 
     const handleRejectUser = async () => {
         if (userToReject) {
-            await updateDoc(doc(db, "users", userToReject.id), { status: "rejected" });
+            await deleteDoc(doc(db, "users", userToReject.id));
             setPendingUsers(pendingUsers.filter(user => user.id !== userToReject.id));
             setIsRejectModalOpen(false);
             setUserToReject(null);
@@ -172,7 +172,6 @@ function AdminAccountApproval() {
                                                     onClick={() => handleApproval(user.id, "approved")}
                                                 >
                                                     <FaCheck />
-
                                                 </button>
                                                 <button
                                                     className="bg-red-500 text-white px-3 py-1 rounded-sm hover:bg-red-600"

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../../config/marian-config.js";
-import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
 import IncubateeSidebar from "../sidebar/IncubateeSidebar.jsx";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 function IncuViewGroup() {
   const { groupId } = useParams();
@@ -10,10 +11,11 @@ function IncuViewGroup() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRequestsTableOpen, setIsRequestsTableOpen] = useState(false); // State to manage requests table visibility
   const [requests, setRequests] = useState([]); // State to store user's requests
+  const [groupMembers, setGroupMembers] = useState([]); // State to store group members
   const [requestData, setRequestData] = useState({
     responsibleTeamMember: "",
+    requestType: "Technical Request", // Default request type
     description: "",
-    technicalRequirement: "",
     dateEntry: new Date().toISOString().split("T")[0],
     dateNeeded: "",
     resourceToolNeeded: "",
@@ -31,17 +33,15 @@ function IncuViewGroup() {
       try {
         const groupDoc = await getDoc(doc(db, "groups", groupId));
         if (groupDoc.exists()) {
-          setGroup({ id: groupDoc.id, ...groupDoc.data() });
+          const groupData = groupDoc.data();
+          setGroup({ id: groupDoc.id, ...groupData });
+          setGroupMembers(groupData.members); // Set group members
           const user = auth.currentUser;
           if (user) {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
               const userData = userDoc.data();
               setUserRole(userData.role); // Set the user's role
-              setRequestData((prevData) => ({
-                ...prevData,
-                responsibleTeamMember: `${userData.name} ${userData.lastname}`
-              }));
             }
           }
         }
@@ -53,23 +53,16 @@ function IncuViewGroup() {
     fetchGroup();
   }, [groupId]);
 
-  const fetchRequests = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const responsibleTeamMember = `${userData.name} ${userData.lastname}`;
-          const q = query(collection(db, "requests"), where("groupId", "==", groupId), where("responsibleTeamMember", "==", responsibleTeamMember));
-          const querySnapshot = await getDocs(q);
-          setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching requests:", error);
+  useEffect(() => {
+    if (isRequestsTableOpen) {
+      const q = query(collection(db, "requests"), where("groupId", "==", groupId));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+
+      return () => unsubscribe();
     }
-  };
+  }, [groupId, isRequestsTableOpen]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -85,11 +78,6 @@ function IncuViewGroup() {
       if (isEditing) {
         // Update the existing request
         await updateDoc(doc(db, "requests", currentRequestId), requestData);
-        setRequests(prevRequests =>
-          prevRequests.map(request =>
-            request.id === currentRequestId ? { ...request, ...requestData } : request
-          )
-        );
         alert("Request updated successfully!");
       } else {
         // Add a new request
@@ -137,7 +125,6 @@ function IncuViewGroup() {
   const handleDeleteRequest = async (requestId) => {
     try {
       await deleteDoc(doc(db, "requests", requestId));
-      setRequests(prevRequests => prevRequests.filter(request => request.id !== requestId));
       alert("Request deleted successfully!");
     } catch (error) {
       console.error("Error deleting request:", error);
@@ -170,27 +157,18 @@ function IncuViewGroup() {
           <div className="flex flex-row gap-2">
             <button
               onClick={() => {
-                const user = auth.currentUser;
-                if (user) {
-                  const userDoc = getDoc(doc(db, "users", user.uid));
-                  userDoc.then((docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                      const userData = docSnapshot.data();
-                      setRequestData({
-                        responsibleTeamMember: `${userData.name} ${userData.lastname}`,
-                        description: "",
-                        technicalRequirement: "",
-                        dateEntry: new Date().toISOString().split("T")[0],
-                        dateNeeded: "",
-                        resourceToolNeeded: "",
-                        prospectResourcePerson: "",
-                        priorityLevel: "low",
-                        remarks: "",
-                        status: "Pending"
-                      });
-                    }
-                  });
-                }
+                setRequestData({
+                  responsibleTeamMember: "",
+                  requestType: "Technical Request", // Default request type
+                  description: "",
+                  dateEntry: new Date().toISOString().split("T")[0],
+                  dateNeeded: "",
+                  resourceToolNeeded: "",
+                  prospectResourcePerson: "",
+                  priorityLevel: "low",
+                  remarks: "",
+                  status: "Pending"
+                });
                 setIsModalOpen(true);
                 setIsEditing(false);
               }}
@@ -199,12 +177,7 @@ function IncuViewGroup() {
               Request Needs
             </button>
             <button
-              onClick={() => {
-                setIsRequestsTableOpen(!isRequestsTableOpen);
-                if (!isRequestsTableOpen) {
-                  fetchRequests();
-                }
-              }}
+              onClick={() => setIsRequestsTableOpen(!isRequestsTableOpen)}
               className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
             >
               {isRequestsTableOpen ? "Hide My Requests" : "Show My Requests"}
@@ -216,7 +189,8 @@ function IncuViewGroup() {
             <table className="min-w-full bg-white border border-gray-200 text-xs">
               <thead className="sticky top-0 bg-secondary-color text-white">
                 <tr>
-                  <th className="py-2 px-4 border-b">Technical Requirement</th>
+                  <th className="py-2 px-4 border-b">Team Member</th>
+                  <th className="py-2 px-4 border-b">Request Type</th>
                   <th className="py-2 px-4 border-b">Date Entry</th>
                   <th className="py-2 px-4 border-b">Date Needed</th>
                   <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
@@ -230,7 +204,8 @@ function IncuViewGroup() {
                 {requests.length > 0 ? (
                   requests.map(request => (
                     <tr key={request.id} className="text-center">
-                      <td className="py-2 px-4 border-b">{request.technicalRequirement}</td>
+                      <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
+                      <td className="py-2 px-4 border-b">{request.requestType}</td>
                       <td className="py-2 px-4 border-b">{new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}</td>
                       <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
                       <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
@@ -242,20 +217,20 @@ function IncuViewGroup() {
                           onClick={() => handleEditRequest(request.id)}
                           className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
                         >
-                          Edit
+                          <FaEdit />
                         </button>
                         <button
                           onClick={() => handleDeleteRequest(request.id)}
                           className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition ml-2"
                         >
-                          Delete
+                          <FaTrash />
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="py-2 px-4 border-b text-center" colSpan="8">No requests found.</td>
+                    <td className="py-2 px-4 border-b text-center" colSpan="9">No requests found.</td>
                   </tr>
                 )}
               </tbody>
@@ -271,14 +246,29 @@ function IncuViewGroup() {
             <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
               <div className="col-span-2">
                 <label className="block text-sm">Responsible Team Member</label>
-                <input
-                  type="text"
+                <select
                   name="responsibleTeamMember"
                   value={requestData.responsibleTeamMember}
                   onChange={handleInputChange}
-                  className="w-full p-2 border text-sm text-gray-400"
-                  readOnly
-                />
+                  className="w-full p-2 border text-sm"
+                >
+                  <option value="">Select Team Member</option>
+                  {groupMembers.map(member => (
+                    <option key={member.id} value={`${member.name} ${member.lastname}`}>{member.name} {member.lastname}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block mb-1 text-sm">Request Type</label>
+                <select
+                  name="requestType"
+                  value={requestData.requestType}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border text-sm"
+                >
+                  <option value="Technical Request">Technical Request</option>
+                  <option value="Expert Request">Expert Request</option>
+                </select>
               </div>
               <div className="col-span-2">
                 <label className="block mb-1 text-sm">Description</label>
@@ -288,16 +278,6 @@ function IncuViewGroup() {
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
                 ></textarea>
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">Technical Requirement</label>
-                <input
-                  type="text"
-                  name="technicalRequirement"
-                  value={requestData.technicalRequirement}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border text-sm"
-                />
               </div>
               <div>
                 <label className="block mb-1 text-sm">Resource/Tool Needed</label>
