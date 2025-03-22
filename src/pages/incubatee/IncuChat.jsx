@@ -13,6 +13,7 @@ function IncuChat() {
     const [currentUserRole, setCurrentUserRole] = useState("");
     const [editingMessage, setEditingMessage] = useState(null);
     const [showOptions, setShowOptions] = useState(null);
+    const [unreadCounts, setUnreadCounts] = useState({});
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -68,10 +69,20 @@ function IncuChat() {
                     id: doc.id,
                     ...doc.data()
                 }));
-                setMessages(messagesList.filter(message =>
+                const filteredMessages = messagesList.filter(message =>
                     (message.senderId === auth.currentUser.uid && message.receiverId === selectedUser.id) ||
                     (message.senderId === selectedUser.id && message.receiverId === auth.currentUser.uid)
-                ));
+                );
+                setMessages(filteredMessages);
+
+                // Mark messages as seen
+                filteredMessages.forEach(async (message) => {
+                    if (message.receiverId === auth.currentUser.uid && !message.seen) {
+                        await updateDoc(doc(db, "messages", message.id), {
+                            seen: true
+                        });
+                    }
+                });
             });
 
             return () => unsubscribe();
@@ -91,6 +102,31 @@ function IncuChat() {
         };
     }, []);
 
+    useEffect(() => {
+        const q = query(
+            collection(db, "messages"),
+            orderBy("timestamp", "asc")
+        );
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const messagesList = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            const unreadCounts = {};
+            messagesList.forEach(message => {
+                if (message.receiverId === auth.currentUser.uid && !message.seen) {
+                    if (!unreadCounts[message.senderId]) {
+                        unreadCounts[message.senderId] = 0;
+                    }
+                    unreadCounts[message.senderId]++;
+                }
+            });
+            setUnreadCounts(unreadCounts);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     const handleSendMessage = async () => {
         if (newMessage.trim() === "") return;
 
@@ -105,7 +141,8 @@ function IncuChat() {
                 senderId: auth.currentUser.uid,
                 receiverId: selectedUser.id,
                 message: newMessage,
-                timestamp: new Date()
+                timestamp: new Date(),
+                seen: false
             });
         }
 
@@ -148,6 +185,8 @@ function IncuChat() {
         return diff > 5; // Disable if more than 5 minutes
     };
 
+    const sortedUsers = [...users].sort((a, b) => (unreadCounts[b.id] || 0) - (unreadCounts[a.id] || 0));
+
     return (
         <div className="flex">
             <IncubateeSidebar />
@@ -157,17 +196,22 @@ function IncuChat() {
                     <div className="w-1/4 border-r">
                         <h2 className="text-md font-semibold p-4 border-b">Users</h2>
                         <ul className="overflow-y-auto h-96">
-                            {users.map(user => (
+                            {sortedUsers.map(user => (
                                 <li
                                     key={user.id}
                                     className={`p-4 cursor-pointer hover:bg-gray-200 ${selectedUser?.id === user.id ? "bg-gray-200" : ""}`}
                                     onClick={() => setSelectedUser(user)}
                                 >
-                                    <div className="flex items-center">
+                                    <div className="flex items-center justify-between">
                                         <div className="flex flex-col">
                                             <span className="text-sm font-bold">{user.name} {user.lastname}</span>
                                             <span className="text-xs text-gray-500">{user.role}</span>
                                         </div>
+                                        {unreadCounts[user.id] > 0 && (
+                                            <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
+                                                {unreadCounts[user.id]}
+                                            </span>
+                                        )}
                                     </div>
                                 </li>
                             ))}
@@ -184,37 +228,41 @@ function IncuChat() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col space-y-1 select-none">
-                                        {messages.map(message => (
-                                            <div
-                                                key={message.id}
-                                                className={`p-2 rounded-md text-sm ${message.senderId === auth.currentUser.uid ? "bg-blue-400 text-white self-end" : "bg-gray-200 self-start"}`}
-                                                title={formatTimestamp(message.timestamp)}
-                                            >
-                                                <div className="flex justify-between items-center">
-                                                    <span>{message.message} {message.edited && <span className="text-xs text-gray-300">(edited)</span>}</span>
-                                                    {message.senderId === auth.currentUser.uid && (
-                                                        <div className="relative flex gap-2 ml-2">
-                                                            <FaEllipsisV className="cursor-pointer" onClick={() => setShowOptions(message.id)} />
-                                                            {showOptions === message.id && (
-                                                                <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-10">
-                                                                    <button
-                                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                                        onClick={() => handleEditMessage(message)}
-                                                                        disabled={isEditDisabled(message.timestamp)}
-                                                                    >
-                                                                        Edit
-                                                                    </button>
-                                                                    <button
-                                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                                        onClick={() => handleDeleteMessage(message.id)}
-                                                                    >
-                                                                        Delete
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
+                                        {messages.map((message, index) => (
+                                            <div key={message.id} className="flex flex-col">
+                                                <div
+                                                    className={`p-2 rounded-md text-sm ${message.senderId === auth.currentUser.uid ? "bg-blue-400 text-white self-end" : "bg-gray-200 self-start"}`}
+                                                    title={formatTimestamp(message.timestamp)}
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span>{message.message} {message.edited && <span className="text-xs text-gray-300">(edited)</span>}</span>
+                                                        {message.senderId === auth.currentUser.uid && (
+                                                            <div className="relative flex gap-2 ml-2">
+                                                                <FaEllipsisV className="cursor-pointer" onClick={() => setShowOptions(message.id)} />
+                                                                {showOptions === message.id && (
+                                                                    <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-10">
+                                                                        <button
+                                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                            onClick={() => handleEditMessage(message)}
+                                                                            disabled={isEditDisabled(message.timestamp)}
+                                                                        >
+                                                                            Edit
+                                                                        </button>
+                                                                        <button
+                                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                            onClick={() => handleDeleteMessage(message.id)}
+                                                                        >
+                                                                            Delete
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                                {message.senderId === auth.currentUser.uid && message.seen && index === messages.length - 1 && (
+                                                    <span className="text-xs text-gray-500 self-end mt-1">Seen</span>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
