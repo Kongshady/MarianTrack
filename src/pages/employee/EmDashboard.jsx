@@ -11,6 +11,7 @@ function EmDashboard(){
         <EmployeeSidebar />
         <div className="flex flex-col items-center justify-center h-screen w-full">
             <h1 className="text-4xl font-bold">Employee Dashboard</h1>
+            <p>Summary of all incubatees</p>
         </div>
     </div>
     );

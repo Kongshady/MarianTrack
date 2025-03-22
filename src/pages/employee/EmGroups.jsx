@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 
 function EmGroups() {
@@ -14,6 +14,7 @@ function EmGroups() {
   }, []);
 
   useEffect(() => {
+    let unsubscribe;
     const fetchGroups = async () => {
       try {
         let q;
@@ -24,8 +25,9 @@ function EmGroups() {
         }
 
         if (q) {
-          const querySnapshot = await getDocs(q);
-          setGroups(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          unsubscribe = onSnapshot(q, (querySnapshot) => {
+            setGroups(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          });
         }
       } catch (error) {
         console.error("Error fetching user groups:", error);
@@ -35,6 +37,12 @@ function EmGroups() {
     if (user) {
       fetchGroups();
     }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user]);
 
   const handleViewGroup = (groupId) => {
@@ -55,16 +63,18 @@ function EmGroups() {
                 {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
                 <div className="mt-2">
                   <h3 className="font-bold text-sm">Members:</h3>
-                  <div className="flex flex-row text-xs">
+                  <div className="flex flex-col justify-start text-xs">
                     <ul className="flex-1">
                       {group.members.map(member => (
                         <li key={member.id}>{member.name} {member.lastname}</li>
                       ))}
                     </ul>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-sm">Assigned PM:</h3>
-                      <p>{group.portfolioManager.name} {group.portfolioManager.lastname}</p>
-                    </div>
+                    {group.portfolioManager.id !== user.id && (
+                      <div className="flex-1 mt-2">
+                        <h3 className="font-bold text-sm">Assigned PM:</h3>
+                        <p>{group.portfolioManager.name} {group.portfolioManager.lastname}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <button

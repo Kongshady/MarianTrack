@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
-import { IoMdNotifications, IoMdSettings } from "react-icons/io";
+import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 import { auth, db } from "../../config/marian-config.js";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -63,7 +63,6 @@ function AdminSideBar() {
           <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="User Management" />
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" />
-          <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
           <li>
             <button
               onClick={handleLogout}

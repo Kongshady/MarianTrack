@@ -11,6 +11,7 @@ function EmProgress() {
       <EmployeeSidebar />
       <div className="flex flex-col items-center justify-center h-screen w-full">
         <h1 className="text-4xl font-bold">Employee Progress</h1>
+        <p>Displays all incubatees progress</p>
       </div>
     </div>
   );

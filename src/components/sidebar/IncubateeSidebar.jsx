@@ -5,10 +5,10 @@ import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/fire
 import { signOut } from "firebase/auth";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdEdit } from "react-icons/md";
-import { IoMdNotifications, IoMdSettings } from "react-icons/io";
+import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 
-function IncubateeSidebar({ onUserFetched }) {
+function IncubateeSidebar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -111,7 +111,6 @@ function IncubateeSidebar({ onUserFetched }) {
           <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="My Group" />
           <MenuItem to={"/incubatee-notification"} icon={<IoMdNotifications />} text="Notifications" />
           <MenuItem to={"/incubatee-chat"} icon={<IoChatbox />} text="Chats" unreadCount={unreadMessagesCount} />
-          <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
           <li>
             <button
               onClick={handleLogout}

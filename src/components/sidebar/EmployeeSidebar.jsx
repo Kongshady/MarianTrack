@@ -5,10 +5,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
-import { IoMdNotifications, IoMdSettings } from "react-icons/io";
+import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 
-function EmSideBar({ onUserFetched }) {
+function EmSideBar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
   const navigate = useNavigate();
@@ -86,7 +86,6 @@ function EmSideBar({ onUserFetched }) {
           <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" />
-          <MenuItem to={""} icon={<IoMdSettings />} text="Settings" />
           <li>
             <button
               onClick={handleLogout}
