@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { db, storage } from "../../config/marian-config.js";
 import { collection, addDoc, getDocs, serverTimestamp, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
-import { IoAddOutline } from "react-icons/io5";
+import { IoAddOutline, IoArchiveOutline } from "react-icons/io5";
 import { FaPlus } from "react-icons/fa";
+import EditGroupModal from "../../components/modals/EditGroupModal.jsx";
 
 function AdGroups() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -55,7 +56,7 @@ function AdGroups() {
         setAvailableSystemAnalysts(availableUsers.filter(user => user.role === "System Analyst"));
         setAvailableDevelopers(availableUsers.filter(user => user.role === "Developer"));
         setAvailableAdditionalMembers(availableUsers.filter(user => !["TBI Manager", "TBI Assistant", "Portfolio Manager"].includes(user.role)));
-        setGroups(groups.map(group => ({
+        setGroups(groups.filter(group => !group.archived).map(group => ({
           ...group,
           portfolioManagerDetails: users.find(user => user.id === group.portfolioManager)
         })));
@@ -117,9 +118,10 @@ function AdGroups() {
       // Create a notification for the portfolio manager
       await addDoc(collection(db, "notifications"), {
         userId: portfolioManager,
-        message: `You have been assigned as the portfolio manager for the group "${groupName}".`,
+        message: `Heads up! You’ve been chosen as the Portfolio Manager for <b>${groupName}</b>. Your leadership starts now!`,
         timestamp: serverTimestamp(),
-        read: false
+        read: false,
+        groupId: groupDocRef.id // Add groupId to the notification
       });
 
       setGroupName("");
@@ -136,7 +138,7 @@ function AdGroups() {
       // Fetch the updated list of groups
       const querySnapshot = await getDocs(collection(db, "groups"));
       const groupsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setGroups(groupsData);
+      setGroups(groupsData.filter(group => !group.archived));
 
       // Navigate to the newly created group's details page
       navigate(`/admin/view-group/${groupDocRef.id}`);
@@ -150,37 +152,52 @@ function AdGroups() {
     navigate(`/admin/view-group/${groupId}`);
   };
 
+  const handleNavigateToArchives = () => {
+    navigate("/admin-groups/archives");
+  };
+
+  const handleArchiveGroup = (groupId) => {
+    setGroups(groups.filter(group => group.id !== groupId));
+  };
+
   return (
     <div className="flex">
       <AdminSidebar />
       <div className="flex flex-col items-start h-screen w-full overflow-x-auto p-10">
         <div className="flex flex-row justify-between items-center w-full">
           <h1 className="text-4xl font-bold mb-5">Incubatees</h1>
-          <button
-            onClick={() => setIsPopupOpen(true)}
-            className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition-all flex items-center justify-center gap-1"
-          >
-            <IoAddOutline className="text-xl" />
-            Create New Group
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsPopupOpen(true)}
+              className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition-all flex items-center justify-center gap-1"
+            >
+              <IoAddOutline className="text-xl" />
+              Create New Group
+            </button>
+            <button
+              onClick={handleNavigateToArchives}
+              className="bg-primary-color text-white p-2 rounded-sm text-sm hover:bg-opacity-80 transition-all flex items-center justify-center"
+              title="View Archives"
+            >
+              <IoArchiveOutline className="text-xl" />
+            </button>
+          </div>
         </div>
 
         {/* Displays The Created Groups */}
         <div className="mt-5 w-full overflow-y-auto">
           <ul className="border">
             {groups.map(group => (
-              <li key={group.id} className="bg-white p-4 shadow flex justify-between items-center">
-                <div>
-                  <h2 className="text-sm font-bold">{group.name}</h2>
-                  <p className="text-xs">{group.description}</p>
-                </div>
-                <button
-                  onClick={() => handleViewGroup(group.id)}
-                  className="bg-primary-color text-white p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
-                >
-                  Group Details
-                </button>
-              </li>
+              <div key={group.id} className="relative">
+                <Link to={`/admin/view-group/${group.id}`}>
+                  <li className="bg-white p-4 shadow flex justify-between items-center cursor-pointer hover:bg-gray-100 transition">
+                    <div>
+                      <h2 className="text-sm font-bold">{group.name}</h2>
+                      <p className="text-xs">{group.description}</p>
+                    </div>
+                  </li>
+                </Link>
+              </div>
             ))}
           </ul>
         </div>
@@ -190,9 +207,6 @@ function AdGroups() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-sm text-sm shadow-lg transform scale-95 transition-all animate-fade-in w-[500px]">
             <h2 className="text-xl font-bold mb-4 text-center">Create a Group</h2>
-
-            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-
             <label className="block mb-3 cursor-pointer text-center border border-gray-400 p-3 rounded-sm">
               <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               {image ? "Image Selected" : "Click to upload Image"}
@@ -247,6 +261,8 @@ function AdGroups() {
               </select>
             )}
 
+            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+            
             <div className="flex justify-between mt-4">
               <button onClick={() => setIsPopupOpen(false)} className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
               <button onClick={handleCreateGroup} className="px-4 py-2 bg-primary-color text-white rounded-lg hover:bg-opacity-80 transition">Create Group</button>

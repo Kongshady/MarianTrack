@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, where, getDoc, getDocs } from "firebase/firestore";
 import { db, auth } from "../../config/marian-config.js";
 import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 import { FaEllipsisV } from "react-icons/fa";
@@ -17,36 +17,41 @@ function EmChat() {
     useEffect(() => {
         document.title = "Employee | Chats"; // Set the page title
 
-        const unsubscribeUsers = onSnapshot(collection(db, "users"), (usersSnapshot) => {
-            const usersList = usersSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+        const fetchUsersAndGroups = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const userData = userDoc.data();
 
-            const unsubscribeGroups = onSnapshot(collection(db, "groups"), (groupsSnapshot) => {
-                const groupsList = groupsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                if (userData.role === "Portfolio Manager") {
+                    const groupsQuery = query(collection(db, "groups"), where("portfolioManager.id", "==", user.uid));
+                    const groupsSnapshot = await getDocs(groupsQuery);
+                    const groupsList = groupsSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
 
-                const filteredUsers = usersList.filter(user => 
-                    user.id !== auth.currentUser.uid && 
-                    ["Project Manager", "TBI Manager", "TBI Assistant"].includes(user.role)
-                ).map(user => {
-                    const userGroup = groupsList.find(group => 
-                        group.members.some(member => member.email === user.email) ||
-                        group.portfolioManager.email === user.email
-                    );
-                    return { ...user, groupName: userGroup ? userGroup.name : "No Group" };
-                });
+                    const projectManagers = [];
+                    for (const group of groupsList) {
+                        const projectManager = group.members.find(member => member.role === "Project Manager");
+                        if (projectManager) {
+                            projectManagers.push({ ...projectManager, groupName: group.name });
+                        }
+                    }
 
-                setUsers(filteredUsers);
-            });
+                    const tbiQuery = query(collection(db, "users"), where("role", "in", ["TBI Manager", "TBI Assistant"]));
+                    const tbiSnapshot = await getDocs(tbiQuery);
+                    const tbiUsers = tbiSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
 
-            return () => unsubscribeGroups();
-        });
+                    setUsers([...projectManagers, ...tbiUsers]);
+                }
+            }
+        };
 
-        return () => unsubscribeUsers();
+        fetchUsersAndGroups();
     }, []);
 
     useEffect(() => {
@@ -185,7 +190,7 @@ function EmChat() {
                 <h1 className="text-4xl font-bold mb-6">Chat</h1>
                 <div className="flex w-full max-w-7xl h-svh bg-white rounded-lg shadow-lg overflow-hidden">
                     <div className="w-1/4 border-r">
-                        <h2 className="text-md font-semibold p-4 border-b">Users</h2>
+                        <h2 className="text-md font-semibold p-4 border-b">Chat Users</h2>
                         <ul className="overflow-y-auto h-96">
                             {sortedUsers.map(user => (
                                 <li
@@ -197,7 +202,7 @@ function EmChat() {
                                         <div className="flex flex-col">
                                             <span className="font-bold text-sm">{user.name} {user.lastname}</span>
                                             <span className="text-xs text-gray-500">{user.role}</span>
-                                            <span className="text-xs text-gray-400">{user.groupName}</span>
+                                            {user.groupName && <span className="text-xs text-gray-400">{user.groupName}</span>}
                                         </div>
                                         {unreadCounts[user.id] > 0 && (
                                             <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
@@ -217,7 +222,7 @@ function EmChat() {
                                         <div className="flex flex-col">
                                             <h2 className="text-md font-semibold">{selectedUser.name} {selectedUser.lastname}</h2>
                                             <span className="text-xs text-gray-500">{selectedUser.role}</span>
-                                            <span className="text-xs text-gray-400">{selectedUser.groupName}</span>
+                                            {selectedUser.groupName && <span className="text-xs text-gray-400">{selectedUser.groupName}</span>}
                                         </div>
                                     </div>
                                     <div className="flex flex-col space-y-1">

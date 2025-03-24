@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, getDocs, collection, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove, collection, deleteDoc, query, where, onSnapshot, getDoc } from "firebase/firestore";
 import AdminSidebar from "../sidebar/AdminSidebar.jsx";
-import { FaRegTrashCan } from "react-icons/fa6";
+import EditGroupModal from "../modals/EditGroupModal.jsx";
+import DeleteGroupModal from "../modals/DeleteGroupModal.jsx";
 import { MdEdit } from "react-icons/md";
 
 function AdViewGroups() {
@@ -17,59 +18,92 @@ function AdViewGroups() {
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
   const [agreeToDelete, setAgreeToDelete] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [showRequests, setShowRequests] = useState(false);
+  const [portfolioManager, setPortfolioManager] = useState(null);
 
   useEffect(() => {
-    const fetchGroup = async () => {
-      try {
-        const groupDoc = await getDoc(doc(db, "groups", groupId));
-        if (groupDoc.exists()) {
-          const groupData = groupDoc.data();
-          setGroup({ id: groupDoc.id, ...groupData });
+    const fetchGroup = () => {
+      const groupDocRef = doc(db, "groups", groupId);
+      const unsubscribeGroup = onSnapshot(groupDocRef, (doc) => {
+        if (doc.exists()) {
+          const groupData = doc.data();
+          setGroup({ id: doc.id, ...groupData });
           setGroupName(groupData.name);
           setDescription(groupData.description);
-        }
-      } catch (error) {
-        console.error("Error fetching group:", error);
-      }
-    };
 
-    const fetchAvailableUsers = async () => {
-      try {
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const groupsSnapshot = await getDocs(collection(db, "groups"));
-
-        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const groups = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const assignedUserIds = new Set();
-        groups.forEach(group => {
-          if (group.members) {
-            group.members.forEach(member => assignedUserIds.add(member.id));
+          // Fetch portfolio manager details
+          if (groupData.portfolioManager) {
+            const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id);
+            onSnapshot(portfolioManagerDocRef, (portfolioManagerDoc) => {
+              if (portfolioManagerDoc.exists()) {
+                setPortfolioManager(portfolioManagerDoc.data());
+              }
+            });
           }
-        });
+        }
+      });
 
-        const availableUsers = users.filter(user =>
-          user.status === "approved" &&
-          !assignedUserIds.has(user.id) &&
-          user.role !== "TBI Manager" &&
-          user.role !== "TBI Assistant" &&
-          user.role !== "Portfolio Manager"
-        );
-        setAvailableUsers(availableUsers);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+      return unsubscribeGroup;
     };
 
-    fetchGroup();
-    fetchAvailableUsers();
+    const fetchAvailableUsers = () => {
+      const usersCollectionRef = collection(db, "users");
+      const groupsCollectionRef = collection(db, "groups");
+
+      const unsubscribeUsers = onSnapshot(usersCollectionRef, (usersSnapshot) => {
+        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        onSnapshot(groupsCollectionRef, (groupsSnapshot) => {
+          const groups = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+          const assignedUserIds = new Set();
+          groups.forEach(group => {
+            if (group.members) {
+              group.members.forEach(member => assignedUserIds.add(member.id));
+            }
+          });
+
+          const availableUsers = users.filter(user =>
+            user.status === "approved" &&
+            !assignedUserIds.has(user.id) &&
+            user.role !== "TBI Manager" &&
+            user.role !== "TBI Assistant" &&
+            user.role !== "Portfolio Manager"
+          );
+          setAvailableUsers(availableUsers);
+        });
+      });
+
+      return unsubscribeUsers;
+    };
+
+    const fetchRequests = () => {
+      const q = query(collection(db, "requests"), where("groupId", "==", groupId));
+      const unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
+        setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+
+      return unsubscribeRequests;
+    };
+
+    const unsubscribeGroup = fetchGroup();
+    const unsubscribeUsers = fetchAvailableUsers();
+    const unsubscribeRequests = fetchRequests();
+
+    return () => {
+      unsubscribeGroup();
+      unsubscribeUsers();
+      unsubscribeRequests();
+    };
   }, [groupId]);
 
   const handleAddMember = async () => {
     if (!selectedUser) return;
 
     try {
-      const userDoc = await getDoc(doc(db, "users", selectedUser));
+      const userDocRef = doc(db, "users", selectedUser);
+      const userDoc = await getDoc(userDocRef);
       const userData = { id: selectedUser, ...userDoc.data() };
 
       await updateDoc(doc(db, "groups", groupId), {
@@ -158,135 +192,97 @@ function AdViewGroups() {
               </li>
             ))}
           </ul>
+          {portfolioManager && (
+            <div className="mt-2">
+              <h3 className="font-bold text-sm">Portfolio Manager:</h3>
+              <p className="text-sm">{portfolioManager.name} {portfolioManager.lastname}</p>
+            </div>
+          )}
+        </div>
+        <div className="mt-6 w-full">
+          <h3 className="text-2xl font-bold mb-1 text-md">Requests</h3>
+          <div className="relative inline-block">
+            <button
+              onClick={() => setShowRequests(!showRequests)}
+              className="bg-primary-color text-white px-4 p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
+            >
+              {showRequests ? "Hide Requests" : "Show Requests"}
+            </button>
+            {requests.length > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                {requests.length}
+              </span>
+            )}
+          </div>
+          {showRequests && (
+            <div className="overflow-y-auto h-96 mt-1">
+              <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
+                <thead className="sticky top-0 bg-primary-color text-white">
+                  <tr>
+                    <th className="py-2 px-4 border-b">Responsible Team Member</th>
+                    <th className="py-2 px-4 border-b">Description</th>
+                    <th className="py-2 px-4 border-b">Technical Requirement</th>
+                    <th className="py-2 px-4 border-b">Date Entry</th>
+                    <th className="py-2 px-4 border-b">Date Needed</th>
+                    <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
+                    <th className="py-2 px-4 border-b">Prospect Resource Person</th>
+                    <th className="py-2 px-4 border-b">Priority Level</th>
+                    <th className="py-2 px-4 border-b">Remarks</th>
+                    <th className="py-2 px-4 border-b">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.length > 0 ? (
+                    requests.map(request => (
+                      <tr key={request.id}>
+                        <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
+                        <td className="py-2 px-4 border-b">{request.description}</td>
+                        <td className="py-2 px-4 border-b">{request.technicalRequirement}</td>
+                        <td className="py-2 px-4 border-b">{request.dateEntry ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString() : "N/A"}</td>
+                        <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
+                        <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
+                        <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
+                        <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
+                        <td className="py-2 px-4 border-b">{request.remarks}</td>
+                        <td className="py-2 px-4 border-b">{request.status}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="py-2 px-4 border-b text-center" colSpan="10">No requests found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
-      {isEditModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-center">Edit Incubatee</h2>
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                  title="Delete Group"
-                >
-                  <FaRegTrashCan />
-                </button>
-              </div>
-            </div>
+      <EditGroupModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onDelete={() => setIsDeleteModalOpen(true)}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        description={description}
+        setDescription={setDescription}
+        availableUsers={availableUsers}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        handleAddMember={handleAddMember}
+        handleRemoveMember={handleRemoveMember}
+        handleUpdateGroup={handleUpdateGroup}
+        group={group}
+      />
 
-            <div className="mb-2">
-              <label className="block text-sm">Group Name</label>
-              <input
-                type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="w-full p-2 border rounded text-sm"
-              />
-            </div>
-            <div className="mb-2">
-              <label className="block text-sm">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded text-sm"
-              ></textarea>
-            </div>
-            <h3 className="text-lg font-bold">Members</h3>
-            <div className="flex items-center mb-2 gap-2">
-              <select
-                value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-                className="w-full p-2 border rounded text-sm"
-              >
-                <option value="">Select Available Members</option>
-                {availableUsers.map(user => (
-                  <option key={user.id} value={user.id}>{user.name} {user.lastname}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleAddMember}
-                className="bg-primary-color text-white text-xs p-1 rounded-sm hover:bg-opacity-80 transition"
-              >
-                Add Member
-              </button>
-            </div>
-            <table className="min-w-full bg-white text-center">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Members</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.members.map(member => (
-                  <tr key={member.id}>
-                    <td className="p-2 text-sm">{member.name} {member.lastname} - {member.role}</td>
-                    <td className="p-2">
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="bg-red-500 text-white p-1 px-2 rounded-sm text-sm hover:bg-red-600 transition"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex justify-center gap-3 mt-4">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-3 px-6 bg-gray-500 text-white text-sm rounded-sm hover:bg-gray-600 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateGroup}
-                className="p-3 px-6 bg-primary-color text-white text-sm rounded-sm hover:bg-opacity-80 transition"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px]">
-            <h2 className="text-xl font-bold mb-4 text-center">Delete Group</h2>
-            <p className="mb-4 text-start">Are you sure you want to delete this group? This action cannot be undone.</p>
-            <div className="mb-4 flex items-center justify-start">
-              <input
-                type="checkbox"
-                id="agreeToDelete"
-                checked={agreeToDelete}
-                onChange={(e) => setAgreeToDelete(e.target.checked)}
-                className="mr-2"
-              />
-              <label htmlFor="agreeToDelete">I agree</label>
-            </div>
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteGroup}
-                disabled={!agreeToDelete}
-                className={`px-4 py-2 rounded-lg transition ${agreeToDelete ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteGroupModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDelete={handleDeleteGroup}
+        agreeToDelete={agreeToDelete}
+        setAgreeToDelete={setAgreeToDelete}
+      />
     </div>
   );
 }

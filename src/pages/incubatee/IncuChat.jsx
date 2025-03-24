@@ -194,7 +194,7 @@ function IncuChat() {
                 <h1 className="text-4xl font-bold mb-6">Chats</h1>
                 <div className="flex w-full max-w-7xl h-svh bg-white rounded-sm shadow-lg overflow-hidden">
                     <div className="w-1/4 border-r">
-                        <h2 className="text-md font-semibold p-4 border-b">Users</h2>
+                        <h2 className="text-md font-semibold p-4 border-b">Chat Members</h2>
                         <ul className="overflow-y-auto h-96">
                             {sortedUsers.map(user => (
                                 <li

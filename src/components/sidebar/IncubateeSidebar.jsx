@@ -62,7 +62,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
       const q = query(
         collection(db, "messages"),
         where("receiverId", "==", userId),
-        where("read", "==", false)
+        where("seen", "==", false)
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         setUnreadMessagesCount(querySnapshot.size);
@@ -108,7 +108,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
       <nav className="mt-6">
         <ul className="space-y-1">
           <MenuItem to={"/incubatee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
-          <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="My Group" />
+          <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="MyGroup" />
           <MenuItem to={"/incubatee-notification"} icon={<IoMdNotifications />} text="Notifications" />
           <MenuItem to={"/incubatee-chat"} icon={<IoChatbox />} text="Chats" unreadCount={unreadMessagesCount} />
           <li>

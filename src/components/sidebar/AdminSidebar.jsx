@@ -5,11 +5,12 @@ import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 import { auth, db } from "../../config/marian-config.js";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
 function AdminSideBar() {
   const [userData, setUserData] = useState(null);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,12 +20,27 @@ function AdminSideBar() {
         const userDocRef = doc(db, "users", user.uid);
         const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
           if (docSnapshot.exists()) {
-            setUserData(docSnapshot.data());
+            const data = docSnapshot.data();
+            setUserData(data);
+            fetchUnreadMessagesCount(data.id);
           }
         });
 
         return () => unsubscribe();
       }
+    };
+
+    const fetchUnreadMessagesCount = (userId) => {
+      const q = query(
+        collection(db, "messages"),
+        where("receiverId", "==", userId),
+        where("seen", "==", false)
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setUnreadMessagesCount(querySnapshot.size);
+      });
+
+      return unsubscribe;
     };
 
     fetchUserData();
@@ -59,10 +75,10 @@ function AdminSideBar() {
         <ul className="space-y-1">
           <MenuItem to={"/admin-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
-          <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
-          <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="User Management" />
+          <MenuItem to={"/admin-progress"} icon={<GiProgression />}text="Progress" />
+          <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="UserManagement" />
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
-          <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" />
+          <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" unreadCount={unreadMessagesCount} />
           <li>
             <button
               onClick={handleLogout}
@@ -81,13 +97,18 @@ function AdminSideBar() {
 }
 
 /* Reusable Menu Item Component */
-function MenuItem({ to, icon, text }) {
+function MenuItem({ to, icon, text, unreadCount }) {
   return (
     <li>
       <Link to={to} className="flex items-center gap-4 p-4 hover:bg-white hover:text-primary-color cursor-pointer transition-all text-white">
         <span className="text-2xl">{icon}</span>
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center">
           {text}
+          {unreadCount > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
         </span>
       </Link>
     </li>

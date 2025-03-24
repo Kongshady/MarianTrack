@@ -20,6 +20,8 @@ function EmNotification() {
           const q = query(collection(db, "notifications"), where("userId", "==", user.uid));
           const querySnapshot = await getDocs(q);
           const notificationsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          // Sort notifications by timestamp in descending order
+          notificationsData.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
           setNotifications(notificationsData);
         }
       } catch (error) {
@@ -127,7 +129,20 @@ function EmNotification() {
           <ul className="w-full">
             {notifications.map(notification => (
               <li key={notification.id} className={`p-2 border rounded-sm flex flex-row items-center justify-between ${notification.read ? 'bg-gray-200' : 'bg-white'} relative`}>
-                <p className="text-sm">{notification.message}</p>
+                <div>
+                  <p className="text-sm">{notification.message}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(notification.timestamp.seconds * 1000).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}, {new Date(notification.timestamp.seconds * 1000).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: 'numeric',
+                      hour12: true
+                    })}
+                  </p>
+                </div>
                 <div className="relative">
                   <button className="text-blue-500 hover:underline group p-2">
                     <HiDotsVertical />

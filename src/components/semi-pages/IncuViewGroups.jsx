@@ -206,7 +206,7 @@ function IncuViewGroup() {
                     <tr key={request.id} className="text-center">
                       <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
                       <td className="py-2 px-4 border-b">{request.requestType}</td>
-                      <td className="py-2 px-4 border-b">{new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}</td>
+                      <td className="py-2 px-4 border-b">{request.dateEntry ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString() : "N/A"}</td>
                       <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
                       <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
                       <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>

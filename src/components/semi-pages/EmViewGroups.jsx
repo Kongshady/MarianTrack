@@ -72,20 +72,27 @@ function EmViewGroup() {
         </div>
         <div className="mt-6 w-full">
           <h3 className="text-2xl font-bold mb-1 text-md">Requests</h3>
-          <button
-            onClick={() => setShowRequests(!showRequests)}
-            className="bg-primary-color text-white px-4 p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
-          >
-            {showRequests ? "Hide Requests" : "Show Requests"}
-          </button>
+          <div className="relative inline-block">
+            <button
+              onClick={() => setShowRequests(!showRequests)}
+              className="bg-primary-color text-white px-4 p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
+            >
+              {showRequests ? "Hide Requests" : "Show Requests"}
+            </button>
+            {requests.length > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                {requests.length}
+              </span>
+            )}
+          </div>
           {showRequests && (
             <div className="overflow-y-auto h-96 mt-1">
               <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
                     <th className="py-2 px-4 border-b">Responsible Team Member</th>
+                    <th className="py-2 px-4 border-b">Request Type</th>
                     <th className="py-2 px-4 border-b">Description</th>
-                    <th className="py-2 px-4 border-b">Technical Requirement</th>
                     <th className="py-2 px-4 border-b">Date Entry</th>
                     <th className="py-2 px-4 border-b">Date Needed</th>
                     <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
@@ -100,8 +107,8 @@ function EmViewGroup() {
                     requests.map(request => (
                       <tr key={request.id}>
                         <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
+                        <td className="py-2 px-4 border-b">{request.requestType}</td>
                         <td className="py-2 px-4 border-b">{request.description}</td>
-                        <td className="py-2 px-4 border-b">{request.technicalRequirement}</td>
                         <td className="py-2 px-4 border-b">{new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}</td>
                         <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
                         <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>

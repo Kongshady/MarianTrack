@@ -37,6 +37,7 @@ import AdProgress from "../pages/admin/AdProgress.jsx";
 import AdAccApproval from "../pages/admin/AdAccountApproval.jsx";
 import AdViewGroups from "../components/semi-pages/AdViewGroups.jsx";
 import AdEditProfile from "../components/edit-profile/AdEditProfile.jsx";
+import AdArchives from "../pages/admin/AdArchives.jsx";
 
 
 function AppRoutes() {
@@ -224,6 +225,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
             <AdEditProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin-groups/archives"
+        element={
+          <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
+            <AdArchives />
           </ProtectedRoute>
         }
       />
