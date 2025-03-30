@@ -7,6 +7,7 @@ import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
+import MarianLogo from "../../assets/images/MarianLogoWtext.png"; // Import the logo image
 
 function EmSideBar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
@@ -108,13 +109,17 @@ function EmSideBar({ onUserFetched = () => {} }) {
 
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
+      {/* Logo Section */}
       <div className="flex gap-3 p-3 items-center">
-        <GiHamburgerMenu className="text-5xl text-white" />
+        {/* Add the MarianLogo image */}
+        <img src={MarianLogo} alt="Marian Logo" className="w-10 h-10 bg-white rounded-sm" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
           <h1 className="text-base font-bold">{userName}</h1>
           <p className="text-sm">{userRole}</p>
         </div>
       </div>
+
+      {/* Navigation Menu */}
       <nav className="mt-6">
         <ul className="space-y-1">
           <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />

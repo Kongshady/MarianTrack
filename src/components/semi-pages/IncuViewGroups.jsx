@@ -1,20 +1,34 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../../config/marian-config.js";
-import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+  query,
+  where,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import IncubateeSidebar from "../sidebar/IncubateeSidebar.jsx";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import RequestsTable from "../modals/RequestsTable.jsx";
+import WorkplanTable from "../modals/WorkplanTable.jsx";
 
 function IncuViewGroup() {
   const { groupId } = useParams();
   const [group, setGroup] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRequestsTableOpen, setIsRequestsTableOpen] = useState(false); // State to manage requests table visibility
-  const [requests, setRequests] = useState([]); // State to store user's requests
-  const [groupMembers, setGroupMembers] = useState([]); // State to store group members
+  const [isRequestsTableOpen, setIsRequestsTableOpen] = useState(false);
+  const [isWorkplanTableOpen, setIsWorkplanTableOpen] = useState(true);
+  const [requests, setRequests] = useState([]);
+  const [workplan, setWorkplan] = useState([]);
+  const [groupMembers, setGroupMembers] = useState([]);
   const [requestData, setRequestData] = useState({
     responsibleTeamMember: "",
-    requestType: "Technical Request", // Default request type
+    requestType: "Technical Request",
     description: "",
     dateEntry: new Date().toISOString().split("T")[0],
     dateNeeded: "",
@@ -22,11 +36,11 @@ function IncuViewGroup() {
     prospectResourcePerson: "",
     priorityLevel: "low",
     remarks: "",
-    status: "Pending" // Default status
+    status: "Pending",
   });
-  const [isEditing, setIsEditing] = useState(false); // State to manage edit mode
-  const [currentRequestId, setCurrentRequestId] = useState(null); // State to store the current request ID being edited
-  const [userRole, setUserRole] = useState(""); // State to store the user's role
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState(null);
+  const [userRole, setUserRole] = useState(""); // Add userRole state
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -35,15 +49,7 @@ function IncuViewGroup() {
         if (groupDoc.exists()) {
           const groupData = groupDoc.data();
           setGroup({ id: groupDoc.id, ...groupData });
-          setGroupMembers(groupData.members); // Set group members
-          const user = auth.currentUser;
-          if (user) {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              setUserRole(userData.role); // Set the user's role
-            }
-          }
+          setGroupMembers(groupData.members);
         }
       } catch (error) {
         console.error("Error fetching group:", error);
@@ -54,21 +60,50 @@ function IncuViewGroup() {
   }, [groupId]);
 
   useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setUserRole(userDoc.data().role); // Set the userRole
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
+
+  useEffect(() => {
     if (isRequestsTableOpen) {
       const q = query(collection(db, "requests"), where("groupId", "==", groupId));
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setRequests(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       });
 
       return () => unsubscribe();
     }
   }, [groupId, isRequestsTableOpen]);
 
+  useEffect(() => {
+    if (isWorkplanTableOpen) {
+      const q = query(collection(db, "workplan"), where("groupId", "==", groupId));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setWorkplan(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      });
+
+      return () => unsubscribe();
+    }
+  }, [groupId, isWorkplanTableOpen]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRequestData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -76,29 +111,25 @@ function IncuViewGroup() {
     e.preventDefault();
     try {
       if (isEditing) {
-        // Update the existing request
         await updateDoc(doc(db, "requests", currentRequestId), requestData);
         alert("Request updated successfully!");
       } else {
-        // Add a new request
         await addDoc(collection(db, "requests"), {
           ...requestData,
           dateEntry: serverTimestamp(),
-          groupId
+          groupId,
         });
 
-        // Fetch the group details to get the portfolio manager
         const groupDoc = await getDoc(doc(db, "groups", groupId));
         if (groupDoc.exists()) {
           const groupData = groupDoc.data();
           const portfolioManagerId = groupData.portfolioManager.id;
 
-          // Create a notification for the portfolio manager
           await addDoc(collection(db, "notifications"), {
             userId: portfolioManagerId,
             message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
             timestamp: serverTimestamp(),
-            read: false
+            read: false,
           });
         }
 
@@ -115,7 +146,7 @@ function IncuViewGroup() {
   };
 
   const handleEditRequest = (requestId) => {
-    const requestToEdit = requests.find(request => request.id === requestId);
+    const requestToEdit = requests.find((request) => request.id === requestId);
     setRequestData(requestToEdit);
     setCurrentRequestId(requestId);
     setIsEditing(true);
@@ -133,116 +164,180 @@ function IncuViewGroup() {
   };
 
   if (!group) {
-    return <div className="flex items-center justify-center h-svh">
-      Loading... Please Wait.
-    </div>;
+    return (
+      <div className="flex items-center justify-center h-svh">
+        Loading... Please Wait.
+      </div>
+    );
   }
 
   return (
     <div className="flex">
       <IncubateeSidebar />
       <div className="flex flex-col items-start h-screen w-full p-10">
-        <h1 className="text-4xl font-bold mb-5">{group.name}</h1>
-        <p className="text-sm">{group.description}</p>
-        {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
-        <div className="mt-2">
-          <h3 className="font-bold text-sm">Members:</h3>
-          <ul className="text-sm">
-            {group.members.map(member => (
-              <li key={member.id}>{member.name} {member.lastname} - {member.role}</li>
-            ))}
-          </ul>
-        </div>
-        {userRole === "Project Manager" && (
-          <div className="flex flex-row gap-2">
-            <button
-              onClick={() => {
-                setRequestData({
-                  responsibleTeamMember: "",
-                  requestType: "Technical Request", // Default request type
-                  description: "",
-                  dateEntry: new Date().toISOString().split("T")[0],
-                  dateNeeded: "",
-                  resourceToolNeeded: "",
-                  prospectResourcePerson: "",
-                  priorityLevel: "low",
-                  remarks: "",
-                  status: "Pending"
-                });
-                setIsModalOpen(true);
-                setIsEditing(false);
-              }}
-              className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
-            >
-              Request Needs
-            </button>
-            <button
-              onClick={() => setIsRequestsTableOpen(!isRequestsTableOpen)}
-              className="mt-4 bg-secondary-color text-white px-4 p-2 text-xs rounded-sm hover:bg-opacity-80 transition"
-            >
-              {isRequestsTableOpen ? "Hide My Requests" : "Show My Requests"}
-            </button>
-          </div>
+        <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
+        <p className="text-sm italic">{group.description}</p>
+        {group.imageUrl && (
+          <img
+            src={group.imageUrl}
+            alt={group.name}
+            className="mt-2 w-full h-40 object-cover rounded-lg"
+          />
         )}
-        {isRequestsTableOpen && (
-          <div className="overflow-y-auto h-96 mt-2 w-full">
-            <table className="min-w-full bg-white border border-gray-200 text-xs">
-              <thead className="sticky top-0 bg-secondary-color text-white">
-                <tr>
-                  <th className="py-2 px-4 border-b">Team Member</th>
-                  <th className="py-2 px-4 border-b">Request Type</th>
-                  <th className="py-2 px-4 border-b">Date Entry</th>
-                  <th className="py-2 px-4 border-b">Date Needed</th>
-                  <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
-                  <th className="py-2 px-4 border-b">Prospect Resource Person</th>
-                  <th className="py-2 px-4 border-b">Priority Level</th>
-                  <th className="py-2 px-4 border-b">Status</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.length > 0 ? (
-                  requests.map(request => (
-                    <tr key={request.id} className="text-center">
-                      <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
-                      <td className="py-2 px-4 border-b">{request.requestType}</td>
-                      <td className="py-2 px-4 border-b">{request.dateEntry ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString() : "N/A"}</td>
-                      <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
-                      <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
-                      <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
-                      <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
-                      <td className="py-2 px-4 border-b font-bold text-secondary-color">{request.status}</td>
-                      <td className="py-2 px-4 border-b">
-                        <button
-                          onClick={() => handleEditRequest(request.id)}
-                          className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRequest(request.id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition ml-2"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="py-2 px-4 border-b text-center" colSpan="9">No requests found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <div className="mt-2 flex flex-row items-end justify-between gap-4 w-full">
+          <div>
+            <h3 className="font-bold text-sm">Members:</h3>
+            <ul className="text-sm">
+              {group.members.map((member) => (
+                <li key={member.id}>
+                  {member.name} {member.lastname} - {member.role}
+                </li>
+              ))}
+            </ul>
           </div>
+          {/* Cards for workplan statistics */}
+          <div className="flex justify-end gap-2">
+            {/* Card for total number of tasks */}
+            <div className="bg-blue-500 text-white text-center p-2 rounded-sm shadow-md ">
+              <h3 className="text-xs">No. of Tasks</h3>
+              <p className="text-md font-semibold mt-1">{workplan.length}</p>
+            </div>
+            {/* Card for pending tasks */}
+            <div className="bg-yellow-500 text-white text-center p-2 rounded-sm shadow-md ">
+              <h3 className="text-xs">Pending Tasks</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.filter((task) => task.status === "Pending").length}
+              </p>
+            </div>
+            {/* Card for completed tasks */}
+            <div className="bg-green-500 text-white text-center p-2 rounded-sm shadow-md ">
+              <h3 className="text-xs">Completed Tasks</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.filter((task) => task.status === "Completed").length}
+              </p>
+            </div>
+            {/* Card for overall workplan completion */}
+            <div
+              className={`text-white text-center p-2 rounded-sm shadow-md  ${workplan.length > 0
+                ? Math.round(
+                  (workplan.filter((task) => task.status === "Completed").length /
+                    workplan.length) *
+                  100
+                ) >= 75
+                  ? "bg-green-500"
+                  : Math.round(
+                    (workplan.filter((task) => task.status === "Completed").length /
+                      workplan.length) *
+                    100
+                  ) >= 50
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+                : "bg-gray-500"
+                }`}
+            >
+              <h3 className="text-xs">Total Completion</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.length > 0
+                  ? `${Math.round(
+                    (workplan.filter((task) => task.status === "Completed").length /
+                      workplan.length) *
+                    100
+                  )}%`
+                  : "0%"}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-row-reverse mt-4">
+          <button
+            onClick={() => {
+              setIsRequestsTableOpen(true); // Open Requests Table
+              setIsWorkplanTableOpen(false); // Close Workplan Table
+            }}
+            className={`${isRequestsTableOpen
+                ? "bg-secondary-color text-white"
+                : "bg-white border border-secondary-color"
+              } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+          >
+            Group Requests
+          </button>
+          <button
+            onClick={() => {
+              setIsWorkplanTableOpen(true); // Open Workplan Table
+              setIsRequestsTableOpen(false); // Close Requests Table
+            }}
+            className={`${isWorkplanTableOpen
+                ? "bg-secondary-color text-white"
+                : "bg-white border border-secondary-color"
+              } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+          >
+            Workplan
+          </button>
+        </div>
+        {isRequestsTableOpen && (
+          <RequestsTable
+            requests={requests}
+            handleEditRequest={handleEditRequest}
+            handleDeleteRequest={handleDeleteRequest}
+            openRequestModal={() => {
+              setRequestData({
+                responsibleTeamMember: "",
+                requestType: "Technical Request",
+                description: "",
+                dateEntry: new Date().toISOString().split("T")[0],
+                dateNeeded: "",
+                resourceToolNeeded: "",
+                prospectResourcePerson: "",
+                priorityLevel: "low",
+                remarks: "",
+                status: "Pending",
+              });
+              setIsModalOpen(true);
+              setIsEditing(false);
+            }}
+            userRole={userRole} // Pass the userRole prop
+          />
+        )}
+        {isWorkplanTableOpen && (
+          <WorkplanTable
+            workplan={workplan}
+            groupMembers={groupMembers}
+            handleAddTask={(newTask) => {
+              addDoc(collection(db, "workplan"), {
+                ...newTask,
+                groupId,
+                status: "Pending", // Default status
+              })
+                .then(() => alert("Task added successfully!"))
+                .catch((error) => console.error("Error adding task:", error));
+            }}
+            handleEditTask={(updatedTask) => {
+              const taskDoc = doc(db, "workplan", updatedTask.id);
+              updateDoc(taskDoc, updatedTask)
+                .then(() => alert("Task updated successfully!"))
+                .catch((error) => console.error("Error updating task:", error));
+            }}
+            handleDeleteTask={(taskId) => {
+              const taskDoc = doc(db, "workplan", taskId);
+              deleteDoc(taskDoc)
+                .then(() => alert("Task deleted successfully!"))
+                .catch((error) => console.error("Error deleting task:", error));
+            }}
+            handleUpdateStatus={(taskId, newStatus) => {
+              const taskDoc = doc(db, "workplan", taskId);
+              updateDoc(taskDoc, { status: newStatus })
+                .catch((error) => console.error("Error updating status:", error));
+            }}
+          />
         )}
       </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[550px]">
-            <h2 className="text-xl font-bold mb-4 text-center">{isEditing ? "Edit Request" : "Request Needs"}</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">
+              {isEditing ? "Edit Request" : "Request Needs"}
+            </h2>
             <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
               <div className="col-span-2">
                 <label className="block text-sm">Responsible Team Member</label>
@@ -253,8 +348,13 @@ function IncuViewGroup() {
                   className="w-full p-2 border text-sm"
                 >
                   <option value="">Select Team Member</option>
-                  {groupMembers.map(member => (
-                    <option key={member.id} value={`${member.name} ${member.lastname}`}>{member.name} {member.lastname}</option>
+                  {groupMembers.map((member) => (
+                    <option
+                      key={member.id}
+                      value={`${member.name} ${member.lastname}`}
+                    >
+                      {member.name} {member.lastname}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -366,3 +466,5 @@ function IncuViewGroup() {
 }
 
 export default IncuViewGroup;
+
+// if the user did not complete the task on time the status will be changed to overdue and the user will be notified

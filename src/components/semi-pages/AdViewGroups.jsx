@@ -1,26 +1,20 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, updateDoc, arrayUnion, arrayRemove, collection, deleteDoc, query, where, onSnapshot, getDoc } from "firebase/firestore";
+import { doc, query, where, onSnapshot, collection, updateDoc } from "firebase/firestore";
 import AdminSidebar from "../sidebar/AdminSidebar.jsx";
-import EditGroupModal from "../modals/EditGroupModal.jsx";
-import DeleteGroupModal from "../modals/DeleteGroupModal.jsx";
 import { MdEdit } from "react-icons/md";
+import EditGroupModal from "../modals/EditGroupModal.jsx";
 
 function AdViewGroups() {
   const { groupId } = useParams();
-  const navigate = useNavigate();
   const [group, setGroup] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState("");
-  const [groupName, setGroupName] = useState("");
-  const [description, setDescription] = useState("");
-  const [agreeToDelete, setAgreeToDelete] = useState(false);
   const [requests, setRequests] = useState([]);
-  const [showRequests, setShowRequests] = useState(false);
+  const [workplan, setWorkplan] = useState([]);
+  const [isRequestsTableOpen, setIsRequestsTableOpen] = useState(true);
+  const [isWorkplanTableOpen, setIsWorkplanTableOpen] = useState(false);
   const [portfolioManager, setPortfolioManager] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchGroup = () => {
@@ -29,8 +23,6 @@ function AdViewGroups() {
         if (doc.exists()) {
           const groupData = doc.data();
           setGroup({ id: doc.id, ...groupData });
-          setGroupName(groupData.name);
-          setDescription(groupData.description);
 
           // Fetch portfolio manager details
           if (groupData.portfolioManager) {
@@ -47,37 +39,6 @@ function AdViewGroups() {
       return unsubscribeGroup;
     };
 
-    const fetchAvailableUsers = () => {
-      const usersCollectionRef = collection(db, "users");
-      const groupsCollectionRef = collection(db, "groups");
-
-      const unsubscribeUsers = onSnapshot(usersCollectionRef, (usersSnapshot) => {
-        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        onSnapshot(groupsCollectionRef, (groupsSnapshot) => {
-          const groups = groupsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-          const assignedUserIds = new Set();
-          groups.forEach(group => {
-            if (group.members) {
-              group.members.forEach(member => assignedUserIds.add(member.id));
-            }
-          });
-
-          const availableUsers = users.filter(user =>
-            user.status === "approved" &&
-            !assignedUserIds.has(user.id) &&
-            user.role !== "TBI Manager" &&
-            user.role !== "TBI Assistant" &&
-            user.role !== "Portfolio Manager"
-          );
-          setAvailableUsers(availableUsers);
-        });
-      });
-
-      return unsubscribeUsers;
-    };
-
     const fetchRequests = () => {
       const q = query(collection(db, "requests"), where("groupId", "==", groupId));
       const unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
@@ -87,78 +48,29 @@ function AdViewGroups() {
       return unsubscribeRequests;
     };
 
+    const fetchWorkplan = () => {
+      const q = query(collection(db, "workplan"), where("groupId", "==", groupId));
+      const unsubscribeWorkplan = onSnapshot(q, (querySnapshot) => {
+        setWorkplan(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+
+      return unsubscribeWorkplan;
+    };
+
     const unsubscribeGroup = fetchGroup();
-    const unsubscribeUsers = fetchAvailableUsers();
     const unsubscribeRequests = fetchRequests();
+    const unsubscribeWorkplan = fetchWorkplan();
 
     return () => {
       unsubscribeGroup();
-      unsubscribeUsers();
       unsubscribeRequests();
+      unsubscribeWorkplan();
     };
   }, [groupId]);
 
-  const handleAddMember = async () => {
-    if (!selectedUser) return;
-
-    try {
-      const userDocRef = doc(db, "users", selectedUser);
-      const userDoc = await getDoc(userDocRef);
-      const userData = { id: selectedUser, ...userDoc.data() };
-
-      await updateDoc(doc(db, "groups", groupId), {
-        members: arrayUnion(userData)
-      });
-
-      setGroup(prevGroup => ({
-        ...prevGroup,
-        members: [...prevGroup.members, userData]
-      }));
-
-      setSelectedUser("");
-    } catch (error) {
-      console.error("Error adding member:", error);
-    }
-  };
-
-  const handleRemoveMember = async (memberId) => {
-    try {
-      const memberToRemove = group.members.find(member => member.id === memberId);
-
-      await updateDoc(doc(db, "groups", groupId), {
-        members: arrayRemove(memberToRemove)
-      });
-
-      setGroup(prevGroup => ({
-        ...prevGroup,
-        members: prevGroup.members.filter(member => member.id !== memberId)
-      }));
-    } catch (error) {
-      console.error("Error removing member:", error);
-    }
-  };
-
-  const handleUpdateGroup = async () => {
-    try {
-      await updateDoc(doc(db, "groups", groupId), {
-        name: groupName,
-        description,
-        members: group.members
-      });
-      setIsEditModalOpen(false);
-    } catch (error) {
-      console.error("Error updating group:", error);
-    }
-  };
-
-  const handleDeleteGroup = async () => {
-    try {
-      await deleteDoc(doc(db, "groups", groupId));
-      setIsDeleteModalOpen(false);
-      navigate("/admin-groups");
-    } catch (error) {
-      console.error("Error deleting group:", error);
-    }
+  const handleSaveGroup = async (updatedGroup) => {
+    const groupDocRef = doc(db, "groups", groupId);
+    await updateDoc(groupDocRef, updatedGroup);
   };
 
   if (!group) {
@@ -181,107 +93,243 @@ function AdViewGroups() {
             </button>
           </div>
         </div>
-        <p className="text-sm">{group.description}</p>
+        <p className="text-sm italic">{group.description}</p>
         {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
-        <div className="mt-2">
-          <h3 className="font-bold text-sm">Members:</h3>
-          <ul className="text-sm">
-            {group.members.map(member => (
-              <li key={member.id}>
-                {member.name} {member.lastname} - {member.role}
-              </li>
-            ))}
-          </ul>
-          {portfolioManager && (
-            <div className="mt-2">
-              <h3 className="font-bold text-sm">Portfolio Manager:</h3>
-              <p className="text-sm">{portfolioManager.name} {portfolioManager.lastname}</p>
-            </div>
-          )}
-        </div>
-        <div className="mt-6 w-full">
-          <h3 className="text-2xl font-bold mb-1 text-md">Requests</h3>
-          <div className="relative inline-block">
-            <button
-              onClick={() => setShowRequests(!showRequests)}
-              className="bg-primary-color text-white px-4 p-2 rounded-sm text-xs hover:bg-opacity-80 transition"
-            >
-              {showRequests ? "Hide Requests" : "Show Requests"}
-            </button>
-            {requests.length > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform translate-x-1/2 -translate-y-1/2">
-                {requests.length}
-              </span>
+        <div className="mt-2 flex flex-row justify-between items-start w-full">
+          {/* Members List */}
+          <div>
+            <h3 className="font-bold text-sm">Members:</h3>
+            <ul className="text-sm">
+              {group.members.map(member => (
+                <li key={member.id}>
+                  {member.name} {member.lastname} - {member.role}
+                </li>
+              ))}
+            </ul>
+            {portfolioManager && (
+              <div className="mt-2">
+                <h3 className="font-bold text-sm">Portfolio Manager:</h3>
+                <p className="text-sm">{portfolioManager.name} {portfolioManager.lastname}</p>
+              </div>
             )}
           </div>
-          {showRequests && (
-            <div className="overflow-y-auto h-96 mt-1">
-              <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
-                <thead className="sticky top-0 bg-primary-color text-white">
+
+          {/* Cards for workplan statistics */}
+          <div className="flex gap-2">
+            {/* Card for total number of tasks */}
+            <div className="bg-blue-500 text-white text-center p-2 rounded-sm shadow-md">
+              <h3 className="text-xs">No. of Tasks</h3>
+              <p className="text-md font-semibold mt-1">{workplan.length}</p>
+            </div>
+            {/* Card for pending tasks */}
+            <div className="bg-yellow-500 text-white text-center p-2 rounded-sm shadow-md">
+              <h3 className="text-xs">Pending Tasks</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.filter((task) => task.status === "Pending").length}
+              </p>
+            </div>
+            {/* Card for completed tasks */}
+            <div className="bg-green-500 text-white text-center p-2 rounded-sm shadow-md">
+              <h3 className="text-xs">Completed Tasks</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.filter((task) => task.status === "Completed").length}
+              </p>
+            </div>
+            {/* Card for overall workplan completion */}
+            <div
+              className={`text-white text-center p-2 rounded-sm shadow-md ${workplan.length > 0
+                ? Math.round(
+                  (workplan.filter((task) => task.status === "Completed").length / workplan.length) * 100
+                ) >= 75
+                  ? "bg-green-500"
+                  : Math.round(
+                    (workplan.filter((task) => task.status === "Completed").length / workplan.length) * 100
+                  ) >= 50
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+                : "bg-gray-500"
+                }`}
+            >
+              <h3 className="text-xs">Total Progress Completion</h3>
+              <p className="text-md font-semibold mt-1">
+                {workplan.length > 0
+                  ? `${Math.round(
+                    (workplan.filter((task) => task.status === "Completed").length / workplan.length) * 100
+                  )}%`
+                  : "0%"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Toggle Buttons for Requests and Workplan */}
+        <div className="flex mt-4">
+          <button
+            onClick={() => {
+              setIsRequestsTableOpen(true);
+              setIsWorkplanTableOpen(false);
+            }}
+            className={`${isRequestsTableOpen
+              ? "bg-primary-color text-white"
+              : "bg-white border border-primary-color"
+              } text-primary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+          >
+            Group Requests
+          </button>
+          <button
+            onClick={() => {
+              setIsWorkplanTableOpen(true);
+              setIsRequestsTableOpen(false);
+            }}
+            className={`${isWorkplanTableOpen
+              ? "bg-primary-color text-white"
+              : "bg-white border border-primary-color"
+              } text-primary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+          >
+            Workplan
+          </button>
+        </div>
+
+        {/* Requests Table */}
+        {isRequestsTableOpen && (
+          <div className="overflow-y-auto h-96 mt-3 w-full">
+            <table className="w-full bg-white border border-gray-200 text-xs text-center">
+              <thead className="sticky top-0 bg-primary-color text-white">
+                <tr>
+                  <th className="py-2 px-4 border-b">Responsible Team Member</th>
+                  <th className="py-2 px-4 border-b">Request Type</th>
+                  <th className="py-2 px-4 border-b">Description</th>
+                  <th className="py-2 px-4 border-b">Date Entry</th>
+                  <th className="py-2 px-4 border-b">Date Needed</th>
+                  <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
+                  <th className="py-2 px-4 border-b">Prospect Resource Person</th>
+                  <th className="py-2 px-4 border-b">Priority Level</th>
+                  <th className="py-2 px-4 border-b">Remarks</th>
+                  <th className="py-2 px-4 border-b">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.length > 0 ? (
+                  requests.map(request => (
+                    <tr key={request.id}>
+                      <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
+                      <td className="py-2 px-4 border-b">{request.requestType}</td>
+                      <td className="py-2 px-4 border-b">{request.description}</td>
+                      <td className="py-2 px-4 border-b">
+                        {request.dateEntry
+                          ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : "N/A"}
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        {request.dateNeeded
+                          ? new Date(request.dateNeeded).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : "N/A"}
+                      </td>
+                      <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
+                      <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
+                      <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
+                      <td className="py-2 px-4 border-b">{request.remarks}</td>
+                      <td className="py-2 px-4 border-b">{request.status}</td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <th className="py-2 px-4 border-b">Responsible Team Member</th>
-                    <th className="py-2 px-4 border-b">Description</th>
-                    <th className="py-2 px-4 border-b">Technical Requirement</th>
-                    <th className="py-2 px-4 border-b">Date Entry</th>
-                    <th className="py-2 px-4 border-b">Date Needed</th>
-                    <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
-                    <th className="py-2 px-4 border-b">Prospect Resource Person</th>
-                    <th className="py-2 px-4 border-b">Priority Level</th>
-                    <th className="py-2 px-4 border-b">Remarks</th>
-                    <th className="py-2 px-4 border-b">Status</th>
+                    <td className="py-2 px-4 border-b text-center" colSpan="10">
+                      No requests found.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {requests.length > 0 ? (
-                    requests.map(request => (
-                      <tr key={request.id}>
-                        <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
-                        <td className="py-2 px-4 border-b">{request.description}</td>
-                        <td className="py-2 px-4 border-b">{request.technicalRequirement}</td>
-                        <td className="py-2 px-4 border-b">{request.dateEntry ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString() : "N/A"}</td>
-                        <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
-                        <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
-                        <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
-                        <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
-                        <td className="py-2 px-4 border-b">{request.remarks}</td>
-                        <td className="py-2 px-4 border-b">{request.status}</td>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Workplan Table */}
+        {isWorkplanTableOpen && (
+          <div className="overflow-y-auto h-96 mt-3 w-full">
+            <table className="w-full bg-white border border-gray-200 text-xs text-center">
+              <thead className="sticky top-0 bg-primary-color text-white">
+                <tr>
+                  <th className="py-2 px-4 border-b text-left">Task Name</th>
+                  <th className="py-2 px-4 border-b">Assigned To</th>
+                  <th className="py-2 px-4 border-b">Start Date</th>
+                  <th className="py-2 px-4 border-b">End Date</th>
+                  <th className="py-2 px-4 border-b">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workplan.length > 0 ? (
+                  // Sort tasks by startDate before rendering
+                  workplan
+                    .slice() // Create a shallow copy to avoid mutating the original array
+                    .sort((a, b) => {
+                      const dateA = new Date(a.startDate);
+                      const dateB = new Date(b.startDate);
+                      return dateA - dateB; // Sort in ascending order
+                    })
+                    .map((task) => (
+                      <tr key={task.id}>
+                        <td className="p-2 border-b text-left">{task.taskName}</td>
+                        <td className="p-2 border-b">{task.assignedTo}</td>
+                        <td className="p-2 border-b">
+                          {task.startDate
+                            ? new Date(task.startDate).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                            : "N/A"}
+                        </td>
+                        <td className="p-2 border-b">
+                          {task.endDate
+                            ? new Date(task.endDate).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                            : "N/A"}
+                        </td>
+                        <td
+                          className={`p-2 border-b font-semibold ${task.status === "Pending"
+                              ? "text-red-500"
+                              : task.status === "In Progress"
+                                ? "text-yellow-500"
+                                : task.status === "Completed"
+                                  ? "text-green-500"
+                                  : "text-gray-500"
+                            }`}
+                        >
+                          {task.status}
+                        </td>
                       </tr>
                     ))
-                  ) : (
-                    <tr>
-                      <td className="py-2 px-4 border-b text-center" colSpan="10">No requests found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ) : (
+                  <tr>
+                    <td className="py-2 px-4 border-b text-center" colSpan="5">
+                      No tasks found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
+      {/* Edit Modal */}
       <EditGroupModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onDelete={() => setIsDeleteModalOpen(true)}
-        groupName={groupName}
-        setGroupName={setGroupName}
-        description={description}
-        setDescription={setDescription}
-        availableUsers={availableUsers}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        handleAddMember={handleAddMember}
-        handleRemoveMember={handleRemoveMember}
-        handleUpdateGroup={handleUpdateGroup}
         group={group}
-      />
-
-      <DeleteGroupModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onDelete={handleDeleteGroup}
-        agreeToDelete={agreeToDelete}
-        setAgreeToDelete={setAgreeToDelete}
+        onSave={handleSaveGroup}
       />
     </div>
   );

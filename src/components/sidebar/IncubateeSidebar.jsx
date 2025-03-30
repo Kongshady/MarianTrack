@@ -3,10 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js";
 import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { GiHamburgerMenu } from "react-icons/gi";
 import { MdDashboard, MdGroups, MdEdit } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
+import MarianLogo from "../../assets/images/MarianLogoWtext.png";
+
 
 function IncubateeSidebar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
@@ -92,7 +93,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
   return (
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-secondary-color overflow-hidden transition-all duration-300">
       <div className="flex gap-3 p-3 items-center">
-        <GiHamburgerMenu className="text-5xl text-white" />
+        <img src={MarianLogo} alt="logo-image" className="w-10 h-10 bg-white rounded-md" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-bold">{userName}</h1>

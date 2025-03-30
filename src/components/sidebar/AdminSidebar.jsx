@@ -5,8 +5,9 @@ import { MdDashboard, MdGroups, MdManageAccounts } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 import { auth, db } from "../../config/marian-config.js";
-import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/firestore";
+import { collection, doc, query, where, onSnapshot } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import MarianLogo from "../../assets/images/MarianLogoWtext.png"; // Import the logo image
 
 function AdminSideBar() {
   const [userData, setUserData] = useState(null);
@@ -22,7 +23,7 @@ function AdminSideBar() {
           if (docSnapshot.exists()) {
             const data = docSnapshot.data();
             setUserData(data);
-            fetchUnreadMessagesCount(data.id);
+            fetchUnreadMessagesCount(user.uid); // Use user.uid directly
           }
         });
 
@@ -31,6 +32,7 @@ function AdminSideBar() {
     };
 
     const fetchUnreadMessagesCount = (userId) => {
+      if (!userId) return; // Ensure userId is defined
       const q = query(
         collection(db, "messages"),
         where("receiverId", "==", userId),
@@ -59,7 +61,8 @@ function AdminSideBar() {
     <div className="group w-[4rem] hover:w-1/4 h-screen bg-primary-color overflow-hidden transition-all duration-300">
       {/* Logo & Menu Button */}
       <div className="flex gap-3 p-3 items-center">
-        <GiHamburgerMenu className="text-5xl text-white" />
+        {/* Add the MarianLogo image */}
+        <img src={MarianLogo} alt="Marian Logo" className="w-10 h-10 bg-white rounded-md" />
         <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
           {userData && (
             <>
@@ -75,7 +78,7 @@ function AdminSideBar() {
         <ul className="space-y-1">
           <MenuItem to={"/admin-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
-          <MenuItem to={"/admin-progress"} icon={<GiProgression />}text="Progress" />
+          <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
           <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="UserManagement" />
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" unreadCount={unreadMessagesCount} />
