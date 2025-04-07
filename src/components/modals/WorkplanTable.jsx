@@ -79,12 +79,12 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
       <table className="min-w-full bg-white border border-gray-200 text-xs">
         <thead className="sticky top-0 bg-secondary-color text-white">
           <tr>
-            <th className="py-2 px-4 border-b text-left">Task Name</th>
-            <th className="py-2 px-4 border-b text-right">Assigned Member</th>
-            <th className="py-2 px-4 border-b">Start Date</th>
-            <th className="py-2 px-4 border-b">End Date</th>
-            <th className="py-2 px-4 border-b">Status</th>
-            <th className="py-2 px-4 border-b">Actions</th>
+            <th className="py-2 px-4 border border-white text-left">Task Name</th>
+            <th className="py-2 px-4 border border-white text-right">Assigned Member</th>
+            <th className="py-2 px-4 border border-white">Start Date</th>
+            <th className="py-2 px-4 border border-white">End Date</th>
+            <th className="py-2 px-4 border border-white">Status</th>
+            <th className="py-2 px-4 border border-white">Actions</th>
           </tr>
         </thead>
         <tbody>

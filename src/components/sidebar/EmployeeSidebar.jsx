@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js";
-import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, query, where, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
@@ -26,6 +26,7 @@ function EmSideBar({ onUserFetched = () => {} }) {
         onUserFetched(userData);
         fetchUnreadMessagesCount(userData.id);
         fetchUnreadNotificationsCount(userData.id);
+        await updateLastOnline(userData.id); // Update last login
       } else {
         const user = auth.currentUser;
         if (user) {
@@ -38,6 +39,7 @@ function EmSideBar({ onUserFetched = () => {} }) {
             onUserFetched(userData);
             fetchUnreadMessagesCount(userData.id);
             fetchUnreadNotificationsCount(userData.id);
+            await updateLastOnline(userData.id); // Update last login
           }
         }
       }
@@ -54,6 +56,7 @@ function EmSideBar({ onUserFetched = () => {} }) {
           onUserFetched(userData);
           fetchUnreadMessagesCount(userData.id);
           fetchUnreadNotificationsCount(userData.id);
+          await updateLastOnline(userData.id); // Update last login
         }
       } else {
         sessionStorage.removeItem("currentUser");
@@ -89,6 +92,13 @@ function EmSideBar({ onUserFetched = () => {} }) {
       return unsubscribe;
     };
 
+    const updateLastOnline = async (userId) => {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, {
+        lastOnline: serverTimestamp(), // Update the lastOnline field with the current server time
+      });
+    };
+
     fetchUserData();
     const unsubscribeAuth = auth.onAuthStateChanged(handleAuthStateChanged);
 
@@ -99,6 +109,13 @@ function EmSideBar({ onUserFetched = () => {} }) {
 
   const handleLogout = async () => {
     try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        await updateDoc(userDocRef, {
+          lastOnline: serverTimestamp(), // Update lastOnline on logout
+        });
+      }
       await signOut(auth);
       sessionStorage.removeItem("currentUser");
       navigate("/", { replace: true });

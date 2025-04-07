@@ -99,6 +99,45 @@ function IncuViewGroup() {
     }
   }, [groupId, isWorkplanTableOpen]);
 
+  useEffect(() => {
+    const checkOverdueTasks = async () => {
+      const q = query(
+        collection(db, "workplan"),
+        where("groupId", "==", groupId),
+        where("status", "in", ["Pending", "In Progress"]) // Check only incomplete tasks
+      );
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        querySnapshot.forEach(async (taskDoc) => {
+          const task = taskDoc.data();
+          const taskEndDate = task.endDate ? new Date(task.endDate.seconds * 1000) : null;
+
+          if (taskEndDate && taskEndDate < new Date()) {
+            // Task is overdue
+            const taskRef = doc(db, "workplan", taskDoc.id);
+
+            // Update task status to "Overdue"
+            await updateDoc(taskRef, { status: "Overdue" });
+
+            // Notify the user responsible for the task
+            if (task.assignedTo) {
+              await addDoc(collection(db, "notifications"), {
+                userId: task.assignedTo, // ID of the user responsible for the task
+                message: `Task "${task.taskName}" is overdue.`,
+                timestamp: serverTimestamp(),
+                read: false,
+              });
+            }
+          }
+        });
+      });
+
+      return () => unsubscribe();
+    };
+
+    checkOverdueTasks();
+  }, [groupId]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRequestData((prevData) => ({
@@ -114,28 +153,49 @@ function IncuViewGroup() {
         await updateDoc(doc(db, "requests", currentRequestId), requestData);
         alert("Request updated successfully!");
       } else {
+        // Add the new request to the "requests" collection
         await addDoc(collection(db, "requests"), {
           ...requestData,
           dateEntry: serverTimestamp(),
           groupId,
         });
-
+  
+        // Fetch the group details
         const groupDoc = await getDoc(doc(db, "groups", groupId));
         if (groupDoc.exists()) {
           const groupData = groupDoc.data();
           const portfolioManagerId = groupData.portfolioManager.id;
-
+  
+          // Notify the portfolio manager
           await addDoc(collection(db, "notifications"), {
             userId: portfolioManagerId,
             message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
             timestamp: serverTimestamp(),
             read: false,
           });
+  
+          // Notify TBI Manager and TBI Assistant
+          const usersQuery = query(
+            collection(db, "users"),
+            where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
+          );
+  
+          const usersSnapshot = await getDocs(usersQuery);
+          usersSnapshot.forEach(async (userDoc) => {
+            const userData = userDoc.data();
+            await addDoc(collection(db, "notifications"), {
+              userId: userDoc.id, // Firestore document ID of the user
+              message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
+              timestamp: serverTimestamp(),
+              read: false,
+            });
+          });
         }
-
+  
         alert("Request submitted successfully!");
       }
-
+  
+      // Reset modal and form state
       setIsModalOpen(false);
       setIsEditing(false);
       setCurrentRequestId(null);

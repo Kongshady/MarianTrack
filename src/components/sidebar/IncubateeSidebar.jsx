@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js";
-import { collection, doc, getDoc, query, where, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDoc, query, where, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { MdDashboard, MdGroups, MdEdit } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
 import MarianLogo from "../../assets/images/MarianLogoWtext.png";
-
 
 function IncubateeSidebar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
@@ -24,6 +23,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
         setUserRole(userData.role);
         onUserFetched(userData);
         fetchUnreadMessagesCount(userData.id);
+        await updateLastOnline(userData.id); // Update last login
       } else {
         const user = auth.currentUser;
         if (user) {
@@ -35,6 +35,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
             setUserRole(userData.role);
             onUserFetched(userData);
             fetchUnreadMessagesCount(userData.id);
+            await updateLastOnline(userData.id); // Update last login
           }
         }
       }
@@ -50,6 +51,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
           setUserRole(userData.role);
           onUserFetched(userData);
           fetchUnreadMessagesCount(userData.id);
+          await updateLastOnline(userData.id); // Update last login
         }
       } else {
         sessionStorage.removeItem("currentUser");
@@ -70,6 +72,13 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
       });
 
       return unsubscribe;
+    };
+
+    const updateLastOnline = async (userId) => {
+      const userDocRef = doc(db, "users", userId);
+      await updateDoc(userDocRef, {
+        lastOnline: serverTimestamp(), // Update the lastOnline field with the current server time
+      });
     };
 
     fetchUserData();

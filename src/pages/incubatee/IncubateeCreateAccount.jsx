@@ -4,9 +4,10 @@ import { auth, db } from "../../config/marian-config.js"; // Import Firebase aut
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import CustomButton from "../../components/CustomButton.jsx";
+import { FiArrowLeft, FiChevronDown } from "react-icons/fi"; // Import back and dropdown icons
 
 function IncubateeCreateAccount() {
-    const [role, setRole] = useState(""); 
+    const [role, setRole] = useState("");
     const [name, setName] = useState("");
     const [lastname, setLastname] = useState("");
     const [email, setEmail] = useState("");
@@ -46,7 +47,7 @@ function IncubateeCreateAccount() {
                 mobile,
                 role,
                 status: "pending", // Default status for approval
-                timestamp: serverTimestamp()
+                timestamp: serverTimestamp(),
             });
 
             alert("Account created successfully! Awaiting admin approval.");
@@ -57,25 +58,79 @@ function IncubateeCreateAccount() {
     };
 
     return (
-        <div className="flex items-center justify-center h-svh">
+        <div className="flex items-center justify-center h-screen relative">
+            {/* Back Button */}
+            <button
+                onClick={() => navigate(-1)} // Navigate to the previous page
+                className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 transition"
+            >
+                <FiArrowLeft size={24} />
+            </button>
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-2 p-5 bg-white rounded-md shadow-xl max-w-lg">
                 <h1 className="text-center text-lg font-bold pb-3">Create Account as Incubatee</h1>
 
-                <div className="flex gap-2 ">
-                    <input type="text" placeholder="Name" className="p-2 border w-full text-sm" required value={name} onChange={(e) => setName(e.target.value)} />
-                    <input type="text" placeholder="Lastname" className="p-2 border w-full text-sm" required value={lastname} onChange={(e) => setLastname(e.target.value)} />
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Name"
+                        className="p-2 border w-full text-sm"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Lastname"
+                        className="p-2 border w-full text-sm"
+                        required
+                        value={lastname}
+                        onChange={(e) => setLastname(e.target.value)}
+                    />
                 </div>
 
                 <Dropdown setRole={setRole} role={role} className="border text-sm" />
 
-                <input type="email" placeholder="Email" className="p-2 border text-sm" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                <input type="text" placeholder="Mobile Number" maxLength={11} className="p-2 border text-sm" required value={mobile} onChange={(e) => setMobile(e.target.value)} />
-                <input type="password" placeholder="Password" className="p-2 border text-sm" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                <input type="password" placeholder="Confirm Password" className="p-2 border text-sm" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <input
+                    type="email"
+                    placeholder="Email"
+                    className="p-2 border text-sm"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                <input
+                    type="text"
+                    placeholder="Mobile Number"
+                    maxLength={11}
+                    className="p-2 border text-sm"
+                    required
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    className="p-2 border text-sm"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Confirm Password"
+                    className="p-2 border text-sm"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                />
 
                 {error && <p className="text-red-500 text-center">{error}</p>}
 
-                <CustomButton text={"Create Account"} className={"bg-secondary-color text-white hover:bg-white hover:text-secondary-color transition-all"} />
+                <CustomButton
+                    text={"Create Account"}
+                    className={"bg-secondary-color text-white hover:bg-white hover:text-secondary-color transition-all"}
+                />
             </form>
         </div>
     );
@@ -84,11 +139,7 @@ function IncubateeCreateAccount() {
 function Dropdown({ setRole, role, className }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const roles = [
-        "Project Manager",
-        "System Analyst",
-        "Developer"
-    ];
+    const roles = ["Project Manager", "System Analyst", "Developer"];
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -104,10 +155,13 @@ function Dropdown({ setRole, role, className }) {
         <div className="relative" ref={dropdownRef}>
             <button
                 type="button"
-                className={`p-2 bg-white w-full text-left ${className} ${role ? "text-black" : "text-gray-400"}`}
+                className={`p-2 bg-white w-full text-left flex items-center justify-between ${className} ${
+                    role ? "text-black" : "text-gray-400"
+                }`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {role || "Choose Role"}
+                <FiChevronDown className="text-gray-600" /> {/* Dropdown arrow */}
             </button>
 
             {isOpen && (

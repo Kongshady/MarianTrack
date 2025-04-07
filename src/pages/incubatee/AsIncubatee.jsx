@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import CustomButton from "../../components/CustomButton";
 import MarianLogo from "../../assets/images/MarianLogoWtext.png";
 import { FcGoogle } from "react-icons/fc";
+import { FiArrowLeft } from "react-icons/fi"; // Import back icon
 
 function LoginAsIncubatee() {
     const [email, setEmail] = useState("");
@@ -69,21 +70,49 @@ function LoginAsIncubatee() {
     return (
         <div className="flex flex-row-reverse h-screen">
             {/* Left Section - Login Form */}
-            <div className="flex flex-col w-1/2 gap-6 items-center justify-center p-10">
+            <div className="flex flex-col w-1/2 gap-6 items-center justify-center p-10 relative">
+                {/* Back Icon */}
+                <button
+                    onClick={() => navigate(-1)} // Navigate to the previous page
+                    className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 transition"
+                >
+                    <FiArrowLeft size={24} />
+                </button>
+
                 <img src={MarianLogo} alt="MarianTBI-logo" className="w-28 p-2" />
 
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="flex flex-col gap-3 w-full max-w-xs">
                     <h1 className="text-center font-bold text-md">Login As Incubatee</h1>
                     {error && <p className="text-red-500 text-center">{error}</p>}
-                    <input type="text" placeholder="Email" className="bg-gray-200 p-2 rounded-sm text-sm" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    <input type="password" placeholder="Password" className="bg-gray-200 p-2 rounded-sm text-sm" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    <CustomButton text="Log In" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all" />
+                    <input
+                        type="text"
+                        placeholder="Email"
+                        className="bg-gray-200 p-2 rounded-sm text-sm"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        className="bg-gray-200 p-2 rounded-sm text-sm"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <CustomButton
+                        text="Log In"
+                        className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all"
+                    />
                 </form>
 
                 <TextDivider />
 
-                <button onClick={handleGoogleLogin} className="flex items-center justify-center gap-2 bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+                <button
+                    onClick={handleGoogleLogin}
+                    className="flex items-center justify-center gap-2 bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105"
+                >
                     <FcGoogle className="w-6 h-6" />
                     <span className="text-gray-600 text-xs">Sign in with Google</span>
                 </button>

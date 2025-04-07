@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, getDoc, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import EmployeeSidebar from "../sidebar/EmployeeSidebar.jsx";
 
 function EmViewGroup() {
@@ -50,14 +50,44 @@ function EmViewGroup() {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
+      // Update the status of the request in Firestore
       await updateDoc(doc(db, "requests", requestId), { status: newStatus });
+
+      // Update the status in the local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId ? { ...request, status: newStatus } : request
         )
       );
+
+      // Fetch the request details to get the groupId or responsible user
+      const requestDoc = await getDoc(doc(db, "requests", requestId));
+      if (requestDoc.exists()) {
+        const requestData = requestDoc.data();
+
+        // Fetch the user responsible for the request using the groupId
+        const usersQuery = query(
+          collection(db, "users"),
+          where("groupId", "==", requestData.groupId) // Match the groupId from the request
+        );
+
+        const usersSnapshot = await getDocs(usersQuery);
+        if (!usersSnapshot.empty) {
+          usersSnapshot.forEach(async (userDoc) => {
+            const userData = userDoc.data();
+
+            // Add a notification for the user
+            await addDoc(collection(db, "notifications"), {
+              userId: userDoc.id, // Use the user's Firestore document ID
+              message: `The status of your request for "${requestData.resourceToolNeeded}" has been updated to "${newStatus}".`,
+              timestamp: serverTimestamp(),
+              read: false,
+            });
+          });
+        }
+      }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Error updating status or sending notification:", error);
     }
   };
 

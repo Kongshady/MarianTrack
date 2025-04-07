@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "../../config/marian-config.js"; // Firestore connection
 import { collection, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
+import { formatDistanceToNow } from "date-fns"; // For formatting time
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaCheck } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
@@ -192,6 +193,7 @@ function AdminAccountApproval() {
                     </div>
                 )}
 
+
                 {activeTab === "approved" && (
                     <div>
                         <h2 className="text-1xl font-semibold mb-3">Approved Users</h2>
@@ -204,17 +206,23 @@ function AdminAccountApproval() {
                                         <th className="p-2 border">Role</th>
                                         <th className="p-2 border">Time Registered</th>
                                         <th className="p-2 border">Group</th>
+                                        <th className="p-2 border">Last Online</th> {/* New Column */}
                                         <th className="p-2 border">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filterUsersByRole(approvedUsers).map(user => (
                                         <tr key={user.id} className="text-center border text-xs">
-                                            <td className="p-2">{user.name} {user.lastname}</td>
+                                            <td className="text-left p-2">{user.name} {user.lastname}</td>
                                             <td className="p-2">{user.email}</td>
                                             <td className="p-2">{user.role}</td>
                                             <td className="p-2">{user.timestamp}</td>
                                             <td className="p-2">{user.groupName}</td>
+                                            <td className="p-2">
+                                                {user.lastOnline
+                                                    ? `${formatDistanceToNow(new Date(user.lastOnline.seconds * 1000), { addSuffix: true })}`
+                                                    : "N/A"}
+                                            </td>
                                             <td className="p-2 flex justify-center">
                                                 <button
                                                     className="bg-red-500 text-white px-3 py-1 rounded-sm hover:bg-red-600 flex items-center justify-center gap-1 text-center"
