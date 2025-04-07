@@ -59,7 +59,7 @@ function EmGroups() {
             groups.map(group => (
               <div
                 key={group.id}
-                className="bg-white p-4 rounded-lg shadow-md border hover:shadow-xl transition-shadow duration-300"
+                className="bg-white p-4 rounded-lg shadow-md border hover:shadow-xl transition-shadow duration-300 relative"
               >
                 <h2 className="text-md font-bold">{group.name}</h2>
                 <p className="text-xs text-gray-600">{group.description}</p>
@@ -90,10 +90,10 @@ function EmGroups() {
                     )}
                   </div>
                 </div>
-                <div className="flex justify-end">
+                <div className="absolute bottom-4 right-4">
                   <button
                     onClick={() => handleViewGroup(group.id)}
-                    className="mt-4 bg-primary-color border border-primary-color text-white px-4 py-2 rounded-sm text-xs hover:bg-white hover:text-primary-color transition"
+                    className="bg-primary-color border border-primary-color text-white px-4 py-2 rounded-sm text-xs hover:bg-white hover:text-primary-color transition"
                   >
                     View Group
                   </button>

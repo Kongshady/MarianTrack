@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js";
 import { collection, doc, getDoc, query, where, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { GiHamburgerMenu, GiProgression } from "react-icons/gi";
 import { MdDashboard, MdGroups } from "react-icons/md";
 import { IoMdNotifications } from "react-icons/io";
 import { IoLogOutSharp, IoChatbox } from "react-icons/io5";
@@ -141,7 +140,6 @@ function EmSideBar({ onUserFetched = () => {} }) {
         <ul className="space-y-1">
           <MenuItem to={"/employee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/employee-groups"} icon={<MdGroups />} text="Incubatees" />
-          <MenuItem to={"/employee-progress"} icon={<GiProgression />} text="Progress" />
           <MenuItem to={"/employee-notification"} icon={<IoMdNotifications />} text="Notification" unreadCount={unreadNotificationsCount} />
           <MenuItem to={"/employee-chat"} icon={<IoChatbox />} text="Chat" unreadCount={unreadMessagesCount} />
           <li>

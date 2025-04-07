@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { db } from "../../config/marian-config.js";
 import { doc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { MdDelete, MdArchive } from "react-icons/md";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function EditGroupModal({ isOpen, onClose, group, onSave }) {
   const [name, setName] = useState(group.name);
@@ -11,6 +12,8 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmChecked, setIsConfirmChecked] = useState(false);
+
+  const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
     // Fetch users from Firestore and filter out those in a group or with specific roles
@@ -69,10 +72,18 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
   };
 
   const handleDeleteGroup = async () => {
-    // Delete the group from Firestore
-    const groupDocRef = doc(db, "groups", group.id);
-    await deleteDoc(groupDocRef);
-    onClose(); // Close the modal after deletion
+    try {
+      // Delete the group from Firestore
+      const groupDocRef = doc(db, "groups", group.id);
+      await deleteDoc(groupDocRef);
+
+      // Redirect the user to /view-group
+      navigate("/admin-groups");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+    } finally {
+      onClose(); // Close the modal after deletion
+    }
   };
 
   const handleArchiveGroup = async () => {

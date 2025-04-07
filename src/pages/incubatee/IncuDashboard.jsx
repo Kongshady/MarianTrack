@@ -9,6 +9,8 @@ function IncuDashboard() {
     const [userGroupId, setUserGroupId] = useState(null); // State to store the user's group ID
     const [totalRequests, setTotalRequests] = useState(0); // State for total requests
     const [ongoingRequests, setOngoingRequests] = useState(0); // State for ongoing requests
+    const [toBeRequestedRequests, setToBeRequestedRequests] = useState(0); // State for "To be Requested" requests
+    const [requestedRequests, setRequestedRequests] = useState(0); // State for "Requested" requests
 
     useEffect(() => {
         document.title = "Incubatee | Dashboard"; // Set the page title
@@ -67,9 +69,17 @@ function IncuDashboard() {
             const requestsData = querySnapshot.docs.map((doc) => doc.data());
             setTotalRequests(requestsData.length); // Total number of group requests
 
-            // Filter ongoing requests (e.g., status is "In Progress")
+            // Filter ongoing requests (e.g., status is "On-going")
             const ongoing = requestsData.filter((request) => request.status === "On-going");
             setOngoingRequests(ongoing.length); // Set the number of ongoing requests
+
+            // Filter "To be Requested" requests
+            const toBeRequested = requestsData.filter((request) => request.status === "To be requested");
+            setToBeRequestedRequests(toBeRequested.length); // Set the number of "To be Requested" requests
+
+            // Filter "Requested" requests
+            const requested = requestsData.filter((request) => request.status === "Requested");
+            setRequestedRequests(requested.length); // Set the number of "Requested" requests
         } catch (error) {
             console.error("Error fetching requests:", error);
         }
@@ -119,7 +129,7 @@ function IncuDashboard() {
                 <p className="text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
 
                 {/* Overview Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                     {/* Total Tasks Card */}
                     <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
                         <h3 className="text-lg font-medium text-gray-700">Total Tasks</h3>
@@ -136,6 +146,18 @@ function IncuDashboard() {
                     <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
                         <h3 className="text-lg font-medium text-gray-700">Ongoing Requests</h3>
                         <p className="text-3xl font-bold text-orange-500 mt-2">{ongoingRequests}</p>
+                    </div>
+
+                    {/* To be Requested Requests Card */}
+                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
+                        <h3 className="text-lg font-medium text-gray-700">To be Requested</h3>
+                        <p className="text-3xl font-bold text-purple-500 mt-2">{toBeRequestedRequests}</p>
+                    </div>
+
+                    {/* Requested Requests Card */}
+                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
+                        <h3 className="text-lg font-medium text-gray-700">Requested</h3>
+                        <p className="text-3xl font-bold text-teal-500 mt-2">{requestedRequests}</p>
                     </div>
                 </div>
 

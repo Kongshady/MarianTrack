@@ -8,6 +8,7 @@ function AdDashboard() {
   const [totalIncubatees, setTotalIncubatees] = useState(0); // State for total incubatees/users
   const [totalRequests, setTotalRequests] = useState(0); // State for total requests
   const [completedGroups, setCompletedGroups] = useState(0); // State for groups with completed workplans
+  const [pendingUsers, setPendingUsers] = useState(0); // State for pending users
   const [userName, setUserName] = useState(""); // State for the logged-in user's name
 
   useEffect(() => {
@@ -39,6 +40,14 @@ function AdDashboard() {
         const completedGroupsSnapshot = await getDocs(completedGroupsQuery);
         setCompletedGroups(completedGroupsSnapshot.size);
 
+        // Fetch pending users
+        const pendingUsersQuery = query(
+          collection(db, "users"),
+          where("status", "==", "pending") // Filter users with status "pending"
+        );
+        const pendingUsersSnapshot = await getDocs(pendingUsersQuery);
+        setPendingUsers(pendingUsersSnapshot.size);
+
         // Fetch the logged-in user's name
         const userId = "currentUserId"; // Replace with the actual logged-in user's ID
         const userDoc = await getDoc(doc(db, "users", userId));
@@ -61,29 +70,35 @@ function AdDashboard() {
           Welcome, {userName || "Admin"}!
         </h1>
         <p className="text-lg text-gray-600 mb-8">Here's an overview of the system's statistics.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full text-center">
           {/* Total Groups Card */}
           <div className="p-6 bg-white shadow rounded-lg">
-            <h2 className="text-xl font-bold text-gray-800">Total Groups</h2>
-            <p className="text-3xl font-bold text-blue-500 mt-4">{totalGroups}</p>
+            <h2 className="text-md font-medium text-gray-800">Total Groups</h2>
+            <p className="text-xl font-bold text-blue-500 mt-4">{totalGroups}</p>
           </div>
 
           {/* Total Incubatees Card */}
           <div className="p-6 bg-white shadow rounded-lg">
-            <h2 className="text-xl font-bold text-gray-800">Total Incubatees</h2>
-            <p className="text-3xl font-bold text-blue-500 mt-4">{totalIncubatees}</p>
+            <h2 className="text-md font-medium text-gray-800">Total Incubatees</h2>
+            <p className="text-xl font-bold text-blue-500 mt-4">{totalIncubatees}</p>
           </div>
 
           {/* Total Requests Card */}
           <div className="p-6 bg-white shadow rounded-lg">
-            <h2 className="text-xl font-bold text-gray-800">Total Requests</h2>
-            <p className="text-3xl font-bold text-blue-500 mt-4">{totalRequests}</p>
+            <h2 className="text-md font-medium text-gray-800">Total Requests</h2>
+            <p className="text-xl font-bold text-blue-500 mt-4">{totalRequests}</p>
           </div>
 
           {/* Completed Groups Card */}
           <div className="p-6 bg-white shadow rounded-lg">
-            <h2 className="text-xl font-bold text-gray-800">Completed Groups</h2>
-            <p className="text-3xl font-bold text-blue-500 mt-4">{completedGroups}</p>
+            <h2 className="text-md font-medium text-gray-800">Completed Groups</h2>
+            <p className="text-xl font-bold text-blue-500 mt-4">{completedGroups}</p>
+          </div>
+
+          {/* Pending Users Card */}
+          <div className="p-6 bg-white shadow rounded-lg">
+            <h2 className="text-md font-medium text-gray-800">Pending Request Users</h2>
+            <p className="text-xl font-bold text-blue-500 mt-4">{pendingUsers}</p>
           </div>
         </div>
       </div>

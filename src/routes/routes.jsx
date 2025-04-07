@@ -21,7 +21,6 @@ import LogAsEmployee from "../pages/employee/AsEmployee.jsx";
 import EmDashboard from "../pages/employee/EmDashboard.jsx";
 import EmGroups from "../pages/employee/EmGroups.jsx";
 import EmNotification from "../pages/employee/EmNotification.jsx";
-import EmProgress from "../pages/employee/EmProgress.jsx";
 import EmChat from "../pages/employee/EmChat.jsx";
 import EmViewGroup from "../components/semi-pages/EmViewGroups.jsx";
 import EmEditProfile from "../components/edit-profile/EmEditProfile.jsx";
@@ -117,14 +116,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["TBI Manager", "Portfolio Manager", "TBI Assistant"]}>
             <EmGroups />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/employee-progress"
-        element={
-          <ProtectedRoute allowedRoles={["TBI Manager", "Portfolio Manager", "TBI Assistant"]}>
-            <EmProgress />
           </ProtectedRoute>
         }
       />
