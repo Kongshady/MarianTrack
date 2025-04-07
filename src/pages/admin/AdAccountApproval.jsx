@@ -390,3 +390,5 @@ function AdminAccountApproval() {
 }
 
 export default AdminAccountApproval;
+
+// Use sendGrid to send email to the user when their account is approved or rejected

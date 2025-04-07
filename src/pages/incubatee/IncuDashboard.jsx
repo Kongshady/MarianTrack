@@ -7,6 +7,8 @@ function IncuDashboard() {
     const [userName, setUserName] = useState("");
     const [tasks, setTasks] = useState([]);
     const [userGroupId, setUserGroupId] = useState(null); // State to store the user's group ID
+    const [totalRequests, setTotalRequests] = useState(0); // State for total requests
+    const [ongoingRequests, setOngoingRequests] = useState(0); // State for ongoing requests
 
     useEffect(() => {
         document.title = "Incubatee | Dashboard"; // Set the page title
@@ -28,39 +30,85 @@ function IncuDashboard() {
             }
         };
 
-        const fetchTasks = async () => {
-            try {
-                const today = new Date();
-                const endOfWeek = new Date();
-                endOfWeek.setDate(today.getDate() + 7); // Calculate the end of the week
-
-                const workplanQuery = query(
-                    collection(db, "workplan"),
-                    where("endDate", ">=", today.toISOString()), // Tasks with deadlines from today
-                    where("endDate", "<=", endOfWeek.toISOString()) // Tasks with deadlines within the week
-                );
-
-                const querySnapshot = await getDocs(workplanQuery);
-                const tasksData = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setTasks(tasksData); // Set the tasks in state
-            } catch (error) {
-                console.error("Error fetching tasks:", error);
-            }
-        };
-
         fetchUserNameAndGroup();
-        fetchTasks();
     }, []);
 
-    // Filter tasks to only include those with status "Pending" or "In-Progress" and matching the user's group ID
-    const filteredTasks = tasks.filter(
-        (task) =>
-            (task.status === "Pending" || task.status === "In Progress") &&
-            task.groupId === userGroupId // Ensure the task's group ID matches the user's group ID
-    );
+    const fetchTasks = async () => {
+        try {
+            if (!userGroupId) return; // Wait until the user's group ID is fetched
+
+            const workplanQuery = query(
+                collection(db, "workplan"),
+                where("groupId", "==", userGroupId) // Fetch tasks belonging to the user's group
+            );
+
+            const querySnapshot = await getDocs(workplanQuery);
+            const tasksData = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            setTasks(tasksData); // Set the tasks in state
+        } catch (error) {
+            console.error("Error fetching tasks:", error);
+        }
+    };
+
+    const fetchRequests = async () => {
+        try {
+            if (!userGroupId) return; // Wait until the user's group ID is fetched
+
+            const requestsQuery = query(
+                collection(db, "requests"),
+                where("groupId", "==", userGroupId) // Fetch requests belonging to the user's group
+            );
+
+            const querySnapshot = await getDocs(requestsQuery);
+
+            const requestsData = querySnapshot.docs.map((doc) => doc.data());
+            setTotalRequests(requestsData.length); // Total number of group requests
+
+            // Filter ongoing requests (e.g., status is "In Progress")
+            const ongoing = requestsData.filter((request) => request.status === "On-going");
+            setOngoingRequests(ongoing.length); // Set the number of ongoing requests
+        } catch (error) {
+            console.error("Error fetching requests:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (userGroupId) {
+            fetchTasks();
+            fetchRequests();
+        }
+    }, [userGroupId]); // Fetch tasks and requests only after the user's group ID is available
+
+    // Helper function to get the start and end of the current week
+    const getCurrentWeekRange = () => {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 (Sunday) to 6 (Saturday)
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Set to Monday
+        startOfWeek.setHours(0, 0, 0, 0); // Start of the day
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to Sunday
+        endOfWeek.setHours(23, 59, 59, 999); // End of the day
+
+        return { startOfWeek, endOfWeek };
+    };
+
+    // Filter tasks to only include those due this week and not completed
+    const filteredTasks = tasks.filter((task) => {
+        const { startOfWeek, endOfWeek } = getCurrentWeekRange();
+        const taskDueDate = task.endDate ? new Date(task.endDate) : null;
+
+        return (
+            taskDueDate &&
+            taskDueDate >= startOfWeek &&
+            taskDueDate <= endOfWeek &&
+            task.status !== "Completed"
+        );
+    });
 
     return (
         <div className="flex">
@@ -69,6 +117,27 @@ function IncuDashboard() {
                 {/* Welcome Section */}
                 <h1 className="text-3xl font-bold mb-2">Welcome, {userName || "User"}!</h1>
                 <p className="text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
+
+                {/* Overview Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Total Tasks Card */}
+                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
+                        <h3 className="text-lg font-medium text-gray-700">Total Tasks</h3>
+                        <p className="text-3xl font-bold text-blue-500 mt-2">{tasks.length}</p>
+                    </div>
+
+                    {/* Total Requests Card */}
+                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
+                        <h3 className="text-lg font-medium text-gray-700">Total Requests</h3>
+                        <p className="text-3xl font-bold text-green-500 mt-2">{totalRequests}</p>
+                    </div>
+
+                    {/* Ongoing Requests Card */}
+                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
+                        <h3 className="text-lg font-medium text-gray-700">Ongoing Requests</h3>
+                        <p className="text-3xl font-bold text-orange-500 mt-2">{ongoingRequests}</p>
+                    </div>
+                </div>
 
                 {/* Tasks Due This Week */}
                 <div className="bg-white p-4 rounded-sm shadow-md hover:shadow-lg transition duration-200">

@@ -18,14 +18,14 @@ const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openR
       <table className="min-w-full bg-white border border-gray-200 text-xs">
         <thead className="sticky top-0 bg-secondary-color text-white">
           <tr>
-            <th className="py-2 px-4 border-b">Team Member</th>
-            <th className="py-2 px-4 border-b">Request Type</th>
-            <th className="py-2 px-4 border-b">Date Entry</th>
-            <th className="py-2 px-4 border-b">Date Needed</th>
-            <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
-            <th className="py-2 px-4 border-b">Prospect Resource Person</th>
-            <th className="py-2 px-4 border-b">Priority Level</th>
-            <th className="py-2 px-4 border-b">Status</th>
+            <th className="py-2 px-4 border border-white">Team Member</th>
+            <th className="py-2 px-4 border border-white">Request Type</th>
+            <th className="py-2 px-4 border border-white">Date Entry</th>
+            <th className="py-2 px-4 border border-white">Date Needed</th>
+            <th className="py-2 px-4 border border-white">Resource/Tool Needed</th>
+            <th className="py-2 px-4 border border-white">Prospect Resource Person</th>
+            <th className="py-2 px-4 border border-white">Priority Level</th>
+            <th className="py-2 px-4 border border-white">Status</th>
             {userRole === "Project Manager" && <th className="py-2 px-4 border-b">Actions</th>}
           </tr>
         </thead>
