@@ -68,16 +68,16 @@ function EmDashboard() {
     return (
         <div className="flex">
             <EmployeeSidebar />
-            <div className="flex flex-col items-start justify-start h-screen w-full p-10 bg-gray-100 overflow-hidden">
+            <div className="flex flex-col items-start justify-start h-screen w-full p-10 bg-gray-100 overflow-x-auto">
                 <h1 className="text-4xl font-bold mb-5">Employee Dashboard</h1>
                 <p className="text-lg text-gray-600 mb-4">Summary of all groups and their progress</p>
 
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4 w-full">
                     {/* Total Groups Card */}
-                    <div className="p-6 bg-white shadow rounded-sm text-center">
-                        <h2 className="text-sm font-bold text-gray-800">Total Number of Assigned Groups</h2>
-                        <p className="text-xl font-bold text-blue-500 mt-4">{totalGroups}</p>
+                    <div className="p-6 bg-white shadow rounded-sm">
+                        <h2 className="text-lg font-medium text-gray-800">Total Number of Assigned Groups</h2>
+                        <p className="text-3xl font-bold text-blue-500 mt-4">{totalGroups}</p>
                     </div>
                 </div>
 

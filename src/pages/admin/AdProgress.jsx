@@ -87,7 +87,7 @@ function AdProgress() {
       <div className="flex flex-col items-start justify-start h-screen w-full p-10 overflow-y-auto">
         <h1 className="text-4xl font-bold mb-5">Incubatees Progress</h1>
         <p className="mb-4">Total Progress of Incubatees</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 w-full">
           {groups.map((group) => {
             const progress = calculateProgress(group.workplan);
             const isFlipped = flippedCards[group.id];
