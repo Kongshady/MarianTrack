@@ -197,37 +197,40 @@ function EmViewGroup() {
           </div>
           {activeTable === "requests" && (
             <div className="overflow-y-auto h-80 mt-1">
-              <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
+              <table className="min-w-full bg-white text-xs text-center">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
-                    <th className="p-2 border-b">Responsible Team Member</th>
-                    <th className="p-2 border-b">Request Type</th>
-                    <th className="p-2 border-b">Description</th>
-                    <th className="p-2 border-b">Date Entry</th>
-                    <th className="p-2 border-b">Date Needed</th>
-                    <th className="p-2 border-b">Resource/Tool Needed</th>
-                    <th className="p-2 border-b">Prospect Resource Person</th>
-                    <th className="p-2 border-b">Priority Level</th>
-                    <th className="p-2 border-b">Remarks</th>
-                    <th className="p-2 border-b">Status</th>
+                    <th className="p-2 font-medium">Responsible Team Member</th>
+                    <th className="p-2 font-medium">Request Type</th>
+                    <th className="p-2 font-medium">Description</th>
+                    <th className="p-2 font-medium">Date Entry</th>
+                    <th className="p-2 font-medium">Date Needed</th>
+                    <th className="p-2 font-medium">Resource/Tool Needed</th>
+                    <th className="p-2 font-medium">Prospect Resource Person</th>
+                    <th className="p-2 font-medium">Priority Level</th>
+                    <th className="p-2 font-medium">Remarks</th>
+                    <th className="p-2 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {requests.length > 0 ? (
-                    requests.map((request) => (
-                      <tr key={request.id}>
-                        <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
-                        <td className="py-2 px-4 border-b">{request.requestType}</td>
-                        <td className="py-2 px-4 border-b">{request.description}</td>
-                        <td className="py-2 px-4 border-b">
+                    requests.map((request, index) => (
+                      <tr
+                        key={request.id}
+                        className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                      >
+                        <td className="py-2 px-4">{request.responsibleTeamMember}</td>
+                        <td className="py-2 px-4">{request.requestType}</td>
+                        <td className="py-2 px-4">{request.description}</td>
+                        <td className="py-2 px-4">
                           {new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}
                         </td>
-                        <td className="py-2 px-4 border-b">{request.dateNeeded}</td>
-                        <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
-                        <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
-                        <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
-                        <td className="py-2 px-4 border-b">{request.remarks}</td>
-                        <td className="py-2 px-4 border-b">
+                        <td className="py-2 px-4">{request.dateNeeded}</td>
+                        <td className="py-2 px-4">{request.resourceToolNeeded}</td>
+                        <td className="py-2 px-4">{request.prospectResourcePerson}</td>
+                        <td className="py-2 px-4">{request.priorityLevel}</td>
+                        <td className="py-2 px-4">{request.remarks}</td>
+                        <td className="py-2 px-4">
                           <select
                             value={request.status || "Requested"}
                             onChange={(e) => handleStatusChange(request.id, e.target.value)}
@@ -243,7 +246,7 @@ function EmViewGroup() {
                     ))
                   ) : (
                     <tr>
-                      <td className="py-2 px-4 border-b text-center" colSpan="10">
+                      <td className="py-2 px-4 text-center" colSpan="10">
                         No requests found.
                       </td>
                     </tr>
@@ -252,21 +255,21 @@ function EmViewGroup() {
               </table>
             </div>
           )}
+
           {activeTable === "workplan" && (
             <div className="overflow-y-auto h-80 mt-1">
-              <table className="min-w-full bg-white border border-gray-200 text-xs text-center">
+              <table className="min-w-full bg-white text-xs text-center">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
-                    <th className="py-2 px-4 border-b text-left">Task Name</th>
-                    <th className="py-2 px-4 border-b">Assigned To</th>
-                    <th className="py-2 px-4 border-b">Start Date</th>
-                    <th className="py-2 px-4 border-b">End Date</th>
-                    <th className="py-2 px-4 border-b">Status</th>
+                    <th className="py-2 px-4 font-medium text-left">Task Name</th>
+                    <th className="py-2 px-4 font-medium">Assigned To</th>
+                    <th className="py-2 px-4 font-medium">Start Date</th>
+                    <th className="py-2 px-4 font-medium">End Date</th>
+                    <th className="py-2 px-4 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {workplan.length > 0 ? (
-                    // Sort tasks by startDate before rendering
                     workplan
                       .slice() // Create a shallow copy to avoid mutating the original array
                       .sort((a, b) => {
@@ -274,11 +277,14 @@ function EmViewGroup() {
                         const dateB = new Date(b.startDate);
                         return dateA - dateB; // Sort in ascending order
                       })
-                      .map((task) => (
-                        <tr key={task.id}>
-                          <td className="p-2 border-b border-r text-left">{task.taskName}</td>
-                          <td className="p-2 border-b">{task.assignedTo}</td>
-                          <td className="p-2 border-b">
+                      .map((task, index) => (
+                        <tr
+                          key={task.id}
+                          className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="p-2 text-left">{task.taskName}</td>
+                          <td className="p-2">{task.assignedTo}</td>
+                          <td className="p-2">
                             {task.startDate
                               ? new Date(task.startDate).toLocaleDateString("en-US", {
                                   year: "numeric",
@@ -287,7 +293,7 @@ function EmViewGroup() {
                                 })
                               : "N/A"}
                           </td>
-                          <td className="p-2 border-b">
+                          <td className="p-2">
                             {task.endDate
                               ? new Date(task.endDate).toLocaleDateString("en-US", {
                                   year: "numeric",
@@ -297,7 +303,7 @@ function EmViewGroup() {
                               : "N/A"}
                           </td>
                           <td
-                            className={`p-2 border-b font-semibold ${
+                            className={`p-2 font-semibold ${
                               task.status === "Pending"
                                 ? "text-red-500"
                                 : task.status === "In Progress"
@@ -313,7 +319,7 @@ function EmViewGroup() {
                       ))
                   ) : (
                     <tr>
-                      <td className="py-2 px-4 border-b text-center" colSpan="5">
+                      <td className="py-2 px-4 text-center" colSpan="5">
                         No tasks found.
                       </td>
                     </tr>

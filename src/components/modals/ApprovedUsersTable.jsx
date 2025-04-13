@@ -36,20 +36,20 @@ function ApprovedUsersTable({ approvedUsers, setUserToRemove, setIsModalOpen }) 
         <div>
             <h2 className="text-1xl font-semibold mb-3">Approved Users</h2>
             <div className="overflow-x-auto h-96">
-                <table className="min-w-full bg-white border rounded-lg">
+                <table className="min-w-full bg-white text-xs">
                     <thead className="sticky top-0">
                         <tr className="bg-primary-color text-white text-xs">
-                            <th className="p-2 border">Name</th>
-                            <th className="p-2 border">Email</th>
-                            <th className="p-2 border">Role</th>
-                            <th className="p-2 border">Time Registered</th>
-                            <th className="p-2 border">Last Online</th>
-                            <th className="p-2 border">Actions</th>
+                            <th className="p-2">Name</th>
+                            <th className="p-2">Email</th>
+                            <th className="p-2">Role</th>
+                            <th className="p-2">Time Registered</th>
+                            <th className="p-2">Last Online</th>
+                            <th className="p-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {approvedUsers.map((user) => (
-                            <tr key={user.id} className="text-center border text-xs">
+                        {approvedUsers.map((user, index) => (
+                            <tr key={user.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}>
                                 <td className="text-left p-2">{user.name} {user.lastname}</td>
                                 <td className="p-2">{user.email}</td>
                                 <td className="p-2">{user.role}</td>

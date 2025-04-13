@@ -85,7 +85,7 @@ function AdProgress() {
     <div className="flex">
       <AdminSidebar />
       <div className="flex flex-col items-start justify-start h-screen w-full p-10 overflow-y-auto">
-        <h1 className="text-4xl font-bold mb-5">Incubatees Progress</h1>
+        <h1 className="text-4xl font-bold">Incubatees Progress</h1>
         <p className="mb-4">Total Progress of Incubatees</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 w-full">
           {groups.map((group) => {

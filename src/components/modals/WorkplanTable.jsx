@@ -13,19 +13,19 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-  
+
     // Validation for endDate
     if (name === "endDate" && new Date(value) < new Date(taskData.startDate)) {
       alert("End Date cannot be earlier than Start Date.");
       return; // Prevent the update
     }
-  
+
     // Validation for startDate
     if (name === "startDate" && new Date(taskData.endDate) < new Date(value)) {
       alert("Start Date cannot be later than End Date.");
       return; // Prevent the update
     }
-  
+
     setTaskData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -76,15 +76,15 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
           + Add Task
         </button>
       </div>
-      <table className="min-w-full bg-white border border-gray-200 text-xs">
+      <table className="min-w-full bg-white text-xs">
         <thead className="sticky top-0 bg-secondary-color text-white">
           <tr>
-            <th className="py-2 px-4 border border-white text-left">Task Name</th>
-            <th className="py-2 px-4 border border-white text-right">Assigned Member</th>
-            <th className="py-2 px-4 border border-white">Start Date</th>
-            <th className="py-2 px-4 border border-white">End Date</th>
-            <th className="py-2 px-4 border border-white">Status</th>
-            <th className="py-2 px-4 border border-white">Actions</th>
+            <th className="py-2 px-4 font-medium text-left">Task Name</th>
+            <th className="py-2 px-4 font-medium text-right">Assigned Member</th>
+            <th className="py-2 px-4 font-medium">Start Date</th>
+            <th className="py-2 px-4 font-medium">End Date</th>
+            <th className="py-2 px-4 font-medium">Status</th>
+            <th className="py-2 px-4 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -92,25 +92,25 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
             // Sort tasks by startDate in ascending order
             [...workplan]
               .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-              .map((task) => (
-                <tr key={task.id} className="text-center">
-                  <td className="p-1 border-b text-left">{task.taskName}</td>
-                  <td className="p-1 border-b text-right">{task.assignedTo}</td>
-                  <td className="p-1 border-b">
+              .map((task, index) => (
+                <tr key={task.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}>
+                  <td className="p-1 text-left">{task.taskName}</td>
+                  <td className="p-1 text-right">{task.assignedTo}</td>
+                  <td className="p-1">
                     {new Date(task.startDate).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })}
                   </td>
-                  <td className="p-1 border-b">
+                  <td className="p-1">
                     {new Date(task.endDate).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })}
                   </td>
-                  <td className="p-1 border-b">
+                  <td className="p-1">
                     <select
                       value={task.status}
                       onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
@@ -121,7 +121,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
                       <option value="Completed">Completed</option>
                     </select>
                   </td>
-                  <td className="p-1 border-b">
+                  <td className="p-1 flex justify-center gap-2">
                     <button
                       onClick={() => openEditModal(task)}
                       className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
@@ -130,7 +130,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
                     </button>
                     <button
                       onClick={() => handleDeleteTask(task.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition ml-2"
+                      className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
                     >
                       <FaTrash />
                     </button>
@@ -139,7 +139,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
               ))
           ) : (
             <tr>
-              <td className="p-1 border-b text-center" colSpan="6">
+              <td className="p-1 text-center" colSpan="6">
                 No tasks found.
               </td>
             </tr>

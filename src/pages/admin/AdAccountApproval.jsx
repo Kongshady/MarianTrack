@@ -10,6 +10,7 @@ function AdminAccountApproval() {
     const [approvedUsers, setApprovedUsers] = useState([]);
     const [activeTab, setActiveTab] = useState("pending");
     const [selectedRole, setSelectedRole] = useState("All");
+    const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [userToRemove, setUserToRemove] = useState(null);
@@ -81,11 +82,26 @@ function AdminAccountApproval() {
         setSelectedRole(e.target.value);
     };
 
-    const filterUsersByRole = (users) => {
-        if (selectedRole === "All") {
-            return users;
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const filterUsersByRoleAndSearch = (users) => {
+        let filteredUsers = users;
+
+        if (selectedRole !== "All") {
+            filteredUsers = filteredUsers.filter((user) => user.role === selectedRole);
         }
-        return users.filter((user) => user.role === selectedRole);
+
+        if (searchTerm) {
+            filteredUsers = filteredUsers.filter(
+                (user) =>
+                    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        return filteredUsers;
     };
 
     return (
@@ -104,7 +120,7 @@ function AdminAccountApproval() {
                         }`}
                         onClick={() => setActiveTab("pending")}
                     >
-                        Requests
+                        Pending Users
                     </button>
                     <button
                         className={`px-6 py-2 ${
@@ -114,35 +130,46 @@ function AdminAccountApproval() {
                         }`}
                         onClick={() => setActiveTab("approved")}
                     >
-                        Approved Lists
+                        Approved Users Lists
                     </button>
                 </div>
 
-                {/* Role Filter Dropdown */}
-                <div className="mb-3">
-                    <label htmlFor="roleFilter" className="mr-2 text-sm">
-                        Filter by Role:
-                    </label>
-                    <select
-                        id="roleFilter"
-                        value={selectedRole}
-                        onChange={handleRoleChange}
-                        className="p-2 border rounded-sm text-sm"
-                    >
-                        <option value="All">All</option>
-                        <option value="TBI Manager">TBI Manager</option>
-                        <option value="TBI Assistant">TBI Assistant</option>
-                        <option value="Portfolio Manager">Portfolio Manager</option>
-                        <option value="Project Manager">Project Manager</option>
-                        <option value="System Analyst">System Analyst</option>
-                        <option value="Developer">Developer</option>
-                    </select>
+                {/* Role Filter and Search Bar */}
+                <div className="flex items-center gap-4 mb-3">
+                    <div>
+                        <label htmlFor="roleFilter" className="mr-2 text-sm">
+                            Filter by Role:
+                        </label>
+                        <select
+                            id="roleFilter"
+                            value={selectedRole}
+                            onChange={handleRoleChange}
+                            className="p-2 border rounded-sm text-sm"
+                        >
+                            <option value="All">All</option>
+                            <option value="TBI Manager">TBI Manager</option>
+                            <option value="TBI Assistant">TBI Assistant</option>
+                            <option value="Portfolio Manager">Portfolio Manager</option>
+                            <option value="Project Manager">Project Manager</option>
+                            <option value="System Analyst">System Analyst</option>
+                            <option value="Developer">Developer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            placeholder="Search by name or email"
+                            className="p-2 border rounded-sm text-sm"
+                        />
+                    </div>
                 </div>
 
                 {activeTab === "pending" && (
                     <PendingUsersTable
-                        pendingUsers={pendingUsers}
-                        filterUsersByRole={filterUsersByRole}
+                        pendingUsers={filterUsersByRoleAndSearch(pendingUsers)}
+                        filterUsersByRole={filterUsersByRoleAndSearch}
                         handleApproval={handleApproval}
                         setUserToReject={setUserToReject}
                         setIsRejectModalOpen={setIsRejectModalOpen}
@@ -151,8 +178,8 @@ function AdminAccountApproval() {
 
                 {activeTab === "approved" && (
                     <ApprovedUsersTable
-                        approvedUsers={approvedUsers}
-                        filterUsersByRole={filterUsersByRole}
+                        approvedUsers={filterUsersByRoleAndSearch(approvedUsers)}
+                        filterUsersByRole={filterUsersByRoleAndSearch}
                         setUserToRemove={setUserToRemove}
                         setIsModalOpen={setIsModalOpen}
                     />

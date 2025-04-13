@@ -6,24 +6,24 @@ function PendingUsersTable({ pendingUsers, filterUsersByRole, handleApproval, se
         <div>
             <h2 className="text-1xl font-semibold mb-3">Pending Users</h2>
             <div className="overflow-x-auto mb-8">
-                <table className="min-w-full bg-white border rounded-lg">
+                <table className="min-w-full bg-white text-xs">
                     <thead>
                         <tr className="bg-primary-color text-white text-xs">
-                            <th className="p-2 border">Name</th>
-                            <th className="p-2 border">Email</th>
-                            <th className="p-2 border">Role</th>
-                            <th className="p-2 border">Time Registered</th>
-                            <th className="p-2 border">Actions</th>
+                            <th className="p-2">Name</th>
+                            <th className="p-2">Email</th>
+                            <th className="p-2">Role</th>
+                            <th className="p-2">Time Registered</th>
+                            <th className="p-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filterUsersByRole(pendingUsers).map((user) => (
-                            <tr key={user.id} className="text-center border text-xs">
-                                <td className="p-2 border">{user.name} {user.lastname}</td>
-                                <td className="p-2 border">{user.email}</td>
-                                <td className="p-2 border">{user.role}</td>
-                                <td className="p-2 border">{user.timestamp}</td>
-                                <td className="p-2 border">
+                        {filterUsersByRole(pendingUsers).map((user, index) => (
+                            <tr key={user.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}>
+                                <td className="p-2">{user.name} {user.lastname}</td>
+                                <td className="p-2">{user.email}</td>
+                                <td className="p-2">{user.role}</td>
+                                <td className="p-2">{user.timestamp}</td>
+                                <td className="p-2">
                                     <button
                                         className="bg-green-500 text-white px-3 py-1 rounded-sm mr-2 hover:bg-green-600"
                                         title="Approve"

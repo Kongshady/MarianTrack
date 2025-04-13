@@ -14,6 +14,7 @@ function IncuChat() {
     const [editingMessage, setEditingMessage] = useState(null);
     const [showOptions, setShowOptions] = useState(null);
     const [unreadCounts, setUnreadCounts] = useState({});
+    const [lastChatTimestamps, setLastChatTimestamps] = useState({});
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -46,11 +47,14 @@ function IncuChat() {
                     id: doc.id,
                     ...doc.data()
                 }));
+
                 const groupUsers = usersList.filter(user =>
                     (currentUserGroup.members.some(member => member.email === user.email) ||
-                    (currentUserRole === "Project Manager" && currentUserGroup.portfolioManager.email === user.email)) &&
+                    (currentUserRole === "Project Manager" && currentUserGroup.portfolioManager.email === user.email) ||
+                    (currentUserRole === "Project Manager" && ["TBI Manager", "TBI Assistant"].includes(user.role))) &&
                     user.id !== auth.currentUser.uid // Exclude the current user
                 );
+
                 setUsers(groupUsers);
             };
 
@@ -83,6 +87,15 @@ function IncuChat() {
                         });
                     }
                 });
+
+                // Update last chat timestamp
+                if (filteredMessages.length > 0) {
+                    const lastMessage = filteredMessages[filteredMessages.length - 1];
+                    setLastChatTimestamps((prev) => ({
+                        ...prev,
+                        [selectedUser.id]: lastMessage.timestamp,
+                    }));
+                }
             });
 
             return () => unsubscribe();
@@ -185,13 +198,20 @@ function IncuChat() {
         return diff > 5; // Disable if more than 5 minutes
     };
 
-    const sortedUsers = [...users].sort((a, b) => (unreadCounts[b.id] || 0) - (unreadCounts[a.id] || 0));
+    // Sort users: last chatted user first, then by unread counts
+    const sortedUsers = [...users].sort((a, b) => {
+        if (lastChatTimestamps[a.id] && lastChatTimestamps[b.id]) {
+            return lastChatTimestamps[b.id].seconds - lastChatTimestamps[a.id].seconds;
+        }
+        if (lastChatTimestamps[a.id]) return -1;
+        if (lastChatTimestamps[b.id]) return 1;
+        return (unreadCounts[b.id] || 0) - (unreadCounts[a.id] || 0);
+    });
 
     return (
         <div className="flex">
             <IncubateeSidebar />
             <div className="flex flex-col items-start justify-start h-screen w-full p-10 bg-gray-100">
-                <h1 className="text-4xl font-bold mb-6">Chats</h1>
                 <div className="flex w-full max-w-7xl h-svh bg-white rounded-sm shadow-lg overflow-hidden">
                     <div className="w-1/4 border-r">
                         <h2 className="text-md font-semibold p-4 border-b">Chat Members</h2>
@@ -203,10 +223,28 @@ function IncuChat() {
                                     onClick={() => setSelectedUser(user)}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-bold">{user.name} {user.lastname}</span>
+                                        {/* Placeholder Image */}
+                                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden mr-3">
+                                            {user.profileImageUrl ? (
+                                                <img
+                                                    src={user.profileImageUrl}
+                                                    alt={`${user.name} ${user.lastname}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-gray-500 text-xs text-center">No Image</span>
+                                            )}
+                                        </div>
+
+                                        {/* User Details */}
+                                        <div className="flex flex-col flex-1">
+                                            <span className="font-bold text-sm">
+                                                {user.name} {user.lastname}
+                                            </span>
                                             <span className="text-xs text-gray-500">{user.role}</span>
                                         </div>
+
+                                        {/* Unread Count */}
                                         {unreadCounts[user.id] > 0 && (
                                             <span className="text-xs bg-red-500 text-white rounded-full px-2 py-1">
                                                 {unreadCounts[user.id]}
@@ -223,7 +261,9 @@ function IncuChat() {
                                 <>
                                     <div className="flex items-center mb-4 top-0 sticky bg-white">
                                         <div className="flex flex-col">
-                                            <h2 className="text-md font-semibold">{selectedUser.name} {selectedUser.lastname}</h2>
+                                            <h2 className="text-md font-semibold">
+                                                {selectedUser.name} {selectedUser.lastname}
+                                            </h2>
                                             <span className="text-xs text-gray-500">{selectedUser.role}</span>
                                         </div>
                                     </div>
