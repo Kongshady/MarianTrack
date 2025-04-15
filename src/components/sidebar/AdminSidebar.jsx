@@ -12,6 +12,7 @@ import MarianLogo from "../../assets/images/MarianLogoWtext.png"; // Import the 
 function AdminSideBar() {
   const [userData, setUserData] = useState(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0); // State for unread notifications
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +24,8 @@ function AdminSideBar() {
           if (docSnapshot.exists()) {
             const data = docSnapshot.data();
             setUserData(data);
-            fetchUnreadMessagesCount(user.uid); // Use user.uid directly
+            fetchUnreadMessagesCount(user.uid); // Fetch unread messages count
+            fetchUnreadNotificationsCount(user.uid); // Fetch unread notifications count
           }
         });
 
@@ -40,6 +42,20 @@ function AdminSideBar() {
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         setUnreadMessagesCount(querySnapshot.size);
+      });
+
+      return unsubscribe;
+    };
+
+    const fetchUnreadNotificationsCount = (userId) => {
+      if (!userId) return; // Ensure userId is defined
+      const q = query(
+        collection(db, "notifications"),
+        where("userId", "==", userId),
+        where("read", "==", false)
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setUnreadNotificationsCount(querySnapshot.size);
       });
 
       return unsubscribe;
@@ -80,8 +96,18 @@ function AdminSideBar() {
           <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
           <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
           <MenuItem to={"/admin-user-management"} icon={<MdManageAccounts />} text="UserManagement" />
-          <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
-          <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" unreadCount={unreadMessagesCount} />
+          <MenuItem
+            to={"/admin-notification"}
+            icon={<IoMdNotifications />}
+            text="Notification"
+            unreadCount={unreadNotificationsCount} // Pass unread notifications count
+          />
+          <MenuItem
+            to={"/admin-chat"}
+            icon={<IoChatbox />}
+            text="Chat"
+            unreadCount={unreadMessagesCount} // Pass unread messages count
+          />
           <li>
             <button
               onClick={handleLogout}

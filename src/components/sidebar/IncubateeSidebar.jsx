@@ -12,6 +12,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("Loading...");
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0); // State for unread notifications
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +24,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
         setUserRole(userData.role);
         onUserFetched(userData);
         fetchUnreadMessagesCount(userData.id);
+        fetchUnreadNotificationsCount(userData.id); // Fetch unread notifications count
         await updateLastOnline(userData.id); // Update last login
       } else {
         const user = auth.currentUser;
@@ -35,6 +37,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
             setUserRole(userData.role);
             onUserFetched(userData);
             fetchUnreadMessagesCount(userData.id);
+            fetchUnreadNotificationsCount(userData.id); // Fetch unread notifications count
             await updateLastOnline(userData.id); // Update last login
           }
         }
@@ -51,6 +54,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
           setUserRole(userData.role);
           onUserFetched(userData);
           fetchUnreadMessagesCount(userData.id);
+          fetchUnreadNotificationsCount(userData.id); // Fetch unread notifications count
           await updateLastOnline(userData.id); // Update last login
         }
       } else {
@@ -69,6 +73,19 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         setUnreadMessagesCount(querySnapshot.size);
+      });
+
+      return unsubscribe;
+    };
+
+    const fetchUnreadNotificationsCount = (userId) => {
+      const q = query(
+        collection(db, "notifications"),
+        where("userId", "==", userId),
+        where("read", "==", false)
+      );
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        setUnreadNotificationsCount(querySnapshot.size);
       });
 
       return unsubscribe;
@@ -119,8 +136,18 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
         <ul className="space-y-1">
           <MenuItem to={"/incubatee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="MyGroup" />
-          <MenuItem to={"/incubatee-notification"} icon={<IoMdNotifications />} text="Notifications" />
-          <MenuItem to={"/incubatee-chat"} icon={<IoChatbox />} text="Chats" unreadCount={unreadMessagesCount} />
+          <MenuItem
+            to={"/incubatee-notification"}
+            icon={<IoMdNotifications />}
+            text="Notifications"
+            unreadCount={unreadNotificationsCount} // Pass unread notifications count
+          />
+          <MenuItem
+            to={"/incubatee-chat"}
+            icon={<IoChatbox />}
+            text="Chats"
+            unreadCount={unreadMessagesCount} // Pass unread messages count
+          />
           <li>
             <button
               onClick={handleLogout}

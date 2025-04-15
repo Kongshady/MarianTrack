@@ -4,6 +4,19 @@ import { db, auth } from "../../config/marian-config.js";
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 import { HiDotsVertical } from "react-icons/hi";
+import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
+
+// Define the getIconForType function
+const getIconForType = (type, sizeClass = "text-xl") => {
+  switch (type) {
+    case "completion":
+      return <FaCheckCircle className={`text-green-500 ${sizeClass}`} />;
+    case "welcome":
+      return <FaUserCheck className={`text-blue-500 ${sizeClass}`} />;
+    default:
+      return <FaBell className={`text-gray-500 ${sizeClass}`} />;
+  }
+};
 
 function EmNotification() {
   const [notifications, setNotifications] = useState([]);
@@ -127,22 +140,34 @@ function EmNotification() {
         </div>
         <div className="w-full ">
           <ul className="w-full">
-            {notifications.map(notification => (
-              <li key={notification.id} className={`p-2 border rounded-sm flex flex-row items-center justify-between ${notification.read ? 'bg-gray-200' : 'bg-white'} relative`}>
-                <div>
-                  <p className="text-sm">{notification.message}</p>
+            {notifications.map((notification) => (
+              <li
+                key={notification.id}
+                className={`p-4 border rounded-sm flex items-center gap-4 ${
+                  notification.read ? "bg-gray-200" : "bg-white"
+                }`}
+              >
+                {/* Display icon based on type */}
+                <div className="flex-shrink-0">
+                  {getIconForType(notification.type, "text-3xl")} {/* Pass size class */}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm mb-1" dangerouslySetInnerHTML={{ __html: notification.message }}></p>
                   <p className="text-xs text-gray-500">
-                    {new Date(notification.timestamp.seconds * 1000).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}, {new Date(notification.timestamp.seconds * 1000).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: 'numeric',
-                      hour12: true
+                    {new Date(notification.timestamp.seconds * 1000).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    ,{" "}
+                    {new Date(notification.timestamp.seconds * 1000).toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "numeric",
+                      hour12: true,
                     })}
                   </p>
                 </div>
+                {/* Vertical Dots */}
                 <div className="relative">
                   <button className="text-blue-500 hover:underline group p-2">
                     <HiDotsVertical />

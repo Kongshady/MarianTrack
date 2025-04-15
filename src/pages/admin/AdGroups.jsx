@@ -125,8 +125,21 @@ function AdGroups() {
         message: `Heads up! You’ve been chosen as the Portfolio Manager for <b>${groupName}</b>. Your leadership starts now!`,
         timestamp: serverTimestamp(),
         read: false,
-        groupId: groupDocRef.id // Add groupId to the notification
+        groupId: groupDocRef.id, // Add groupId to the notification
+        type: "manager" // Notification type for portfolio manager
       });
+
+      // Create notifications for each member
+      for (const member of memberDetails) {
+        await addDoc(collection(db, "notifications"), {
+          userId: member.id,
+          message: `You're in! <b>${groupName}</b> just got even better with you on board.`,
+          timestamp: serverTimestamp(),
+          read: false,
+          groupId: groupDocRef.id, // Add groupId to the notification
+          type: "welcome" // Notification type for members
+        });
+      }
 
       setGroupName("");
       setDescription("");

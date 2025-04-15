@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { auth, db } from "../../config/marian-config";
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
+import { FaUserCheck, FaBell } from "react-icons/fa"; // Import icons
 
 function IncuNotification() {
     const [notifications, setNotifications] = useState([]);
@@ -128,6 +129,17 @@ function IncuNotification() {
         setDropdownOpen((prev) => (prev === id ? null : id));
     };
 
+    const getIconForType = (type) => {
+        switch (type) {
+            case "welcome":
+                return <FaUserCheck className="text-green-500" size={30} />;
+            case "manager":
+                return <FaBell className="text-blue-500" size={30} />;
+            default:
+                return <FaBell className="text-gray-500" size={30} />;
+        }
+    };
+
     return (
         <div className="flex">
             <IncubateeSidebar />
@@ -154,23 +166,29 @@ function IncuNotification() {
                         {notifications.map((notification) => (
                             <li
                                 key={notification.id}
-                                className={`p-2 shadow-md hover:shadow-lg transition duration-200 relative ${
+                                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${
                                     notification.read ? "bg-gray-200" : "bg-white"
                                 }`}
                             >
-                                <p className="text-sm text-gray-700">{notification.message}</p>
-                                <p className="text-xs text-gray-500">
-                                    {notification.createdAt
-                                        ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
-                                              year: "numeric",
-                                              month: "long",
-                                              day: "numeric",
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              hour12: true,
-                                          })
-                                        : "Unknown"}
-                                </p>
+                                {/* Display icon based on type */}
+                                <div className="flex-shrink-0">
+                                    {getIconForType(notification.type, "text-3xl")} {/* Pass size class */}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm mb-1" dangerouslySetInnerHTML={{ __html: notification.message }}></p>
+                                    <p className="text-xs text-gray-500">
+                                        {notification.createdAt
+                                            ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                  hour12: true,
+                                              })
+                                            : "Unknown"}
+                                    </p>
+                                </div>
                                 {/* Vertical Dots */}
                                 <div className="absolute top-4 right-4">
                                     <button

@@ -2,6 +2,19 @@ import React, { useEffect, useState } from "react";
 import { db } from "../../config/marian-config";
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
+import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
+
+// Define the getIconForType function
+const getIconForType = (type, sizeClass = "text-xl") => {
+  switch (type) {
+    case "group_request":
+      return <FaUserCheck className={`text-blue-500 ${sizeClass}`} />;
+    case "group_completion":
+      return <FaCheckCircle className={`text-green-500 ${sizeClass}`} />;
+    default:
+      return <FaBell className={`text-gray-500 ${sizeClass}`} />;
+  }
+};
 
 function AdNotification() {
   const [notifications, setNotifications] = useState([]);
@@ -9,10 +22,9 @@ function AdNotification() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // Fetch only notifications of type "group_request" or "group_completion"
         const notificationsQuery = query(
           collection(db, "notifications"),
-          where("type", "in", ["group_request", "group_completion"]) // Filter by type
+          where("type", "in", ["group_request", "group_completion"])
         );
 
         const querySnapshot = await getDocs(notificationsQuery);
@@ -87,23 +99,29 @@ function AdNotification() {
             {notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`p-2 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200 relative ${
+                className={`p-4 border rounded-sm flex items-start gap-4 ${
                   notification.read ? "bg-gray-200" : "bg-white"
                 }`}
               >
-                <p className="text-sm text-gray-700">{notification.message}</p>
-                <p className="text-xs text-gray-500">
-                  {notification.createdAt
-                    ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "Unknown"}
-                </p>
+                {/* Display icon based on type */}
+                <div className="flex-shrink-0">
+                  {getIconForType(notification.type, "text-3xl")} {/* Pass size class */}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium mb-1" dangerouslySetInnerHTML={{ __html: notification.message }}></p>
+                  <p className="text-xs text-gray-500">
+                    {notification.createdAt
+                      ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "Unknown"}
+                  </p>
+                </div>
                 <div className="absolute top-4 right-4">
                   <button className="text-gray-500 hover:text-gray-700">&#x22EE;</button>
                 </div>
