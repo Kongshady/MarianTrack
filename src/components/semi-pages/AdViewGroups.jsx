@@ -25,7 +25,7 @@ function AdViewGroups() {
           setGroup({ id: doc.id, ...groupData });
 
           // Fetch portfolio manager details
-          if (groupData.portfolioManager) {
+          if (groupData.portfolioManager && groupData.portfolioManager.id) {
             const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id);
             onSnapshot(portfolioManagerDocRef, (portfolioManagerDoc) => {
               if (portfolioManagerDoc.exists()) {
@@ -42,7 +42,7 @@ function AdViewGroups() {
     const fetchRequests = () => {
       const q = query(collection(db, "requests"), where("groupId", "==", groupId));
       const unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
-        setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setRequests(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
       });
 
       return unsubscribeRequests;
@@ -51,7 +51,7 @@ function AdViewGroups() {
     const fetchWorkplan = () => {
       const q = query(collection(db, "workplan"), where("groupId", "==", groupId));
       const unsubscribeWorkplan = onSnapshot(q, (querySnapshot) => {
-        setWorkplan(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setWorkplan(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
       });
 
       return unsubscribeWorkplan;
@@ -62,9 +62,9 @@ function AdViewGroups() {
     const unsubscribeWorkplan = fetchWorkplan();
 
     return () => {
-      unsubscribeGroup();
-      unsubscribeRequests();
-      unsubscribeWorkplan();
+      if (unsubscribeGroup) unsubscribeGroup();
+      if (unsubscribeRequests) unsubscribeRequests();
+      if (unsubscribeWorkplan) unsubscribeWorkplan();
     };
   }, [groupId]);
 

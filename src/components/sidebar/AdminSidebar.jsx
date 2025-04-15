@@ -79,7 +79,7 @@ function AdminSideBar() {
           <MenuItem to={"/admin-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
           <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
-          <MenuItem to={"/admin-approval"} icon={<MdManageAccounts />} text="UserManagement" />
+          <MenuItem to={"/admin-user-management"} icon={<MdManageAccounts />} text="UserManagement" />
           <MenuItem to={"/admin-notification"} icon={<IoMdNotifications />} text="Notification" />
           <MenuItem to={"/admin-chat"} icon={<IoChatbox />} text="Chat" unreadCount={unreadMessagesCount} />
           <li>

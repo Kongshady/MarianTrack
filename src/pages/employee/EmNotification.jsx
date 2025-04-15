@@ -107,7 +107,7 @@ function EmNotification() {
   return (
     <div className="flex">
       <EmployeeSidebar />
-      <div className="flex flex-col items-start p-10 h-screen w-full">
+      <div className="flex flex-col items-start p-10 h-screen w-full overflow-y-auto">
         <div className="flex items-center justify-between w-full mb-5">
           <h1 className="text-4xl font-bold">Notifications</h1>
           <div className="flex gap-1">
@@ -125,7 +125,7 @@ function EmNotification() {
             </button>
           </div>
         </div>
-        <div className="w-full h-96 overflow-y-auto">
+        <div className="w-full ">
           <ul className="w-full">
             {notifications.map(notification => (
               <li key={notification.id} className={`p-2 border rounded-sm flex flex-row items-center justify-between ${notification.read ? 'bg-gray-200' : 'bg-white'} relative`}>

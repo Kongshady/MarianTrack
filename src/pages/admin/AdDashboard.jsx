@@ -106,10 +106,10 @@ function AdDashboard() {
     <div className="flex">
       <AdminSideBar />
       <div className="flex flex-col items-start justify-start h-svh overflow-x-auto w-full p-10 bg-gray-100">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-4xl mb-2 font-bold">
           Welcome, {userName || "Admin"}!
         </h1>
-        <p className="text-lg text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 mb-4">
           Here's an overview of the system's statistics.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full text-center">

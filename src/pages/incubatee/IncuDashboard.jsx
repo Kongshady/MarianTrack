@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../../config/marian-config"; // Import Firebase auth and Firestore
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
 
 function IncuDashboard() {
@@ -50,8 +50,51 @@ function IncuDashboard() {
                 ...doc.data(),
             }));
             setTasks(tasksData); // Set the tasks in state
+
+            // Check for tasks due this week and add notifications
+            const { startOfWeek, endOfWeek } = getCurrentWeekRange();
+            const dueTasks = tasksData.filter((task) => {
+                const taskDueDate = task.endDate ? new Date(task.endDate) : null;
+                return (
+                    taskDueDate &&
+                    taskDueDate >= startOfWeek &&
+                    taskDueDate <= endOfWeek &&
+                    task.status !== "Completed"
+                );
+            });
+
+            if (dueTasks.length > 0) {
+                await addNotification();
+            }
         } catch (error) {
             console.error("Error fetching tasks:", error);
+        }
+    };
+
+    const addNotification = async () => {
+        try {
+            const user = auth.currentUser;
+            if (user) {
+                const notificationQuery = query(
+                    collection(db, "notifications"),
+                    where("userId", "==", user.uid),
+                    where("type", "==", "task_due_this_week")
+                );
+
+                const existingNotifications = await getDocs(notificationQuery);
+
+                // Avoid duplicate notifications
+                if (existingNotifications.empty) {
+                    await addDoc(collection(db, "notifications"), {
+                        userId: user.uid,
+                        type: "task_due_this_week",
+                        message: "Your tasks for this week are about to end. Please update them.",
+                        createdAt: new Date(),
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error adding notification:", error);
         }
     };
 
@@ -126,7 +169,7 @@ function IncuDashboard() {
             <div className="flex flex-col h-screen w-full p-10 bg-gray-100">
                 {/* Welcome Section */}
                 <h1 className="text-3xl font-bold mb-2">Welcome, {userName || "User"}!</h1>
-                <p className="text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
+                <p className="text-sm text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
 
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
 import { db } from "../../config/marian-config.js";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { FiRefreshCw, FiList, FiBarChart2 } from "react-icons/fi"; // Import icons for list and detailed views
 
@@ -32,6 +32,12 @@ function AdProgress() {
               ...taskDoc.data(),
             }));
 
+            // Check if the group's progress is 100% and notify
+            const progress = calculateProgress(workplan);
+            if (progress === 100) {
+              await notifyGroupCompletion(group.name);
+            }
+
             return { ...group, workplan: workplan || [] };
           })
         );
@@ -49,6 +55,19 @@ function AdProgress() {
     if (!workplan || workplan.length === 0) return 0;
     const completedTasks = workplan.filter((task) => task.status === "Completed").length;
     return Math.round((completedTasks / workplan.length) * 100);
+  };
+
+  const notifyGroupCompletion = async (groupName) => {
+    try {
+      await addDoc(collection(db, "notifications"), {
+        type: "group_completion",
+        message: `The Group "${groupName}" is completed on their tasks.`,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
   };
 
   const toggleFlip = (groupId) => {

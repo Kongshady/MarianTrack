@@ -135,7 +135,7 @@ function AdminAccountApproval() {
                 </div>
 
                 {/* Role Filter and Search Bar */}
-                <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                     <div>
                         <label htmlFor="roleFilter" className="mr-2 text-sm">
                             Filter by Role:

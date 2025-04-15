@@ -33,7 +33,7 @@ import AdChat from "../pages/admin/AdChat.jsx";
 import AdNotification from "../pages/admin/AdNotification.jsx";
 import AdGroups from "../pages/admin/AdGroups.jsx";
 import AdProgress from "../pages/admin/AdProgress.jsx";
-import AdAccApproval from "../pages/admin/AdAccountApproval.jsx";
+import AdUserManagement from "../pages/admin/AdUserManagement.jsx";
 import AdViewGroups from "../components/semi-pages/AdViewGroups.jsx";
 import AdEditProfile from "../components/edit-profile/AdEditProfile.jsx";
 import AdArchives from "../pages/admin/AdArchives.jsx";
@@ -180,10 +180,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/admin-approval"
+        path="/admin-user-management"
         element={
           <ProtectedRoute allowedRoles={["TBI Manager"]}>
-            <AdAccApproval />
+            <AdUserManagement />
           </ProtectedRoute>
         }
       />

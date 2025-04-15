@@ -12,6 +12,7 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
+  getDocs, // Import getDocs
 } from "firebase/firestore";
 import IncubateeSidebar from "../sidebar/IncubateeSidebar.jsx";
 import RequestsTable from "../modals/RequestsTable.jsx";
@@ -149,61 +150,66 @@ function IncuViewGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (isEditing) {
-        await updateDoc(doc(db, "requests", currentRequestId), requestData);
-        alert("Request updated successfully!");
-      } else {
-        // Add the new request to the "requests" collection
-        await addDoc(collection(db, "requests"), {
-          ...requestData,
-          dateEntry: serverTimestamp(),
-          groupId,
-        });
-  
-        // Fetch the group details
-        const groupDoc = await getDoc(doc(db, "groups", groupId));
-        if (groupDoc.exists()) {
-          const groupData = groupDoc.data();
-          const portfolioManagerId = groupData.portfolioManager.id;
-  
-          // Notify the portfolio manager
-          await addDoc(collection(db, "notifications"), {
-            userId: portfolioManagerId,
-            message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
-            timestamp: serverTimestamp(),
-            read: false,
-          });
-  
-          // Notify TBI Manager and TBI Assistant
-          const usersQuery = query(
-            collection(db, "users"),
-            where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
-          );
-  
-          const usersSnapshot = await getDocs(usersQuery);
-          usersSnapshot.forEach(async (userDoc) => {
-            const userData = userDoc.data();
-            await addDoc(collection(db, "notifications"), {
-              userId: userDoc.id, // Firestore document ID of the user
-              message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
-              timestamp: serverTimestamp(),
-              read: false,
+        if (isEditing) {
+            // Update an existing request
+            await updateDoc(doc(db, "requests", currentRequestId), requestData);
+            alert("Request updated successfully!");
+        } else {
+            // Add a new request
+            if (!groupId) {
+                throw new Error("Group ID is missing. Please try again.");
+            }
+
+            // Add the new request to the "requests" collection
+            await addDoc(collection(db, "requests"), {
+                ...requestData,
+                dateEntry: serverTimestamp(), // Use serverTimestamp for Firestore
+                groupId, // Ensure groupId is included
             });
-          });
+
+            // Fetch the group details
+            const groupDoc = await getDoc(doc(db, "groups", groupId));
+            if (groupDoc.exists()) {
+                const groupData = groupDoc.data();
+                const portfolioManagerId = groupData.portfolioManager.id;
+
+                // Notify the portfolio manager
+                await addDoc(collection(db, "notifications"), {
+                    userId: portfolioManagerId,
+                    message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
+                    timestamp: serverTimestamp(),
+                    read: false,
+                });
+
+                // Notify TBI Manager and TBI Assistant
+                const usersQuery = query(
+                    collection(db, "users"),
+                    where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
+                );
+
+                const usersSnapshot = await getDocs(usersQuery);
+                usersSnapshot.forEach(async (userDoc) => {
+                    await addDoc(collection(db, "notifications"), {
+                        userId: userDoc.id, // Firestore document ID of the user
+                        message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
+                        timestamp: serverTimestamp(),
+                        read: false,
+                    });
+                });
+            }
+
+            alert("Request submitted successfully!");
         }
-  
-        alert("Request submitted successfully!");
-      }
-  
-      // Reset modal and form state
-      setIsModalOpen(false);
-      setIsEditing(false);
-      setCurrentRequestId(null);
+
+        // Reset modal and form state
+        setIsModalOpen(false);
+        setIsEditing(false);
+        setCurrentRequestId(null);
     } catch (error) {
-      console.error("Error submitting request:", error);
-      alert("Error submitting request. Please try again.");
+        console.error("Error submitting request:", error);
+        alert(`Error submitting request: ${error.message}`);
     }
-  };
+};
 
   const handleEditRequest = (requestId) => {
     const requestToEdit = requests.find((request) => request.id === requestId);
