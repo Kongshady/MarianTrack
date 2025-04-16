@@ -17,23 +17,23 @@ Before getting started, make sure you have the following installed:
 
 ### 1. Clone the Repository
 open your VScode terminal or use Git Bash, then run:
-git clone https://github.com/your-username/your-repo-name.git
+- git clone https://github.com/your-username/your-repo-name.git
 
 ### 2. Navigate to the Project Directory
-cd your-repository-name
+- cd your-repository-name
 
 ### 3. Install Firebase
 Open Terminal and run the following command to install Firebase:
-npm install firebase
+- npm install firebase
 
 ### 4. Install All Dependecies
 If you have a package.json file(which likely you do), then install all dependencies with:
-npm install 
+- npm install 
 
 ### 5. Run the Project
 To start the development server:
-npm run dev
+- npm run dev
 
 ### 6. Your All Set
 Open your browser and go to:
-http://localhost:3000
+- http://localhost:3000
