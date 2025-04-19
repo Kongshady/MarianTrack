@@ -93,15 +93,15 @@ function EmDashboard() {
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4 w-full">
                     {/* Total Groups Card */}
-                    <div className="p-6 bg-white shadow rounded-sm">
-                        <h2 className="text-lg font-medium text-gray-800">Total Number of Assigned Groups</h2>
+                    <div className="p-6 bg-white shadow rounded-sm hover:shadow-lg transition-shadow duration-300">
+                        <h2 className="text-lg font-medium text-gray-800 ">Total Number of Assigned Groups</h2>
                         <p className="text-3xl font-bold text-blue-500 mt-4">{totalGroups}</p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Table of Groups with Number of Requests */}
-                    <div className="bg-white p-4 rounded-sm shadow w-full">
+                    <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Number of Requests</h2>
                         <div className="max-h-64 overflow-y-auto">
                             <table className="w-full text-sm text-left text-gray-500">
@@ -126,7 +126,7 @@ function EmDashboard() {
                     </div>
 
                     {/* Table of Groups with Total Progress Completion */}
-                    <div className="bg-white p-4 rounded-sm shadow w-full">
+                    <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
                         <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Total Progress Completion</h2>
                         <div className="max-h-64 overflow-y-auto">
                             <table className="w-full text-sm text-left text-gray-500">

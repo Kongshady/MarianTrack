@@ -291,9 +291,9 @@ function IncuViewGroup() {
             className="mt-2 w-full h-40 object-cover rounded-lg"
           />
         )}
-        <div className="mt-2 flex flex-row items-end justify-between gap-4 w-full">
+        <div className="mt-2 flex flex-col items-start justify-between gap-4 w-full">
           <div>
-            <h3 className="font-bold text-sm">Members:</h3>
+            <h3 className="font-bold text-md">Members:</h3>
             <ul className="text-sm">
               {group.members.map((member) => (
                 <li key={member.id}>
@@ -342,7 +342,7 @@ function IncuViewGroup() {
                 : "bg-gray-500"
                 }`}
             >
-              <h3 className="text-xs">Total Completion</h3>
+              <h3 className="text-xs">Total Progress Completion</h3>
               <p className="text-md font-semibold mt-1">
                 {workplan.length > 0
                   ? `${Math.round(
@@ -447,7 +447,9 @@ function IncuViewGroup() {
             </h2>
             <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
               <div className="col-span-2">
-                <label className="block text-sm">Responsible Team Member</label>
+                <label className="block text-sm">
+                  Responsible Team Member <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="responsibleTeamMember"
                   value={requestData.responsibleTeamMember}
@@ -466,38 +468,50 @@ function IncuViewGroup() {
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block mb-1 text-sm">Request Type</label>
+                <label className="block mb-1 text-sm">
+                  Request Type <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="requestType"
                   value={requestData.requestType}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
                 >
+                  <option value="">Select Request Type</option>
                   <option value="Technical Request">Technical Request</option>
                   <option value="Expert Request">Expert Request</option>
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block mb-1 text-sm">Description</label>
-                <textarea
-                  name="description"
-                  value={requestData.description}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border text-sm"
-                ></textarea>
-              </div>
-              <div>
-                <label className="block mb-1 text-sm">Resource/Tool Needed</label>
+                <label className="block mb-1 text-sm">
+                  Resource/Tool Needed <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="resourceToolNeeded"
                   value={requestData.resourceToolNeeded}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
+                  placeholder="Enter the resource or tool needed"
                 />
               </div>
+              <div className="col-span-2">
+                <label className="block mb-1 text-sm">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={requestData.description}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border text-sm"
+                  placeholder="Describe the request in detail (Optional)"
+                ></textarea>
+              </div>
+              
               <div>
-                <label className="block mb-1 text-sm">Date Entry</label>
+                <label className="block mb-1 text-sm">
+                  Date Entry
+                </label>
                 <input
                   type="date"
                   name="dateEntry"
@@ -508,7 +522,9 @@ function IncuViewGroup() {
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm">Date Needed</label>
+                <label className="block mb-1 text-sm">
+                  Date Needed <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="date"
                   name="dateNeeded"
@@ -518,35 +534,44 @@ function IncuViewGroup() {
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm">Prospect Resource Person</label>
+                <label className="block mb-1 text-sm">
+                  Prospect Resource Person
+                </label>
                 <input
                   type="text"
                   name="prospectResourcePerson"
                   value={requestData.prospectResourcePerson}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
+                  placeholder="Enter the name of resource person"
                 />
               </div>
               <div>
-                <label className="block mb-1 text-sm">Priority Level</label>
+                <label className="block mb-1 text-sm">
+                  Priority Level <span className="text-red-500">*</span>
+                </label>
                 <select
                   name="priorityLevel"
                   value={requestData.priorityLevel}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
                 >
+                  <option value="">Select Priority Level</option>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block mb-1 text-sm">Remarks</label>
+                <label className="block mb-1 text-sm">
+                  Remarks
+                </label>
                 <textarea
                   name="remarks"
                   value={requestData.remarks}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
+                  placeholder="Optional remarks or additional information"
                 ></textarea>
               </div>
               <div className="col-span-2 flex justify-end gap-2">
@@ -559,7 +584,22 @@ function IncuViewGroup() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-secondary-color text-white text-sm rounded-sm hover:bg-opacity-80 transition"
+                  disabled={
+                    !requestData.responsibleTeamMember ||
+                    !requestData.requestType ||
+                    !requestData.resourceToolNeeded ||
+                    !requestData.dateNeeded ||
+                    !requestData.priorityLevel
+                  }
+                  className={`px-4 py-2 text-white text-sm rounded-sm transition ${
+                    !requestData.responsibleTeamMember ||
+                    !requestData.requestType ||
+                    !requestData.resourceToolNeeded ||
+                    !requestData.dateNeeded ||
+                    !requestData.priorityLevel
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-secondary-color hover:bg-opacity-80"
+                  }`}
                 >
                   {isEditing ? "Update Request" : "Submit Request"}
                 </button>

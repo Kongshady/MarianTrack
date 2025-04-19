@@ -7,8 +7,6 @@ import { HiDotsVertical } from "react-icons/hi";
 import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
 import { LiaHandsHelpingSolid } from "react-icons/lia";
 
-
-
 // Define the getIconForType function
 const getIconForType = (type, sizeClass = "text-xl") => {
   switch (type) {
@@ -23,7 +21,6 @@ const getIconForType = (type, sizeClass = "text-xl") => {
 
 function EmNotification() {
   const [notifications, setNotifications] = useState([]);
-  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,10 +65,8 @@ function EmNotification() {
     try {
       await deleteDoc(doc(db, "notifications", notificationId));
       setNotifications(notifications.filter(notification => notification.id !== notificationId));
-      alert("Notification deleted successfully!");
     } catch (error) {
       console.error("Error deleting notification:", error);
-      alert("Error deleting notification. Please try again.");
     }
   };
 
@@ -84,10 +79,8 @@ function EmNotification() {
       });
       await batch.commit();
       setNotifications(notifications.map(notification => ({ ...notification, read: true })));
-      alert("All notifications marked as read!");
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-      alert("Error marking all notifications as read. Please try again.");
     }
   };
 
@@ -100,24 +93,9 @@ function EmNotification() {
       });
       await batch.commit();
       setNotifications([]);
-      alert("All notifications deleted successfully!");
     } catch (error) {
       console.error("Error deleting all notifications:", error);
-      alert("Error deleting all notifications. Please try again.");
     }
-  };
-
-  const openDeleteAllModal = () => {
-    setShowDeleteAllModal(true);
-  };
-
-  const closeDeleteAllModal = () => {
-    setShowDeleteAllModal(false);
-  };
-
-  const confirmDeleteAllNotifications = () => {
-    handleDeleteAllNotifications();
-    closeDeleteAllModal();
   };
 
   return (
@@ -134,14 +112,14 @@ function EmNotification() {
               Mark All as Read
             </button>
             <button
-              onClick={openDeleteAllModal}
+              onClick={handleDeleteAllNotifications}
               className="bg-red-500 text-white text-xs px-4 py-2 rounded-sm hover:bg-red-600 transition"
             >
               Delete All
             </button>
           </div>
         </div>
-        <div className="w-full ">
+        <div className="w-full">
           <ul className="w-full">
             {notifications.map((notification) => (
               <li
@@ -202,29 +180,6 @@ function EmNotification() {
           </ul>
         </div>
       </div>
-
-      {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
-            <p className="mb-4">Are you sure you want to delete all notifications?</p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={closeDeleteAllModal}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteAllNotifications}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-              >
-                Delete All
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

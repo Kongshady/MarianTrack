@@ -59,7 +59,7 @@ function EmGroups() {
             groups.map(group => (
               <div
                 key={group.id}
-                className="bg-white p-4 rounded-lg shadow-md border hover:shadow-xl transition-shadow duration-300 relative"
+                className="bg-white p-4 rounded-sm shadow-sm border hover:shadow-lg transition-shadow duration-300 relative"
               >
                 <h2 className="text-md font-bold">{group.name}</h2>
                 <p className="text-xs text-gray-600">{group.description}</p>

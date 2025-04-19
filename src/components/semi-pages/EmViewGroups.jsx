@@ -102,7 +102,7 @@ function EmViewGroup() {
   return (
     <div className="flex">
       <EmployeeSidebar />
-      <div className="flex flex-col items-start h-screen w-full p-10">
+      <div className="flex flex-col items-start h-screen w-full p-10 overflow-y-auto">
         <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
         <p className="text-sm italic">{group.description}</p>
         {group.imageUrl && (
@@ -112,10 +112,10 @@ function EmViewGroup() {
             className="mt-2 w-full h-40 object-cover rounded-lg"
           />
         )}
-        <div className="mt-2 flex flex-row justify-between items-start w-full">
+        <div className="mt-2 flex flex-col justify-between items-start w-full gap-4 mb-4">
           {/* Members List */}
-          <div>
-            <h3 className="font-bold text-sm">Members:</h3>
+          <div className="">
+            <h3 className="font-bold text-md">Members:</h3>
             <ul className="text-sm">
               {group.members.map((member) => (
                 <li key={member.id}>
@@ -149,20 +149,20 @@ function EmViewGroup() {
             {/* Card for overall workplan completion */}
             <div
               className={`text-white text-center p-2 rounded-sm shadow-md ${workplan.length > 0
-                  ? Math.round(
+                ? Math.round(
+                  (workplan.filter((task) => task.status === "Completed").length /
+                    workplan.length) *
+                  100
+                ) >= 75
+                  ? "bg-green-500"
+                  : Math.round(
                     (workplan.filter((task) => task.status === "Completed").length /
                       workplan.length) *
                     100
-                  ) >= 75
-                    ? "bg-green-500"
-                    : Math.round(
-                      (workplan.filter((task) => task.status === "Completed").length /
-                        workplan.length) *
-                      100
-                    ) >= 50
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                  : "bg-gray-500"
+                  ) >= 50
+                    ? "bg-yellow-500"
+                    : "bg-red-500"
+                : "bg-gray-500"
                 }`}
             >
               <h3 className="text-xs">Total Progress Completion</h3>
@@ -197,7 +197,8 @@ function EmViewGroup() {
           </div>
           {activeTable === "requests" && (
             <div className="overflow-y-auto h-80 mt-1">
-              <table className="min-w-full bg-white text-xs text-center">
+              <p className="font-bold mb-2">Requested Needs</p>
+              <table className="min-w-full bg-white text-xs text-left">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
                     <th className="p-2 font-medium">Responsible Team Member</th>
@@ -219,18 +220,18 @@ function EmViewGroup() {
                         key={request.id}
                         className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
                       >
-                        <td className="py-2 px-4">{request.responsibleTeamMember}</td>
-                        <td className="py-2 px-4">{request.requestType}</td>
-                        <td className="py-2 px-4">{request.description}</td>
-                        <td className="py-2 px-4">
+                        <td className="p-2">{request.responsibleTeamMember}</td>
+                        <td className="p-2">{request.requestType}</td>
+                        <td className="p-2">{request.description}</td>
+                        <td className="p-2">
                           {new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}
                         </td>
-                        <td className="py-2 px-4">{request.dateNeeded}</td>
-                        <td className="py-2 px-4">{request.resourceToolNeeded}</td>
-                        <td className="py-2 px-4">{request.prospectResourcePerson}</td>
-                        <td className="py-2 px-4">{request.priorityLevel}</td>
-                        <td className="py-2 px-4">{request.remarks}</td>
-                        <td className="py-2 px-4">
+                        <td className="p-2">{request.dateNeeded}</td>
+                        <td className="p-2">{request.resourceToolNeeded}</td>
+                        <td className="p-2">{request.prospectResourcePerson}</td>
+                        <td className="p-2">{request.priorityLevel}</td>
+                        <td className="p-2">{request.remarks}</td>
+                        <td className="p-2">
                           <select
                             value={request.status || "Requested"}
                             onChange={(e) => handleStatusChange(request.id, e.target.value)}
@@ -246,7 +247,7 @@ function EmViewGroup() {
                     ))
                   ) : (
                     <tr>
-                      <td className="py-2 px-4 text-center" colSpan="10">
+                      <td className="p-2 text-center" colSpan="10">
                         No requests found.
                       </td>
                     </tr>
@@ -257,15 +258,16 @@ function EmViewGroup() {
           )}
 
           {activeTable === "workplan" && (
-            <div className="overflow-y-auto h-80 mt-1">
-              <table className="min-w-full bg-white text-xs text-center">
+            <div className="overflow-y-auto mt-1">
+              <p className="font-bold mb-2">Project Workplan</p>
+              <table className="min-w-full bg-white text-xs text-left">
                 <thead className="sticky top-0 bg-primary-color text-white">
                   <tr>
-                    <th className="py-2 px-4 font-medium text-left">Task Name</th>
-                    <th className="py-2 px-4 font-medium">Assigned To</th>
-                    <th className="py-2 px-4 font-medium">Start Date</th>
-                    <th className="py-2 px-4 font-medium">End Date</th>
-                    <th className="py-2 px-4 font-medium">Status</th>
+                    <th className="p-2 font-medium">Task Name</th>
+                    <th className="p-2 font-medium text-right">Assigned To</th>
+                    <th className="p-2 font-medium">Start Date</th>
+                    <th className="p-2 font-medium">End Date</th>
+                    <th className="p-2 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -280,38 +282,37 @@ function EmViewGroup() {
                       .map((task, index) => (
                         <tr
                           key={task.id}
-                          className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                          className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
                         >
-                          <td className="p-2 text-left">{task.taskName}</td>
-                          <td className="p-2">{task.assignedTo}</td>
+                          <td className="p-2">{task.taskName}</td>
+                          <td className="p-2 text-right">{task.assignedTo}</td>
                           <td className="p-2">
                             {task.startDate
                               ? new Date(task.startDate).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
                               : "N/A"}
                           </td>
                           <td className="p-2">
                             {task.endDate
                               ? new Date(task.endDate).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
                               : "N/A"}
                           </td>
                           <td
-                            className={`p-2 font-semibold ${
-                              task.status === "Pending"
-                                ? "text-red-500"
-                                : task.status === "In Progress"
+                            className={`p-2 font-semibold ${task.status === "Pending"
+                              ? "text-red-500"
+                              : task.status === "In Progress"
                                 ? "text-yellow-500"
                                 : task.status === "Completed"
-                                ? "text-green-500"
-                                : "text-gray-500"
-                            }`}
+                                  ? "text-green-500"
+                                  : "text-gray-500"
+                              }`}
                           >
                             {task.status}
                           </td>

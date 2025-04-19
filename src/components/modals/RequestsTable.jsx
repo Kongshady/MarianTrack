@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openRequestModal, userRole }) => {
   return (
-    <div className="overflow-y-auto h-96 mt-2 w-full">
+    <div className="overflow-y-auto mt-2 w-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg">Requests</h3>
         {userRole === "Project Manager" && (

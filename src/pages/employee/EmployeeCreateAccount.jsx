@@ -33,6 +33,16 @@ function EmployeeCreateAccount() {
             setError("Passwords do not match.");
             return;
         }
+        if (
+            password.length < 8 ||
+            !/[A-Z]/.test(password) ||
+            !/[a-z]/.test(password) ||
+            !/[0-9]/.test(password) ||
+            !/[@$!%*?&#]/.test(password)
+        ) {
+            setError("Password does not meet the requirements.");
+            return;
+        }
 
         try {
             // Firebase Authentication: Create User
@@ -116,6 +126,23 @@ function EmployeeCreateAccount() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
+                <ul className="text-xs text-gray-600 mt-1">
+                    <li className={`${password.length >= 8 ? "text-green-500" : "text-red-500"}`}>
+                        * Password must be at least 8 characters long
+                    </li>
+                    <li className={`${/[A-Z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
+                        * Must contain at least one uppercase letter
+                    </li>
+                    <li className={`${/[a-z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
+                        * Must contain at least one lowercase letter
+                    </li>
+                    <li className={`${/[0-9]/.test(password) ? "text-green-500" : "text-red-500"}`}>
+                        * Must contain at least one number
+                    </li>
+                    <li className={`${/[@$!%*?&#]/.test(password) ? "text-green-500" : "text-red-500"}`}>
+                        * Must contain at least one special character (@, $, !, %, *, ?, &, #)
+                    </li>
+                </ul>
                 <input
                     type="password"
                     placeholder="Confirm Password"
@@ -129,7 +156,38 @@ function EmployeeCreateAccount() {
 
                 <CustomButton
                     text={"Create Account"}
-                    className={"bg-primary-color text-white hover:bg-white hover:text-primary-color transition-all"}
+                    className={`px-4 py-2 text-white text-sm rounded-sm transition ${
+                        !name ||
+                        !lastname ||
+                        !email ||
+                        !mobile ||
+                        !password ||
+                        !confirmPassword ||
+                        !role ||
+                        password !== confirmPassword ||
+                        password.length < 8 ||
+                        !/[A-Z]/.test(password) ||
+                        !/[a-z]/.test(password) ||
+                        !/[0-9]/.test(password) ||
+                        !/[@$!%*?&#]/.test(password)
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-primary-color hover:bg-opacity-80"
+                    }`}
+                    disabled={
+                        !name ||
+                        !lastname ||
+                        !email ||
+                        !mobile ||
+                        !password ||
+                        !confirmPassword ||
+                        !role ||
+                        password !== confirmPassword ||
+                        password.length < 8 ||
+                        !/[A-Z]/.test(password) ||
+                        !/[a-z]/.test(password) ||
+                        !/[0-9]/.test(password) ||
+                        !/[@$!%*?&#]/.test(password)
+                    }
                 />
             </form>
         </div>

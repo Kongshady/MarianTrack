@@ -95,7 +95,7 @@ function AdViewGroups() {
         </div>
         <p className="text-sm italic">{group.description}</p>
         {group.imageUrl && <img src={group.imageUrl} alt={group.name} className="mt-2 w-full h-40 object-cover rounded-lg" />}
-        <div className="mt-2 flex flex-row justify-between items-start w-full">
+        <div className="mt-2 flex flex-col justify-between items-start w-full gap-4">
           {/* Members List */}
           <div>
             <h3 className="font-bold text-sm">Members:</h3>
@@ -193,7 +193,8 @@ function AdViewGroups() {
         {/* Requests Table */}
         {isRequestsTableOpen && (
           <div className="overflow-y-auto h-96 mt-3 w-full">
-            <table className="w-full bg-white border-gray-200 text-xs text-center">
+            <p className="font-bold mb-2">Requested Needs</p>
+            <table className="w-full bg-white border-gray-200 text-xs text-left">
               <thead className="sticky top-0 bg-primary-color text-white">
                 <tr>
                   <th className="py-2 px-4 ">Responsible Team Member</th>
@@ -221,19 +222,19 @@ function AdViewGroups() {
                       <td className="py-2 px-4 ">
                         {request.dateEntry
                           ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
                           : "N/A"}
                       </td>
                       <td className="py-2 px-4 ">
                         {request.dateNeeded
                           ? new Date(request.dateNeeded).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
                           : "N/A"}
                       </td>
                       <td className="py-2 px-4 ">{request.resourceToolNeeded}</td>
@@ -258,7 +259,9 @@ function AdViewGroups() {
         {/* Workplan Table */}
         {isWorkplanTableOpen && (
           <div className="mt-3 w-full">
-            <table className="w-full bg-white border-gray-200 text-xs text-center">
+              <p className="font-bold mb-2">Project Workplan</p>
+
+            <table className="w-full bg-white border-gray-200 text-xs text-left">
               <thead className="sticky top-0 bg-primary-color text-white">
                 <tr>
                   <th className="py-2 px-4 text-left">Task Name</th>
@@ -304,12 +307,12 @@ function AdViewGroups() {
                         </td>
                         <td
                           className={`p-2 font-semibold ${task.status === "Pending"
-                              ? "text-red-500"
-                              : task.status === "In Progress"
-                                ? "text-yellow-500"
-                                : task.status === "Completed"
-                                  ? "text-green-500"
-                                  : "text-gray-500"
+                            ? "text-red-500"
+                            : task.status === "In Progress"
+                              ? "text-yellow-500"
+                              : task.status === "Completed"
+                                ? "text-green-500"
+                                : "text-gray-500"
                             }`}
                         >
                           {task.status}

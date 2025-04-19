@@ -142,20 +142,20 @@ function AdDashboard() {
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full text-center">
           {/* Total Groups Card */}
-          <div className="p-6 bg-white shadow">
+          <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-md font-medium text-gray-800">Total Groups</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{totalGroups}</p>
           </div>
 
           {/* Total Incubatees Card */}
-          <div className="p-6 bg-white shadow">
+          <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-md font-medium text-gray-800">Total Incubatees</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{totalIncubatees}</p>
           </div>
 
           {/* Flip Card for Total Requests */}
           <div
-            className={`p-6 bg-white shadow transform transition-transform duration-500 ${
+            className={`p-6 bg-white shadow transform transition-transform duration-500 hover:shadow-lg ${
               isFlipped ? "rotate-y-180" : ""
             }`}
             onClick={() => setIsFlipped(!isFlipped)}
@@ -182,22 +182,22 @@ function AdDashboard() {
           </div>
 
           {/* Completed Groups Card */}
-          <div className="p-6 bg-white shadow">
+          <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-md font-medium text-gray-800">Completed Groups</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{completedGroups}</p>
           </div>
 
           {/* Pending Users Card */}
-          <div className="p-6 bg-white shadow">
+          <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-md font-medium text-gray-800">Pending Request Users</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{pendingUsers}</p>
           </div>
         </div>
 
         {/* Tables */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-4 ">
           {/* Table of Groups with Number of Requests */}
-          <div className="bg-white p-4 rounded-sm shadow w-full">
+          <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Number of Requests</h2>
             <div className="max-h-64 overflow-y-auto">
               <table className="w-full text-sm text-left text-gray-500">
@@ -222,7 +222,7 @@ function AdDashboard() {
           </div>
 
           {/* Table of Groups with Total Progress Completion */}
-          <div className="bg-white p-4 rounded-sm shadow w-full">
+          <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Total Progress Completion</h2>
             <div className="max-h-64 overflow-y-auto">
               <table className="w-full text-sm text-left text-gray-500">
