@@ -139,6 +139,46 @@ function IncuViewGroup() {
     checkOverdueTasks();
   }, [groupId]);
 
+  useEffect(() => {
+    const checkGroupCompletion = async () => {
+      if (workplan.length > 0) {
+        const completedTasks = workplan.filter((task) => task.status === "Completed").length;
+        const totalCompletion = Math.round((completedTasks / workplan.length) * 100);
+
+        if (totalCompletion === 100) {
+          try {
+            // Fetch the group details
+            const groupDoc = await getDoc(doc(db, "groups", groupId));
+            if (groupDoc.exists()) {
+              const groupData = groupDoc.data();
+
+              // Notify TBI Manager and TBI Assistant
+              const usersQuery = query(
+                collection(db, "users"),
+                where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
+              );
+
+              const usersSnapshot = await getDocs(usersQuery);
+              usersSnapshot.forEach(async (userDoc) => {
+                await addDoc(collection(db, "notifications"), {
+                  userId: userDoc.id, // Firestore document ID of the user
+                  message: `<b style="color: green;">Group Progress Update:</b> Great news! <b>${groupData.name}</b> has completed all the tasks in their workplan.`,
+                  type: "group_completion",
+                  timestamp: serverTimestamp(),
+                  read: false,
+                });
+              });
+            }
+          } catch (error) {
+            console.error("Error sending group completion notification:", error);
+          }
+        }
+      }
+    };
+
+    checkGroupCompletion();
+  }, [workplan, groupId]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRequestData((prevData) => ({
@@ -191,8 +231,9 @@ function IncuViewGroup() {
                 usersSnapshot.forEach(async (userDoc) => {
                     await addDoc(collection(db, "notifications"), {
                         userId: userDoc.id, // Firestore document ID of the user
-                        message: `<b style="color="red">Group Request:</b> A new request has been submitted from the group "${groupData.name}".`,
+                        message: `<b style="color: red;">Group Needs:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
                         timestamp: serverTimestamp(),
+                        type: "group_request",
                         read: false,
                     });
                 });

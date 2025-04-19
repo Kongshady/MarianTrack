@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../../config/marian-config";
-import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
+import React, { useEffect, useState, useRef } from "react";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
 import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
+import { HiDotsVertical } from "react-icons/hi"; // Import vertical dots icon
+import { LiaHandsHelpingSolid } from "react-icons/lia";
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { db, auth } from "../../config/marian-config.js"; // Adjust the import based on your project structure
 
 // Define the getIconForType function
 const getIconForType = (type, sizeClass = "text-xl") => {
   switch (type) {
     case "group_request":
-      return <FaUserCheck className={`text-blue-500 ${sizeClass}`} />;
+      return <LiaHandsHelpingSolid className={`text-red-500 ${sizeClass}`} />;
     case "group_completion":
       return <FaCheckCircle className={`text-green-500 ${sizeClass}`} />;
     default:
@@ -18,36 +20,66 @@ const getIconForType = (type, sizeClass = "text-xl") => {
 
 function AdNotification() {
   const [notifications, setNotifications] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(null); // Track which dropdown is open
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const notificationsQuery = query(
+    const fetchNotifications = () => {
+      const user = auth.currentUser;
+      if (user) {
+        const q = query(
           collection(db, "notifications"),
-          where("type", "in", ["group_request", "group_completion"])
+          where("userId", "==", user.uid) // Fetch notifications for the current admin user
         );
 
-        const querySnapshot = await getDocs(notificationsQuery);
-        const notificationsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setNotifications(notificationsData);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          const notificationsData = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          // Sort notifications by timestamp in descending order
+          notificationsData.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
+          setNotifications(notificationsData);
+        });
+
+        return unsubscribe;
       }
     };
 
-    fetchNotifications();
+    const unsubscribe = fetchNotifications();
+    return () => unsubscribe && unsubscribe();
   }, []);
 
-  const markAllAsRead = async () => {
+  const handleMarkAsRead = async (notificationId) => {
     try {
-      const unreadNotifications = notifications.filter((notif) => !notif.read);
-      for (const notif of unreadNotifications) {
-        const notifRef = doc(db, "notifications", notif.id);
-        await updateDoc(notifRef, { read: true });
-      }
+      await updateDoc(doc(db, "notifications", notificationId), { read: true });
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await deleteDoc(doc(db, "notifications", notificationId));
+      setNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const batch = writeBatch(db);
+      notifications.forEach((notification) => {
+        const notificationRef = doc(db, "notifications", notification.id);
+        batch.update(notificationRef, { read: true });
+      });
+      await batch.commit();
       setNotifications((prev) =>
         prev.map((notif) => ({
           ...notif,
@@ -55,16 +87,16 @@ function AdNotification() {
         }))
       );
     } catch (error) {
-      console.error("Error marking notifications as read:", error);
+      console.error("Error marking all notifications as read:", error);
     }
   };
 
-  const deleteAllNotifications = async () => {
+  const handleDeleteAllNotifications = async () => {
     try {
       const batch = writeBatch(db);
-      notifications.forEach((notif) => {
-        const notifRef = doc(db, "notifications", notif.id);
-        batch.delete(notifRef);
+      notifications.forEach((notification) => {
+        const notificationRef = doc(db, "notifications", notification.id);
+        batch.delete(notificationRef);
       });
       await batch.commit();
       setNotifications([]);
@@ -73,45 +105,65 @@ function AdNotification() {
     }
   };
 
+  const toggleDropdown = (id) => {
+    setDropdownOpen((prev) => (prev === id ? null : id));
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(null); // Close the dropdown if clicked outside
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   return (
     <div className="flex">
       <AdminSidebar />
-      <div className="flex flex-col items-start justify-start h-screen w-full p-10 overflow-x-auto">
+      <div className="flex flex-col items-start justify-start h-screen w-full p-10 overflow-y-auto">
         <div className="flex justify-between items-center w-full mb-4">
           <h1 className="text-4xl font-bold">Notifications</h1>
           <div className="flex gap-2">
             <button
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
               className="px-4 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition"
             >
               Mark All as Read
             </button>
             <button
-              onClick={deleteAllNotifications}
+              onClick={handleDeleteAllNotifications}
               className="px-4 py-2 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition"
             >
               Delete All
             </button>
           </div>
         </div>
-        {notifications.length > 0 ? (
-          <ul className="w-full">
-            {notifications.map((notification) => (
+        <ul className="w-full">
+          {notifications.length > 0 ? (
+            notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`p-4 border rounded-sm flex items-start gap-4 ${
+                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${
                   notification.read ? "bg-gray-200" : "bg-white"
                 }`}
               >
                 {/* Display icon based on type */}
                 <div className="flex-shrink-0">
-                  {getIconForType(notification.type, "text-3xl")} {/* Pass size class */}
+                  {getIconForType(notification.type, "text-3xl")}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium mb-1" dangerouslySetInnerHTML={{ __html: notification.message }}></p>
+                  <p
+                    className="text-sm mb-1"
+                    dangerouslySetInnerHTML={{ __html: notification.message }}
+                  ></p>
                   <p className="text-xs text-gray-500">
-                    {notification.createdAt
-                      ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
+                    {notification.timestamp
+                      ? new Date(notification.timestamp.seconds * 1000).toLocaleString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
@@ -122,15 +174,40 @@ function AdNotification() {
                       : "Unknown"}
                   </p>
                 </div>
-                <div className="absolute top-4 right-4">
-                  <button className="text-gray-500 hover:text-gray-700">&#x22EE;</button>
+                {/* Vertical Dots */}
+                <div className="relative">
+                  <button
+                    onClick={() => toggleDropdown(notification.id)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <HiDotsVertical />
+                  </button>
+                  {dropdownOpen === notification.id && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-10"
+                    >
+                      <button
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Mark as Read
+                      </button>
+                      <button
+                        onClick={() => handleDeleteNotification(notification.id)}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-500">No notifications available.</p>
-        )}
+            ))
+          ) : (
+            <p className="text-gray-500">No notifications available.</p>
+          )}
+        </ul>
       </div>
     </div>
   );
