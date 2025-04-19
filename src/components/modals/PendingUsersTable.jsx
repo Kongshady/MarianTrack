@@ -5,7 +5,7 @@ function PendingUsersTable({ pendingUsers, filterUsersByRole, handleApproval, se
     return (
         <div>
             <h2 className="text-1xl font-semibold mb-3">Pending Users</h2>
-            <div className="overflow-x-auto mb-8">
+            <div className="overflow-x-auto">
                 <table className="min-w-full bg-white text-xs">
                     <thead>
                         <tr className="bg-primary-color text-white text-xs">

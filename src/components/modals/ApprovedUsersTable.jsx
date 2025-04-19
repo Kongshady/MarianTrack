@@ -35,7 +35,7 @@ function ApprovedUsersTable({ approvedUsers, setUserToRemove, setIsModalOpen }) 
     return (
         <div>
             <h2 className="text-1xl font-semibold mb-3">Approved Users</h2>
-            <div className="overflow-x-auto h-96">
+            <div className="overflow-x-auto">
                 <table className="min-w-full bg-white text-xs">
                     <thead className="sticky top-0">
                         <tr className="bg-primary-color text-white text-xs">

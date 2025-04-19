@@ -80,7 +80,7 @@ function AdViewGroups() {
   return (
     <div className="flex">
       <AdminSidebar />
-      <div className="flex flex-col items-start h-screen w-full p-10">
+      <div className="flex flex-col items-start h-screen w-full p-10 overflow-y-auto">
         <div className="flex justify-between w-full">
           <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
           <div>
@@ -193,29 +193,32 @@ function AdViewGroups() {
         {/* Requests Table */}
         {isRequestsTableOpen && (
           <div className="overflow-y-auto h-96 mt-3 w-full">
-            <table className="w-full bg-white border border-gray-200 text-xs text-center">
+            <table className="w-full bg-white border-gray-200 text-xs text-center">
               <thead className="sticky top-0 bg-primary-color text-white">
                 <tr>
-                  <th className="py-2 px-4 border-b">Responsible Team Member</th>
-                  <th className="py-2 px-4 border-b">Request Type</th>
-                  <th className="py-2 px-4 border-b">Description</th>
-                  <th className="py-2 px-4 border-b">Date Entry</th>
-                  <th className="py-2 px-4 border-b">Date Needed</th>
-                  <th className="py-2 px-4 border-b">Resource/Tool Needed</th>
-                  <th className="py-2 px-4 border-b">Prospect Resource Person</th>
-                  <th className="py-2 px-4 border-b">Priority Level</th>
-                  <th className="py-2 px-4 border-b">Remarks</th>
-                  <th className="py-2 px-4 border-b">Status</th>
+                  <th className="py-2 px-4 ">Responsible Team Member</th>
+                  <th className="py-2 px-4 ">Request Type</th>
+                  <th className="py-2 px-4 ">Description</th>
+                  <th className="py-2 px-4 ">Date Entry</th>
+                  <th className="py-2 px-4 ">Date Needed</th>
+                  <th className="py-2 px-4 ">Resource/Tool Needed</th>
+                  <th className="py-2 px-4 ">Prospect Resource Person</th>
+                  <th className="py-2 px-4 ">Priority Level</th>
+                  <th className="py-2 px-4 ">Remarks</th>
+                  <th className="py-2 px-4 ">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {requests.length > 0 ? (
-                  requests.map(request => (
-                    <tr key={request.id}>
-                      <td className="py-2 px-4 border-b">{request.responsibleTeamMember}</td>
-                      <td className="py-2 px-4 border-b">{request.requestType}</td>
-                      <td className="py-2 px-4 border-b">{request.description}</td>
-                      <td className="py-2 px-4 border-b">
+                  requests.map((request, index) => (
+                    <tr
+                      key={request.id}
+                      className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                    >
+                      <td className="py-2 px-4 ">{request.responsibleTeamMember}</td>
+                      <td className="py-2 px-4 ">{request.requestType}</td>
+                      <td className="py-2 px-4 ">{request.description}</td>
+                      <td className="py-2 px-4 ">
                         {request.dateEntry
                           ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString("en-US", {
                               year: "numeric",
@@ -224,7 +227,7 @@ function AdViewGroups() {
                             })
                           : "N/A"}
                       </td>
-                      <td className="py-2 px-4 border-b">
+                      <td className="py-2 px-4 ">
                         {request.dateNeeded
                           ? new Date(request.dateNeeded).toLocaleDateString("en-US", {
                               year: "numeric",
@@ -233,16 +236,16 @@ function AdViewGroups() {
                             })
                           : "N/A"}
                       </td>
-                      <td className="py-2 px-4 border-b">{request.resourceToolNeeded}</td>
-                      <td className="py-2 px-4 border-b">{request.prospectResourcePerson}</td>
-                      <td className="py-2 px-4 border-b">{request.priorityLevel}</td>
-                      <td className="py-2 px-4 border-b">{request.remarks}</td>
-                      <td className="py-2 px-4 border-b">{request.status}</td>
+                      <td className="py-2 px-4 ">{request.resourceToolNeeded}</td>
+                      <td className="py-2 px-4 ">{request.prospectResourcePerson}</td>
+                      <td className="py-2 px-4 ">{request.priorityLevel}</td>
+                      <td className="py-2 px-4 ">{request.remarks}</td>
+                      <td className="py-2 px-4 ">{request.status}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="py-2 px-4 border-b text-center" colSpan="10">
+                    <td className="py-2 px-4  text-center" colSpan="10">
                       No requests found.
                     </td>
                   </tr>
@@ -254,20 +257,19 @@ function AdViewGroups() {
 
         {/* Workplan Table */}
         {isWorkplanTableOpen && (
-          <div className="overflow-y-auto h-96 mt-3 w-full">
-            <table className="w-full bg-white border border-gray-200 text-xs text-center">
+          <div className="mt-3 w-full">
+            <table className="w-full bg-white border-gray-200 text-xs text-center">
               <thead className="sticky top-0 bg-primary-color text-white">
                 <tr>
-                  <th className="py-2 px-4 border-b text-left">Task Name</th>
-                  <th className="py-2 px-4 border-b">Assigned To</th>
-                  <th className="py-2 px-4 border-b">Start Date</th>
-                  <th className="py-2 px-4 border-b">End Date</th>
-                  <th className="py-2 px-4 border-b">Status</th>
+                  <th className="py-2 px-4 text-left">Task Name</th>
+                  <th className="py-2 px-4">Assigned To</th>
+                  <th className="py-2 px-4">Start Date</th>
+                  <th className="py-2 px-4">End Date</th>
+                  <th className="py-2 px-4">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {workplan.length > 0 ? (
-                  // Sort tasks by startDate before rendering
                   workplan
                     .slice() // Create a shallow copy to avoid mutating the original array
                     .sort((a, b) => {
@@ -275,11 +277,14 @@ function AdViewGroups() {
                       const dateB = new Date(b.startDate);
                       return dateA - dateB; // Sort in ascending order
                     })
-                    .map((task) => (
-                      <tr key={task.id}>
-                        <td className="p-2 border-b text-left">{task.taskName}</td>
-                        <td className="p-2 border-b">{task.assignedTo}</td>
-                        <td className="p-2 border-b">
+                    .map((task, index) => (
+                      <tr
+                        key={task.id}
+                        className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                      >
+                        <td className="p-2 text-left">{task.taskName}</td>
+                        <td className="p-2">{task.assignedTo}</td>
+                        <td className="p-2">
                           {task.startDate
                             ? new Date(task.startDate).toLocaleDateString("en-US", {
                               year: "numeric",
@@ -288,7 +293,7 @@ function AdViewGroups() {
                             })
                             : "N/A"}
                         </td>
-                        <td className="p-2 border-b">
+                        <td className="p-2">
                           {task.endDate
                             ? new Date(task.endDate).toLocaleDateString("en-US", {
                               year: "numeric",
@@ -298,7 +303,7 @@ function AdViewGroups() {
                             : "N/A"}
                         </td>
                         <td
-                          className={`p-2 border-b font-semibold ${task.status === "Pending"
+                          className={`p-2 font-semibold ${task.status === "Pending"
                               ? "text-red-500"
                               : task.status === "In Progress"
                                 ? "text-yellow-500"
@@ -313,7 +318,7 @@ function AdViewGroups() {
                     ))
                 ) : (
                   <tr>
-                    <td className="py-2 px-4 border-b text-center" colSpan="5">
+                    <td className="py-2 px-4 text-center" colSpan="5">
                       No tasks found.
                     </td>
                   </tr>

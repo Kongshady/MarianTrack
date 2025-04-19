@@ -32,7 +32,6 @@ import AdDashboard from "../pages/admin/AdDashboard.jsx";
 import AdChat from "../pages/admin/AdChat.jsx";
 import AdNotification from "../pages/admin/AdNotification.jsx";
 import AdGroups from "../pages/admin/AdGroups.jsx";
-import AdProgress from "../pages/admin/AdProgress.jsx";
 import AdUserManagement from "../pages/admin/AdUserManagement.jsx";
 import AdViewGroups from "../components/semi-pages/AdViewGroups.jsx";
 import AdEditProfile from "../components/edit-profile/AdEditProfile.jsx";
@@ -168,14 +167,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
             <AdGroups />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin-progress"
-        element={
-          <ProtectedRoute allowedRoles={["TBI Manager", "TBI Assistant"]}>
-            <AdProgress />
           </ProtectedRoute>
         }
       />

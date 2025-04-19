@@ -240,7 +240,7 @@ function IncuViewGroup() {
   return (
     <div className="flex">
       <IncubateeSidebar />
-      <div className="flex flex-col items-start h-screen w-full p-10">
+      <div className="flex flex-col items-start h-screen w-full p-10 overflow-y-auto">
         <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
         <p className="text-sm italic">{group.description}</p>
         {group.imageUrl && (

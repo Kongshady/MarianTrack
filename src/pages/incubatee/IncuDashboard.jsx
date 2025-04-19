@@ -168,7 +168,7 @@ function IncuDashboard() {
             <IncubateeSidebar />
             <div className="flex flex-col h-screen w-full p-10 bg-gray-100">
                 {/* Welcome Section */}
-                <h1 className="text-3xl font-bold mb-2">Welcome, {userName || "User"}!</h1>
+                <h1 className="text-3xl font-bold">Welcome, {userName || "User"}!</h1>
                 <p className="text-sm text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
 
                 {/* Overview Cards */}

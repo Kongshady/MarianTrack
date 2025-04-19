@@ -57,7 +57,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
   };
 
   return (
-    <div className="overflow-y-auto h-96 mt-2 w-full">
+    <div className="overflow-y-auto mt-2 w-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg">Workplan</h3>
         <button

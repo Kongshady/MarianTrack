@@ -94,7 +94,7 @@ function AdminSideBar() {
         <ul className="space-y-1">
           <MenuItem to={"/admin-dashboard"} icon={<MdDashboard />} text="Dashboard" />
           <MenuItem to={"/admin-groups"} icon={<MdGroups />} text="Incubatees" />
-          <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" />
+          {/* <MenuItem to={"/admin-progress"} icon={<GiProgression />} text="Progress" /> */}
           <MenuItem to={"/admin-user-management"} icon={<MdManageAccounts />} text="UserManagement" />
           <MenuItem
             to={"/admin-notification"}

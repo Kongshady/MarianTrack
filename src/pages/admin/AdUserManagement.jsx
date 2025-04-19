@@ -107,7 +107,7 @@ function AdminAccountApproval() {
     return (
         <div className="flex">
             <AdminSidebar />
-            <div className="w-full p-10 h-screen">
+            <div className="w-full p-10 h-screen overflow-y-auto">
                 <h1 className="text-3xl font-bold mb-5">User Management</h1>
 
                 {/* Tab Navigation */}

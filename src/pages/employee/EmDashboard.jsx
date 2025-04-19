@@ -1,62 +1,80 @@
 import { useEffect, useState } from "react";
 import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 import { db } from "../../config/marian-config.js";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 function EmDashboard() {
     const [totalGroups, setTotalGroups] = useState(0); // State for total groups
     const [groups, setGroups] = useState([]); // State for groups with their data
     const [groupRequests, setGroupRequests] = useState({}); // State for storing the number of requests per group
     const [groupProgress, setGroupProgress] = useState({}); // State for storing progress percentage per group
+    const [user, setUser] = useState(null); // State for the logged-in user
 
     useEffect(() => {
         document.title = "Employee | Dashboard"; // Set the page title
 
         const fetchDashboardData = async () => {
             try {
-                // Fetch all groups
-                const groupsSnapshot = await getDocs(collection(db, "groups"));
-                const groupsData = groupsSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setGroups(groupsData);
-                setTotalGroups(groupsData.length); // Set total number of groups
+                // Fetch the logged-in user from sessionStorage
+                const storedUser = sessionStorage.getItem("currentUser");
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    setUser(userData);
 
-                // Fetch requests and count them per group
-                const requestsSnapshot = await getDocs(collection(db, "requests"));
-                const requestsData = requestsSnapshot.docs.map((doc) => doc.data());
+                    // Fetch groups assigned to the Portfolio Manager
+                    let groupsQuery;
+                    if (userData.role === "Portfolio Manager") {
+                        groupsQuery = query(
+                            collection(db, "groups"),
+                            where("portfolioManager.id", "==", userData.id)
+                        );
+                    } else {
+                        groupsQuery = collection(db, "groups"); // Fetch all groups for other roles
+                    }
 
-                const requestsCount = {};
-                groupsData.forEach((group) => {
-                    requestsCount[group.id] = requestsData.filter(
-                        (request) => request.groupId === group.id
-                    ).length;
-                });
-                setGroupRequests(requestsCount); // Set the number of requests per group
+                    const groupsSnapshot = await getDocs(groupsQuery);
+                    const groupsData = groupsSnapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
+                    setGroups(groupsData);
+                    setTotalGroups(groupsData.length); // Set total number of assigned groups
 
-                // Fetch workplan and calculate progress for each group
-                const workplanSnapshot = await getDocs(collection(db, "workplan"));
-                const workplanData = workplanSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                    // Fetch requests and count them per group
+                    const requestsSnapshot = await getDocs(collection(db, "requests"));
+                    const requestsData = requestsSnapshot.docs.map((doc) => doc.data());
 
-                const progressData = {};
-                groupsData.forEach((group) => {
-                    const groupTasks = workplanData.filter(
-                        (task) => task.groupId === group.id
-                    );
-                    const totalTasks = groupTasks.length;
-                    const completedTasks = groupTasks.filter(
-                        (task) => task.status === "Completed"
-                    ).length;
-                    const progress = totalTasks > 0
-                        ? Math.round((completedTasks / totalTasks) * 100)
-                        : 0;
-                    progressData[group.id] = progress;
-                });
-                setGroupProgress(progressData); // Set progress percentage per group
+                    const requestsCount = {};
+                    groupsData.forEach((group) => {
+                        requestsCount[group.id] = requestsData.filter(
+                            (request) => request.groupId === group.id
+                        ).length;
+                    });
+                    setGroupRequests(requestsCount); // Set the number of requests per group
+
+                    // Fetch workplan and calculate progress for each group
+                    const workplanSnapshot = await getDocs(collection(db, "workplan"));
+                    const workplanData = workplanSnapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
+
+                    const progressData = {};
+                    groupsData.forEach((group) => {
+                        const groupTasks = workplanData.filter(
+                            (task) => task.groupId === group.id
+                        );
+                        const totalTasks = groupTasks.length;
+                        const completedTasks = groupTasks.filter(
+                            (task) => task.status === "Completed"
+                        ).length;
+                        const progress = totalTasks > 0
+                            ? Math.round((completedTasks / totalTasks) * 100)
+                            : 0;
+                        progressData[group.id] = progress;
+                    });
+                    setGroupProgress(progressData); // Set progress percentage per group
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             }
@@ -94,12 +112,14 @@ function EmDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {groups.map((group) => (
-                                        <tr key={group.id} className="border-b last:border-b-0">
-                                            <td className="px-4 py-2">{group.name}</td>
-                                            <td className="px-4 py-2">{groupRequests[group.id] || 0}</td>
-                                        </tr>
-                                    ))}
+                                    {groups
+                                        .sort((a, b) => (groupRequests[b.id] || 0) - (groupRequests[a.id] || 0))
+                                        .map((group) => (
+                                            <tr key={group.id} className="border-b last:border-b-0">
+                                                <td className="px-4 py-2">{group.name}</td>
+                                                <td className="px-4 py-2">{groupRequests[group.id] || 0}</td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>
@@ -117,12 +137,14 @@ function EmDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {groups.map((group) => (
-                                        <tr key={group.id} className="border-b last:border-b-0">
-                                            <td className="px-4 py-2">{group.name}</td>
-                                            <td className="px-4 py-2">{groupProgress[group.id] || 0}%</td>
-                                        </tr>
-                                    ))}
+                                    {groups
+                                        .sort((a, b) => (groupProgress[b.id] || 0) - (groupProgress[a.id] || 0))
+                                        .map((group) => (
+                                            <tr key={group.id} className="border-b last:border-b-0">
+                                                <td className="px-4 py-2">{group.name}</td>
+                                                <td className="px-4 py-2">{groupProgress[group.id] || 0}%</td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>

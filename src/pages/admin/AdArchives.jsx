@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminSideBar from "../../components/sidebar/AdminSidebar.jsx";
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../config/marian-config.js";
@@ -10,6 +10,7 @@ function AdArchives() {
   const [filteredGroups, setFilteredGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     document.title = "Admin | Archives"; // Set the page title
@@ -87,7 +88,16 @@ function AdArchives() {
       <AdminSideBar />
       <div className="flex flex-col items-start justify-start h-screen w-full p-10">
         <div className="flex justify-between items-center w-full mb-5">
-          <h1 className="text-4xl font-bold">Archived Groups</h1>
+          {/* Make "Incubatees" clickable and redirect to the previous page */}
+          <h1 className="text-4xl">
+            <button
+              onClick={() => navigate(-1)} // Navigate to the previous page
+              className="text-black hover:text-primary-color transition"
+            >
+              Incubatees
+            </button>{" "}
+            &gt; <b>Archived Groups</b>
+          </h1>
           <div className="flex gap-2">
             <select
               value={selectedYear}
