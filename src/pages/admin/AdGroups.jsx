@@ -122,7 +122,7 @@ function AdGroups() {
       // Create a notification for the portfolio manager
       await addDoc(collection(db, "notifications"), {
         userId: portfolioManager,
-        message: `Heads up! You’ve been chosen as the Portfolio Manager for <b>${groupName}</b>. Your leadership starts now!`,
+        message: `<b style="color:green">You’ve been assigned</b> as the Portfolio Manager for the Group <b>"${groupName}"</b>. Get ready to lead and make an impact!`,
         timestamp: serverTimestamp(),
         read: false,
         groupId: groupDocRef.id, // Add groupId to the notification

@@ -176,7 +176,7 @@ function IncuViewGroup() {
                 // Notify the portfolio manager
                 await addDoc(collection(db, "notifications"), {
                     userId: portfolioManagerId,
-                    message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
+                    message: `<b>Group Request:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
                     timestamp: serverTimestamp(),
                     read: false,
                 });
@@ -191,7 +191,7 @@ function IncuViewGroup() {
                 usersSnapshot.forEach(async (userDoc) => {
                     await addDoc(collection(db, "notifications"), {
                         userId: userDoc.id, // Firestore document ID of the user
-                        message: `Group Request: A new request has been submitted from the group "${groupData.name}".`,
+                        message: `<b style="color="red">Group Request:</b> A new request has been submitted from the group "${groupData.name}".`,
                         timestamp: serverTimestamp(),
                         read: false,
                     });

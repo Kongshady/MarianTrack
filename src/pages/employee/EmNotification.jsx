@@ -5,16 +5,19 @@ import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatc
 import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 import { HiDotsVertical } from "react-icons/hi";
 import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
+import { LiaHandsHelpingSolid } from "react-icons/lia";
+
+
 
 // Define the getIconForType function
 const getIconForType = (type, sizeClass = "text-xl") => {
   switch (type) {
-    case "completion":
+    case "manager":
       return <FaCheckCircle className={`text-green-500 ${sizeClass}`} />;
     case "welcome":
       return <FaUserCheck className={`text-blue-500 ${sizeClass}`} />;
     default:
-      return <FaBell className={`text-gray-500 ${sizeClass}`} />;
+      return <LiaHandsHelpingSolid className={`text-red-600 ${sizeClass}`} />;
   }
 };
 
@@ -151,8 +154,15 @@ function EmNotification() {
                 <div className="flex-shrink-0">
                   {getIconForType(notification.type, "text-3xl")} {/* Pass size class */}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm mb-1" dangerouslySetInnerHTML={{ __html: notification.message }}></p>
+                {/* Make the entire notification clickable */}
+                <div
+                  onClick={() => handleViewNotification(notification.id, notification.groupId)}
+                  className="flex-1 cursor-pointer"
+                >
+                  <p
+                    className="text-sm mb-1"
+                    dangerouslySetInnerHTML={{ __html: notification.message }}
+                  ></p>
                   <p className="text-xs text-gray-500">
                     {new Date(notification.timestamp.seconds * 1000).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -173,10 +183,10 @@ function EmNotification() {
                     <HiDotsVertical />
                     <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-10 hidden group-hover:block">
                       <button
-                        onClick={() => handleViewNotification(notification.id, notification.groupId)}
+                        onClick={() => markAsRead(notification.id)}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        View
+                        Mark as Read
                       </button>
                       <button
                         onClick={() => handleDeleteNotification(notification.id)}
