@@ -79,8 +79,8 @@ function EmViewGroup() {
             // Add a notification for the user
             await addDoc(collection(db, "notifications"), {
               userId: userDoc.id, // Use the user's Firestore document ID
-              message: `The status of your request for "${requestData.resourceToolNeeded}" has been updated to "${newStatus}".`,
-              timestamp: serverTimestamp(),
+              message: `<strong style="color: red;">Status Update:</strong> The status of your request for "${requestData.resourceToolNeeded}" has been updated to "${newStatus}".`,
+              createdAt: new Date(),
               read: false,
             });
           });

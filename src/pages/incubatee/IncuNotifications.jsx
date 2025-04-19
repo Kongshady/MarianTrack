@@ -24,7 +24,15 @@ function IncuNotification() {
                         id: doc.id,
                         ...doc.data(),
                     }));
-                    setNotifications(notificationsData);
+
+                    // Sort notifications by createdAt in descending order
+                    const sortedNotifications = notificationsData.sort((a, b) => {
+                        const dateA = a.createdAt?.toDate() || new Date(0); // Handle missing timestamps
+                        const dateB = b.createdAt?.toDate() || new Date(0);
+                        return dateB - dateA; // Descending order
+                    });
+
+                    setNotifications(sortedNotifications);
                 }
             } catch (error) {
                 console.error("Error fetching notifications:", error);

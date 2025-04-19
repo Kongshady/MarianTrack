@@ -88,9 +88,9 @@ function IncuDashboard() {
                     await addDoc(collection(db, "notifications"), {
                         userId: user.uid,
                         type: "task_due_this_week",
-                        message: "Your tasks for this week are about to end. Please update them.",
+                        message: `<strong style="color: green;">Weekly Update:</strong> <span>This week's tasks are nearly finished. If there are any changes or progress, kindly update them.</span>`,
                         createdAt: new Date(),
-                    });
+                      });
                 }
             }
         } catch (error) {
