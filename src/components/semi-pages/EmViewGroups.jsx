@@ -8,8 +8,8 @@ function EmViewGroup() {
   const { groupId } = useParams();
   const [group, setGroup] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [workplan, setWorkplan] = useState([]); // State for workplan
-  const [activeTable, setActiveTable] = useState("requests"); // State to toggle between requests and workplan
+  const [workplan, setWorkplan] = useState([]); 
+  const [activeTable, setActiveTable] = useState("requests"); 
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -50,25 +50,21 @@ function EmViewGroup() {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
-      // Update the status of the request in Firestore
       await updateDoc(doc(db, "requests", requestId), { status: newStatus });
 
-      // Update the status in the local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId ? { ...request, status: newStatus } : request
         )
       );
 
-      // Fetch the request details to get the groupId or responsible user
       const requestDoc = await getDoc(doc(db, "requests", requestId));
       if (requestDoc.exists()) {
         const requestData = requestDoc.data();
 
-        // Fetch the user responsible for the request using the groupId
         const usersQuery = query(
           collection(db, "users"),
-          where("groupId", "==", requestData.groupId) // Match the groupId from the request
+          where("groupId", "==", requestData.groupId)
         );
 
         const usersSnapshot = await getDocs(usersQuery);
@@ -76,10 +72,15 @@ function EmViewGroup() {
           usersSnapshot.forEach(async (userDoc) => {
             const userData = userDoc.data();
 
-            // Add a notification for the user
+            let notificationMessage = `<strong style="color: red;">Status Update:</strong> The status of your request for <strong>"${requestData.resourceToolNeeded}"</strong> has been updated to <strong>"${newStatus}".</strong>`;
+
+            if (newStatus === "Done") {
+              notificationMessage += " Kindly ensure you provide a remark.";
+            }
+
             await addDoc(collection(db, "notifications"), {
-              userId: userDoc.id, // Use the user's Firestore document ID
-              message: `<strong style="color: red;">Status Update:</strong> The status of your request for "${requestData.resourceToolNeeded}" has been updated to "${newStatus}".`,
+              userId: userDoc.id,
+              message: notificationMessage,
               createdAt: new Date(),
               read: false,
             });

@@ -162,6 +162,7 @@ function IncuViewGroup() {
               usersSnapshot.forEach(async (userDoc) => {
                 await addDoc(collection(db, "notifications"), {
                   userId: userDoc.id, // Firestore document ID of the user
+                  groupId: groupId, // Add groupId here
                   message: `<b style="color: green;">Group Progress Update:</b> Great news! <b>${groupData.name}</b> has completed all the tasks in their workplan.`,
                   type: "group_completion",
                   timestamp: serverTimestamp(),
@@ -190,67 +191,69 @@ function IncuViewGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        if (isEditing) {
-            // Update an existing request
-            await updateDoc(doc(db, "requests", currentRequestId), requestData);
-            alert("Request updated successfully!");
-        } else {
-            // Add a new request
-            if (!groupId) {
-                throw new Error("Group ID is missing. Please try again.");
-            }
-
-            // Add the new request to the "requests" collection
-            await addDoc(collection(db, "requests"), {
-                ...requestData,
-                dateEntry: serverTimestamp(), // Use serverTimestamp for Firestore
-                groupId, // Ensure groupId is included
-            });
-
-            // Fetch the group details
-            const groupDoc = await getDoc(doc(db, "groups", groupId));
-            if (groupDoc.exists()) {
-                const groupData = groupDoc.data();
-                const portfolioManagerId = groupData.portfolioManager.id;
-
-                // Notify the portfolio manager
-                await addDoc(collection(db, "notifications"), {
-                    userId: portfolioManagerId,
-                    message: `<b>Group Request:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
-                    timestamp: serverTimestamp(),
-                    read: false,
-                });
-
-                // Notify TBI Manager and TBI Assistant
-                const usersQuery = query(
-                    collection(db, "users"),
-                    where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
-                );
-
-                const usersSnapshot = await getDocs(usersQuery);
-                usersSnapshot.forEach(async (userDoc) => {
-                    await addDoc(collection(db, "notifications"), {
-                        userId: userDoc.id, // Firestore document ID of the user
-                        message: `<b style="color: red;">Group Needs:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
-                        timestamp: serverTimestamp(),
-                        type: "group_request",
-                        read: false,
-                    });
-                });
-            }
-
-            alert("Request submitted successfully!");
+      if (isEditing) {
+        // Update an existing request
+        await updateDoc(doc(db, "requests", currentRequestId), requestData);
+        alert("Request updated successfully!");
+      } else {
+        // Add a new request
+        if (!groupId) {
+          throw new Error("Group ID is missing. Please try again.");
         }
 
-        // Reset modal and form state
-        setIsModalOpen(false);
-        setIsEditing(false);
-        setCurrentRequestId(null);
+        // Add the new request to the "requests" collection
+        await addDoc(collection(db, "requests"), {
+          ...requestData,
+          dateEntry: serverTimestamp(), // Use serverTimestamp for Firestore
+          groupId, // Ensure groupId is included
+        });
+
+        // Fetch the group details
+        const groupDoc = await getDoc(doc(db, "groups", groupId));
+        if (groupDoc.exists()) {
+          const groupData = groupDoc.data();
+          const portfolioManagerId = groupData.portfolioManager.id;
+
+          // Notify the portfolio manager
+          await addDoc(collection(db, "notifications"), {
+            userId: portfolioManagerId,
+            groupId: groupId, // Add groupId here
+            message: `<b>Group Request:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
+            timestamp: serverTimestamp(),
+            read: false,
+          });
+
+          // Notify TBI Manager and TBI Assistant
+          const usersQuery = query(
+            collection(db, "users"),
+            where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
+          );
+
+          const usersSnapshot = await getDocs(usersQuery);
+          usersSnapshot.forEach(async (userDoc) => {
+            await addDoc(collection(db, "notifications"), {
+              userId: userDoc.id, // Firestore document ID of the user
+              groupId: groupId, // Add groupId here
+              message: `<b style="color: red;">Group Needs:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
+              timestamp: serverTimestamp(),
+              type: "group_request",
+              read: false,
+            });
+          });
+        }
+
+        alert("Request submitted successfully!");
+      }
+
+      // Reset modal and form state
+      setIsModalOpen(false);
+      setIsEditing(false);
+      setCurrentRequestId(null);
     } catch (error) {
-        console.error("Error submitting request:", error);
-        alert(`Error submitting request: ${error.message}`);
+      console.error("Error submitting request:", error);
+      alert(`Error submitting request: ${error.message}`);
     }
-};
+  };
 
   const handleEditRequest = (requestId) => {
     const requestToEdit = requests.find((request) => request.id === requestId);
@@ -362,8 +365,8 @@ function IncuViewGroup() {
               setIsWorkplanTableOpen(false); // Close Workplan Table
             }}
             className={`${isRequestsTableOpen
-                ? "bg-secondary-color text-white"
-                : "bg-white border border-secondary-color"
+              ? "bg-secondary-color text-white"
+              : "bg-white border border-secondary-color"
               } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
           >
             Group Requests
@@ -374,8 +377,8 @@ function IncuViewGroup() {
               setIsRequestsTableOpen(false); // Close Requests Table
             }}
             className={`${isWorkplanTableOpen
-                ? "bg-secondary-color text-white"
-                : "bg-white border border-secondary-color"
+              ? "bg-secondary-color text-white"
+              : "bg-white border border-secondary-color"
               } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
           >
             Workplan
@@ -507,7 +510,7 @@ function IncuViewGroup() {
                   placeholder="Describe the request in detail (Optional)"
                 ></textarea>
               </div>
-              
+
               <div>
                 <label className="block mb-1 text-sm">
                   Date Entry
@@ -591,15 +594,14 @@ function IncuViewGroup() {
                     !requestData.dateNeeded ||
                     !requestData.priorityLevel
                   }
-                  className={`px-4 py-2 text-white text-sm rounded-sm transition ${
-                    !requestData.responsibleTeamMember ||
-                    !requestData.requestType ||
-                    !requestData.resourceToolNeeded ||
-                    !requestData.dateNeeded ||
-                    !requestData.priorityLevel
+                  className={`px-4 py-2 text-white text-sm rounded-sm transition ${!requestData.responsibleTeamMember ||
+                      !requestData.requestType ||
+                      !requestData.resourceToolNeeded ||
+                      !requestData.dateNeeded ||
+                      !requestData.priorityLevel
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-secondary-color hover:bg-opacity-80"
-                  }`}
+                    }`}
                 >
                   {isEditing ? "Update Request" : "Submit Request"}
                 </button>

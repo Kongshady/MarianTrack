@@ -25,7 +25,7 @@ function LandingPage() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.status === "approved") {
-          navigate("/dashboard");
+          navigate("/incubatee-dashboard");
         } else {
           alert("Your account is pending approval.");
         }
@@ -52,9 +52,12 @@ function LandingPage() {
             <CustomButton text="Login as Incubatee" className="bg-secondary-color text-text-color hover:bg-white hover:text-secondary-color transition-all w-full" />
           </Link>
           <TextDivider />
-          <button onClick={handleGoogleSignIn} className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105">
+          <button
+            onClick={handleGoogleSignIn}
+            className="flex items-center justify-center gap-2 w-full bg-white p-3 border-2 rounded cursor-pointer transition hover:scale-105"
+          >
             <FcGoogle className="w-6 h-6" />
-            <span className="text-gray-600 text-xs">Sign in with Google</span>
+            <span className="text-gray-600 text-xs">Login with Google</span>
           </button>
         </div>
 

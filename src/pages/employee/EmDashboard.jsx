@@ -88,7 +88,7 @@ function EmDashboard() {
             <EmployeeSidebar />
             <div className="flex flex-col items-start justify-start h-screen w-full p-10 bg-gray-100 overflow-x-auto">
                 <h1 className="text-4xl font-bold">Employee Dashboard</h1>
-                <p className="text-lg text-gray-600 mb-4">Summary of all groups and their progress</p>
+                <p className="text-md text-gray-600 mb-4">Summary of all groups and their progress</p>
 
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4 w-full">

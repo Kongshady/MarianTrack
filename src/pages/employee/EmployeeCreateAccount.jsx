@@ -35,10 +35,8 @@ function EmployeeCreateAccount() {
         }
         if (
             password.length < 8 ||
-            !/[A-Z]/.test(password) ||
             !/[a-z]/.test(password) ||
-            !/[0-9]/.test(password) ||
-            !/[@$!%*?&#]/.test(password)
+            !/[0-9]/.test(password)
         ) {
             setError("Password does not meet the requirements.");
             return;
@@ -130,17 +128,11 @@ function EmployeeCreateAccount() {
                     <li className={`${password.length >= 8 ? "text-green-500" : "text-red-500"}`}>
                         * Password must be at least 8 characters long
                     </li>
-                    <li className={`${/[A-Z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
-                        * Must contain at least one uppercase letter
-                    </li>
                     <li className={`${/[a-z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
                         * Must contain at least one lowercase letter
                     </li>
                     <li className={`${/[0-9]/.test(password) ? "text-green-500" : "text-red-500"}`}>
                         * Must contain at least one number
-                    </li>
-                    <li className={`${/[@$!%*?&#]/.test(password) ? "text-green-500" : "text-red-500"}`}>
-                        * Must contain at least one special character (@, $, !, %, *, ?, &, #)
                     </li>
                 </ul>
                 <input
@@ -166,10 +158,8 @@ function EmployeeCreateAccount() {
                         !role ||
                         password !== confirmPassword ||
                         password.length < 8 ||
-                        !/[A-Z]/.test(password) ||
                         !/[a-z]/.test(password) ||
-                        !/[0-9]/.test(password) ||
-                        !/[@$!%*?&#]/.test(password)
+                        !/[0-9]/.test(password)
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-primary-color hover:bg-opacity-80"
                     }`}
@@ -183,10 +173,8 @@ function EmployeeCreateAccount() {
                         !role ||
                         password !== confirmPassword ||
                         password.length < 8 ||
-                        !/[A-Z]/.test(password) ||
                         !/[a-z]/.test(password) ||
-                        !/[0-9]/.test(password) ||
-                        !/[@$!%*?&#]/.test(password)
+                        !/[0-9]/.test(password)
                     }
                 />
             </form>

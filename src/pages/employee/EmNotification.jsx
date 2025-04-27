@@ -57,8 +57,19 @@ function EmNotification() {
   };
 
   const handleViewNotification = async (notificationId, groupId) => {
-    await markAsRead(notificationId);
-    navigate(`/employee/view-group/${groupId}`);
+    try {
+      await markAsRead(notificationId);
+
+      // Check if groupId exists before navigating
+      if (groupId) {
+        navigate(`/employee/view-group/${groupId}`);
+      } else {
+        console.error("Group ID is missing in the notification.");
+        alert("This notification does not have a valid group associated with it.");
+      }
+    } catch (error) {
+      console.error("Error handling notification view:", error);
+    }
   };
 
   const handleDeleteNotification = async (notificationId) => {

@@ -5,6 +5,7 @@ import { HiDotsVertical } from "react-icons/hi"; // Import vertical dots icon
 import { LiaHandsHelpingSolid } from "react-icons/lia";
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db, auth } from "../../config/marian-config.js"; // Adjust the import based on your project structure
+import { useNavigate } from "react-router-dom";
 
 // Define the getIconForType function
 const getIconForType = (type, sizeClass = "text-xl") => {
@@ -22,6 +23,7 @@ function AdNotification() {
   const [notifications, setNotifications] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(null); // Track which dropdown is open
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNotifications = () => {
@@ -60,6 +62,22 @@ function AdNotification() {
       );
     } catch (error) {
       console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const handleViewNotification = async (notificationId, groupId) => {
+    try {
+      await handleMarkAsRead(notificationId);
+
+      // Check if groupId exists before navigating
+      if (groupId) {
+        navigate(`/admin/view-group/${groupId}`);
+      } else {
+        console.error("Group ID is missing in the notification.");
+        alert("This notification does not have a valid group associated with it.");
+      }
+    } catch (error) {
+      console.error("Error handling notification view:", error);
     }
   };
 
@@ -156,7 +174,10 @@ function AdNotification() {
                 <div className="flex-shrink-0">
                   {getIconForType(notification.type, "text-3xl")}
                 </div>
-                <div className="flex-1">
+                <div
+                  onClick={() => handleViewNotification(notification.id, notification.groupId)}
+                  className="flex-1 cursor-pointer"
+                >
                   <p
                     className="text-sm mb-1"
                     dangerouslySetInnerHTML={{ __html: notification.message }}

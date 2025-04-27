@@ -248,21 +248,21 @@ function AdChat() {
                         </ul>
                     </div>
                     <div className="w-3/4 flex flex-col">
-                        <div className="flex-1 p-4 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto">
                             {selectedUser ? (
                                 <>
-                                    <div className="flex items-center mb-4 top-0 sticky bg-white">
+                                    <div className="flex items-center mb-4 p-4 top-0 sticky bg-primary-color text-white z-10">
                                         <div className="flex flex-col">
                                             <h2 className="text-md font-semibold">
                                                 {selectedUser.name} {selectedUser.lastname}
                                             </h2>
-                                            <span className="text-xs text-gray-500">{selectedUser.role}</span>
+                                            <span className="text-xs text-white">{selectedUser.role}</span>
                                             {selectedUser.role === "Project Manager" && (
                                                 <span className="text-xs text-gray-400">{selectedUser.groupName}</span>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-col space-y-1">
+                                    <div className="flex flex-col p-4 space-y-1">
                                         {messages.map((message, index) => {
                                             const currentMessageTime = new Date(message.timestamp.seconds * 1000);
                                             const previousMessageTime =
