@@ -14,7 +14,7 @@ function LoginAsIncubatee() {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const allowedRoles = ["Project Manager", "System Analyst", "Developer"];
+    const restrictedRoles = ["TBI Manager", "TBI Assistant", "Portfolio Manager"];
 
     useEffect(() => {
         document.title = "Incubatee Login"; // Set the page title
@@ -31,10 +31,14 @@ function LoginAsIncubatee() {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
-                    navigate("/incubatee-dashboard"); // Redirect to dashboard if approved and role is valid
+                if (restrictedRoles.includes(userData.role)) {
+                    setError("Access denied. You are not allowed to log in here with this role.");
+                    return;
+                }
+                if (userData.status === "approved") {
+                    navigate("/incubatee-dashboard"); // Redirect to dashboard if approved
                 } else {
-                    setError("Access denied. Your account is either pending approval or you do not have permission.");
+                    setError("Access denied. Your account is pending approval.");
                 }
             } else {
                 setError("User not found.");
@@ -54,10 +58,14 @@ function LoginAsIncubatee() {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                if (userData.status === "approved" && allowedRoles.includes(userData.role)) {
+                if (restrictedRoles.includes(userData.role)) {
+                    setError("Access denied. You are not allowed to log in here with this role.");
+                    return;
+                }
+                if (userData.status === "approved") {
                     navigate("/incubatee-dashboard");
                 } else {
-                    setError("Access denied. Your account is either pending approval or you do not have permission.");
+                    setError("Access denied. Your account is pending approval.");
                 }
             } else {
                 setError("User not found.");

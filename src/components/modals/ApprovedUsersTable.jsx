@@ -1,6 +1,6 @@
 import { FaRegTrashCan } from "react-icons/fa6";
 import { FaInfoCircle } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns"; // Importing date-fns for date formatting
 import { db } from "../../config/marian-config.js"; // Firestore connection
 import { doc, getDoc } from "firebase/firestore";
@@ -9,6 +9,13 @@ function ApprovedUsersTable({ approvedUsers, setUserToRemove, setIsModalOpen }) 
     const [selectedUser, setSelectedUser] = useState(null); // State to store the selected user's information
     const [isInfoModalOpen, setIsInfoModalOpen] = useState(false); // State to control the information modal
     const [groupName, setGroupName] = useState(""); // State to store the group name
+
+    // Sort users alphabetically by name
+    const sortedUsers = approvedUsers.sort((a, b) => {
+        const nameA = `${a.name} ${a.lastname}`.toLowerCase();
+        const nameB = `${b.name} ${b.lastname}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
 
     const handleInfoClick = async (user) => {
         setSelectedUser(user); // Set the selected user's information
@@ -48,7 +55,7 @@ function ApprovedUsersTable({ approvedUsers, setUserToRemove, setIsModalOpen }) 
                         </tr>
                     </thead>
                     <tbody>
-                        {approvedUsers.map((user, index) => (
+                        {sortedUsers.map((user, index) => (
                             <tr key={user.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}>
                                 <td className="text-left p-2">{user.name} {user.lastname}</td>
                                 <td className="p-2">{user.email}</td>

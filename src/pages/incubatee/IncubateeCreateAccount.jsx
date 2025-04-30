@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../config/marian-config.js"; // Import Firebase auth & Firestore
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import CustomButton from "../../components/CustomButton.jsx";
-import { FiArrowLeft, FiChevronDown } from "react-icons/fi"; // Import back and dropdown icons
+import { FiArrowLeft } from "react-icons/fi"; // Import back icon
 
 function IncubateeCreateAccount() {
-    const [role, setRole] = useState("");
     const [name, setName] = useState("");
     const [lastname, setLastname] = useState("");
     const [email, setEmail] = useState("");
@@ -18,14 +17,14 @@ function IncubateeCreateAccount() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        document.title = "Create Account as Incubatee"; // Set the page title
+        document.title = "Create an Account as Incubatee"; // Page title
     }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
 
-        if (!name || !lastname || !email || !mobile || !password || !confirmPassword || !role) {
+        if (!name || !lastname || !email || !mobile || !password || !confirmPassword) {
             setError("All fields are required.");
             return;
         }
@@ -45,7 +44,7 @@ function IncubateeCreateAccount() {
                 lastname,
                 email,
                 mobile,
-                role,
+                role: "Incubatee", // Default role for all users created here
                 status: "pending", // Default status for approval
                 timestamp: serverTimestamp(),
             });
@@ -89,8 +88,6 @@ function IncubateeCreateAccount() {
                     />
                 </div>
 
-                <Dropdown setRole={setRole} role={role} className="border text-sm" />
-
                 <input
                     type="email"
                     placeholder="Email"
@@ -120,8 +117,8 @@ function IncubateeCreateAccount() {
                     <li className={`${password.length >= 8 ? "text-green-500" : "text-red-500"}`}>
                         * Password must be at least 8 characters long
                     </li>
-                    <li className={`${/[a-z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
-                        * Must contain at least one lowercase letter
+                    <li className={`${/[A-Z]/.test(password) ? "text-green-500" : "text-red-500"}`}>
+                        * Must contain at least one uppercase letter
                     </li>
                     <li className={`${/[0-9]/.test(password) ? "text-green-500" : "text-red-500"}`}>
                         * Must contain at least one number
@@ -147,7 +144,6 @@ function IncubateeCreateAccount() {
                         !mobile ||
                         !password ||
                         !confirmPassword ||
-                        !role ||
                         password !== confirmPassword ||
                         password.length < 8 ||
                         !/[a-z]/.test(password) ||
@@ -162,7 +158,6 @@ function IncubateeCreateAccount() {
                         !mobile ||
                         !password ||
                         !confirmPassword ||
-                        !role ||
                         password !== confirmPassword ||
                         password.length < 8 ||
                         !/[a-z]/.test(password) ||
@@ -170,54 +165,6 @@ function IncubateeCreateAccount() {
                     }
                 />
             </form>
-        </div>
-    );
-}
-
-function Dropdown({ setRole, role, className }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
-    const roles = ["Project Manager", "System Analyst", "Developer"];
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    return (
-        <div className="relative" ref={dropdownRef}>
-            <button
-                type="button"
-                className={`p-2 bg-white w-full text-left flex items-center justify-between ${className} ${
-                    role ? "text-black" : "text-gray-400"
-                }`}
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                {role || "Choose Role"}
-                <FiChevronDown className="text-gray-600" /> {/* Dropdown arrow */}
-            </button>
-
-            {isOpen && (
-                <ul className="absolute left-0 mt-1 w-full bg-white shadow-md rounded-md z-10">
-                    {roles.map((item, index) => (
-                        <li
-                            key={index}
-                            className="px-4 py-2 hover:bg-gray-200 cursor-pointer transition"
-                            onClick={() => {
-                                setRole(item);
-                                setIsOpen(false);
-                            }}
-                        >
-                            {item}
-                        </li>
-                    ))}
-                </ul>
-            )}
         </div>
     );
 }

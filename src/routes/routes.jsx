@@ -52,7 +52,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-dashboard"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuDashboard />
           </ProtectedRoute>
         }
@@ -60,7 +60,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-group"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuGroups />
           </ProtectedRoute>
         }
@@ -68,7 +68,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-notification"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuNotifications />
           </ProtectedRoute>
         }
@@ -76,7 +76,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-chat"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuChat />
           </ProtectedRoute>
         }
@@ -84,7 +84,7 @@ function AppRoutes() {
       <Route
         path="/incubatee/view-group/:groupId"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuViewGroup />
           </ProtectedRoute>
         }
@@ -92,7 +92,7 @@ function AppRoutes() {
       <Route
         path="/incubatee-editprofile"
         element={
-          <ProtectedRoute allowedRoles={["Project Manager", "System Analyst", "Developer"]}>
+          <ProtectedRoute allowedRoles={["Incubatee", "Project Manager", "System Analyst", "Developer"]}>
             <IncuEditProfile />
           </ProtectedRoute>
         }

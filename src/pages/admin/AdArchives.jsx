@@ -50,7 +50,8 @@ function AdArchives() {
 
     if (searchTerm) {
       filtered = filtered.filter(group =>
-        group.name.toLowerCase().includes(searchTerm.toLowerCase())
+        group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.description?.toLowerCase().includes(searchTerm.toLowerCase()) // Include description in the search
       );
     }
 

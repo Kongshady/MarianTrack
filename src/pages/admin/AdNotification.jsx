@@ -170,7 +170,6 @@ function AdNotification() {
                   notification.read ? "bg-gray-200" : "bg-white"
                 }`}
               >
-                {/* Display icon based on type */}
                 <div className="flex-shrink-0">
                   {getIconForType(notification.type, "text-3xl")}
                 </div>

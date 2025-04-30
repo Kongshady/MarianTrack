@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, query, where, onSnapshot, collection, updateDoc } from "firebase/firestore";
+import { doc, query, where, onSnapshot, collection, updateDoc, getDoc } from "firebase/firestore";
 import AdminSidebar from "../sidebar/AdminSidebar.jsx";
 import { MdEdit } from "react-icons/md";
 import EditGroupModal from "../modals/EditGroupModal.jsx";
@@ -18,20 +18,32 @@ function AdViewGroups() {
 
   useEffect(() => {
     const fetchGroup = () => {
-      const groupDocRef = doc(db, "groups", groupId);
-      const unsubscribeGroup = onSnapshot(groupDocRef, (doc) => {
-        if (doc.exists()) {
-          const groupData = doc.data();
-          setGroup({ id: doc.id, ...groupData });
+      const groupDocRef = doc(db, "groups", groupId); // Correct usage of doc
+      const unsubscribeGroup = onSnapshot(groupDocRef, async (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const groupData = docSnapshot.data();
+
+          // Fetch member details
+          const membersWithDetails = await Promise.all(
+            groupData.members.map(async (member) => {
+              const memberDocRef = doc(db, "users", member.id); // Correct usage of doc
+              const memberDoc = await getDoc(memberDocRef);
+              if (memberDoc.exists()) {
+                return { ...member, ...memberDoc.data() }; // Merge member role with user details
+              }
+              return member; // Return member as is if user details are not found
+            })
+          );
+
+          setGroup({ id: docSnapshot.id, ...groupData, members: membersWithDetails });
 
           // Fetch portfolio manager details
           if (groupData.portfolioManager) {
-            const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id);
-            onSnapshot(portfolioManagerDocRef, (portfolioManagerDoc) => {
-              if (portfolioManagerDoc.exists()) {
-                setPortfolioManager(portfolioManagerDoc.data());
-              }
-            });
+            const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id); // Correct usage of doc
+            const portfolioManagerDoc = await getDoc(portfolioManagerDocRef);
+            if (portfolioManagerDoc.exists()) {
+              setPortfolioManager(portfolioManagerDoc.data());
+            }
           }
         }
       });
@@ -100,7 +112,7 @@ function AdViewGroups() {
           <div>
             <h3 className="font-bold text-sm">Members:</h3>
             <ul className="text-sm">
-              {group.members.map(member => (
+              {group.members.map((member) => (
                 <li key={member.id}>
                   {member.name} {member.lastname} - {member.role}
                 </li>

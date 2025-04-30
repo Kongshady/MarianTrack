@@ -6,7 +6,6 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
 
 function AdDashboard() {
   const [totalGroups, setTotalGroups] = useState(0);
-  const [totalIncubatees, setTotalIncubatees] = useState(0);
   const [totalRequests, setTotalRequests] = useState(0);
   const [completedRequests, setCompletedRequests] = useState(0);
   const [ongoingRequests, setOngoingRequests] = useState(0);
@@ -49,7 +48,6 @@ function AdDashboard() {
           where("role", "not-in", ["TBI Manager", "TBI Assistant", "Portfolio Manager"])
         );
         const usersSnapshot = await getDocs(usersQuery);
-        setTotalIncubatees(usersSnapshot.size);
 
         // Fetch requests and count them per group
         const requestsSnapshot = await getDocs(collection(db, "requests"));
@@ -140,18 +138,13 @@ function AdDashboard() {
         <p className="text-sm text-gray-600 mb-4">Here's an overview of the Incubatees's statistics.</p>
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 w-full text-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full text-center">
           {/* Total Groups Card */}
           <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-md font-medium text-gray-800">Total Groups</h2>
+            <h2 className="text-md font-medium text-gray-800">Total No. of StartUps</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{totalGroups}</p>
           </div>
 
-          {/* Total Incubatees Card */}
-          <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-md font-medium text-gray-800">Total Incubatees</h2>
-            <p className="text-xl font-bold text-blue-500 mt-4">{totalIncubatees}</p>
-          </div>
 
           {/* Flip Card for Total Requests */}
           <div

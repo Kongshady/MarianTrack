@@ -10,6 +10,7 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
   const [members, setMembers] = useState(group.members || []);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
+  const [selectedRole, setSelectedRole] = useState(""); // State for the selected role
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConfirmChecked, setIsConfirmChecked] = useState(false);
 
@@ -50,24 +51,41 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
     const updatedMembers = members.filter((member) => member.id !== memberId);
     setMembers(updatedMembers);
 
-    // Update the user's groupId to null in Firestore
-    const userDocRef = doc(db, "users", memberId);
-    await updateDoc(userDocRef, { groupId: null });
+    try {
+      // Update the user's groupId to null and reset their role to "Incubatee" in Firestore
+      const userDocRef = doc(db, "users", memberId);
+      await updateDoc(userDocRef, { groupId: null, role: "Incubatee" });
+
+      console.log(`User ${memberId} removed from group and role reset to "Incubatee".`);
+    } catch (error) {
+      console.error("Error resetting user role in Firestore:", error);
+    }
   };
 
   const handleAddMember = async () => {
-    if (selectedUser) {
+    if (selectedUser && selectedRole) {
       const userToAdd = availableUsers.find((user) => user.id === selectedUser);
-      const updatedMembers = [...members, userToAdd];
+
+      // Add the user with the selected role to the members list
+      const updatedMembers = [...members, { ...userToAdd, role: selectedRole }];
       setMembers(updatedMembers);
 
-      // Update the user's groupId in Firestore
-      const userDocRef = doc(db, "users", selectedUser);
-      await updateDoc(userDocRef, { groupId: group.id });
+      try {
+        // Update the user's groupId and role in Firestore
+        const userDocRef = doc(db, "users", selectedUser);
+        await updateDoc(userDocRef, { groupId: group.id, role: selectedRole });
 
-      // Remove the added user from the dropdown
-      setAvailableUsers(availableUsers.filter((user) => user.id !== selectedUser));
-      setSelectedUser("");
+        console.log(`User ${selectedUser} added to group with role ${selectedRole}.`);
+
+        // Remove the added user from the dropdown
+        setAvailableUsers(availableUsers.filter((user) => user.id !== selectedUser));
+        setSelectedUser("");
+        setSelectedRole("");
+      } catch (error) {
+        console.error("Error adding user to group in Firestore:", error);
+      }
+    } else {
+      console.error("Please select both a user and a role.");
     }
   };
 
@@ -101,7 +119,7 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white p-6 rounded-sm shadow-lg w-2/6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Edit Group</h2>
+            <h2 className="text-lg font-bold">Edit StartUp</h2>
             <div className="flex gap-1">
               <button
                 onClick={handleArchiveGroup}
@@ -113,14 +131,14 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
                 className="text-red-500 bg-gray-100 p-2 rounded-sm hover:bg-red-500 hover:text-white transition duration-300"
-                title="Delete Group"
+                title="Delete StartUp"
               >
                 <MdDelete size={20} />
               </button>
             </div>
           </div>
           <div className="mb-1">
-            <label className="text-sm">Group Name</label>
+            <label className="text-sm">StartUp Name</label>
             <input
               type="text"
               value={name}
@@ -139,7 +157,8 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
           </div>
           <div className="mb-2 p-2">
             <h3 className="text-sm font-medium mb-2 border-b text-center p-2">Members</h3>
-            <div className="flex gap-2 mb-1">
+            <div className="flex gap-2 mb-1 flex-wrap">
+              {/* Dropdown to select a user */}
               <select
                 value={selectedUser}
                 onChange={(e) => setSelectedUser(e.target.value)}
@@ -152,9 +171,23 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
                   </option>
                 ))}
               </select>
+
+              {/* Dropdown to select a role */}
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-sm p-2 text-sm"
+              >
+                <option value="">Select Role</option>
+                <option value="Project Manager">Project Manager</option>
+                <option value="System Analyst">System Analyst</option>
+                <option value="Developer">Developer</option>
+              </select>
+
+              {/* Add button */}
               <button
                 onClick={handleAddMember}
-                className="bg-primary-color text-white text-xs px-4 py-2 rounded-sm hover:bg-opacity-80"
+                className="bg-primary-color text-white text-xs px-4 py-2 rounded-sm hover:bg-opacity-80 flex-1"
               >
                 Add
               </button>
@@ -162,7 +195,7 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
             <ul className="mb-2">
               {members.map((member) => (
                 <li key={member.id} className="flex justify-between items-center p-1 hover:bg-gray-100 text-sm">
-                  <span>{member.name} {member.lastname}</span>
+                  <span>{member.name} {member.lastname} - {member.role}</span>
                   <button
                     onClick={() => handleRemoveMember(member.id)}
                     className="text-red-500 text-xs hover:underline"
