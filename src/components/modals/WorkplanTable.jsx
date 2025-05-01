@@ -1,31 +1,19 @@
 import React, { useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, handleDeleteTask, handleUpdateStatus }) => {
+const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, handleDeleteTask, handleUpdateStatus, groupRole }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskData, setTaskData] = useState({
     taskName: "",
     assignedTo: "",
     startDate: "",
     endDate: "",
+    priorityLevel: "Low", // Default priority level
   });
   const [isEditing, setIsEditing] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    // Validation for endDate
-    if (name === "endDate" && new Date(value) < new Date(taskData.startDate)) {
-      alert("End Date cannot be earlier than Start Date.");
-      return; // Prevent the update
-    }
-
-    // Validation for startDate
-    if (name === "startDate" && new Date(taskData.endDate) < new Date(value)) {
-      alert("Start Date cannot be later than End Date.");
-      return; // Prevent the update
-    }
-
     setTaskData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -46,6 +34,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
         assignedTo: "",
         startDate: "",
         endDate: "",
+        priorityLevel: "Low", // Reset priority level
       });
     }
   };
@@ -60,21 +49,24 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
     <div className="overflow-y-auto mt-2 w-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg">Workplan</h3>
-        <button
-          onClick={() => {
-            setTaskData({
-              taskName: "",
-              assignedTo: "",
-              startDate: "",
-              endDate: "",
-            });
-            setIsEditing(false);
-            setIsModalOpen(true);
-          }}
-          className="bg-secondary-color text-white px-4 py-2 text-xs rounded-sm hover:bg-opacity-80 transition flex items-center gap-2"
-        >
-          + Add Task
-        </button>
+        {groupRole !== "System Analyst" && groupRole !== "Developer" && (
+          <button
+            onClick={() => {
+              setTaskData({
+                taskName: "",
+                assignedTo: "",
+                startDate: "",
+                endDate: "",
+                priorityLevel: "Low", // Default priority level
+              });
+              setIsEditing(false);
+              setIsModalOpen(true);
+            }}
+            className="bg-secondary-color text-white px-4 py-2 text-xs rounded-sm hover:bg-opacity-80 transition flex items-center gap-2"
+          >
+            + Add Task
+          </button>
+        )}
       </div>
       <table className="min-w-full bg-white text-xs">
         <thead className="sticky top-0 bg-secondary-color text-white">
@@ -83,17 +75,30 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
             <th className="py-2 px-4 font-medium text-right">Assigned Member</th>
             <th className="py-2 px-4 font-medium">Start Date</th>
             <th className="py-2 px-4 font-medium">End Date</th>
+            <th className="py-2 px-4 font-medium">Priority Level</th>
             <th className="py-2 px-4 font-medium">Status</th>
             <th className="py-2 px-4 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {workplan.length > 0 ? (
-            // Sort tasks by startDate in ascending order
+            // Sort tasks by priority level (High > Medium > Low) and then by status (Completed at the bottom)
             [...workplan]
-              .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+              .sort((a, b) => {
+                const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+                if (a.status === "Completed" && b.status !== "Completed") return 1;
+                if (a.status !== "Completed" && b.status === "Completed") return -1;
+                if (priorityOrder[a.priorityLevel] !== priorityOrder[b.priorityLevel]) {
+                  return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                }
+                return new Date(a.startDate) - new Date(b.startDate);
+              })
               .map((task, index) => (
-                <tr key={task.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}>
+                <tr
+                  key={task.id}
+                  className={`${task.status === "Completed" ? "bg-gray-200 opacity-70" : index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                    }`}
+                >
                   <td className="p-1 text-left">{task.taskName}</td>
                   <td className="p-1 text-right">{task.assignedTo}</td>
                   <td className="p-1">
@@ -110,36 +115,56 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
                       day: "numeric",
                     })}
                   </td>
+                  <td
+                    className={`p-2 font-bold ${task.priorityLevel === "High"
+                        ? "text-red-500"
+                        : task.priorityLevel === "Medium"
+                          ? "text-yellow-500"
+                          : "text-green-500"
+                      }`}
+                  >
+                    {task.priorityLevel}
+                  </td>
                   <td className="p-1">
-                    <select
-                      value={task.status}
-                      onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
-                      className="w-full p-1 border text-xs text-center"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                    </select>
+                    {/* Allow only Project Manager or Assigned Member to edit the status */}
+                    {groupRole === "Project Manager" || task.assignedTo === groupMembers.find((member) => member.name === task.assignedTo)?.name ? (
+                      <select
+                        value={task.status}
+                        onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
+                        className="w-full p-1 border text-xs text-center"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                    ) : (
+                      <span className="text-xs">{task.status}</span>
+                    )}
                   </td>
                   <td className="p-1 flex justify-center gap-2">
-                    <button
-                      onClick={() => openEditModal(task)}
-                      className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTask(task.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
-                    >
-                      <FaTrash />
-                    </button>
+                    {/* Restrict actions for System Analyst and Developer */}
+                    {groupRole !== "System Analyst" && groupRole !== "Developer" && (
+                      <>
+                        <button
+                          onClick={() => openEditModal(task)}
+                          className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
+                          disabled={task.status === "Completed"} // Disable edit for completed tasks
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
+                        >
+                          <FaTrash />
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))
           ) : (
             <tr>
-              <td className="p-1 text-center" colSpan="6">
+              <td className="p-1 text-center" colSpan="7">
                 No tasks found.
               </td>
             </tr>
@@ -203,6 +228,20 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
                   className="w-full p-2 border text-sm"
                   required
                 />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm">Priority Level</label>
+                <select
+                  name="priorityLevel"
+                  value={taskData.priorityLevel}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border text-sm"
+                  required
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
               </div>
               <div className="col-span-2 flex justify-end gap-2">
                 <button

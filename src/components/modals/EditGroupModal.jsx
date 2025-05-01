@@ -17,26 +17,27 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
   const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
-    // Fetch users from Firestore and filter out those in a group or with specific roles
     const fetchAvailableUsers = async () => {
       try {
         const usersQuery = collection(db, "users");
         const querySnapshot = await getDocs(usersQuery);
-        const users = querySnapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter(
-            (user) =>
-              (!user.groupId || user.groupId === null) && // Exclude users who are already in a group
-              !["Portfolio Manager", "TBI Manager", "TBI Assistant"].includes(user.role) // Exclude specific roles
-          );
-        setAvailableUsers(users);
+        const users = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        // Filter out users who are already in the group
+        const filteredUsers = users.filter(
+          (user) =>
+            !members.some((member) => member.id === user.id) && // Exclude users already in the group
+            !["Portfolio Manager", "TBI Manager", "TBI Assistant"].includes(user.role) // Exclude specific roles
+        );
+
+        setAvailableUsers(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
 
     fetchAvailableUsers();
-  }, []);
+  }, [members]); // Re-run when members change
 
   const handleSave = async () => {
     // Update the group in Firestore
@@ -62,28 +63,20 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
     }
   };
 
-  const handleAddMember = async () => {
+  const handleAddMember = () => {
     if (selectedUser && selectedRole) {
       const userToAdd = availableUsers.find((user) => user.id === selectedUser);
 
-      // Add the user with the selected role to the members list
-      const updatedMembers = [...members, { ...userToAdd, role: selectedRole }];
+      // Add the user with the selected groupRole to the members list
+      const updatedMembers = [
+        ...members,
+        { id: userToAdd.id, name: userToAdd.name, lastname: userToAdd.lastname, groupRole: selectedRole },
+      ];
       setMembers(updatedMembers);
 
-      try {
-        // Update the user's groupId and role in Firestore
-        const userDocRef = doc(db, "users", selectedUser);
-        await updateDoc(userDocRef, { groupId: group.id, role: selectedRole });
-
-        console.log(`User ${selectedUser} added to group with role ${selectedRole}.`);
-
-        // Remove the added user from the dropdown
-        setAvailableUsers(availableUsers.filter((user) => user.id !== selectedUser));
-        setSelectedUser("");
-        setSelectedRole("");
-      } catch (error) {
-        console.error("Error adding user to group in Firestore:", error);
-      }
+      // Clear the selected user and role
+      setSelectedUser("");
+      setSelectedRole("");
     } else {
       console.error("Please select both a user and a role.");
     }
@@ -195,7 +188,9 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
             <ul className="mb-2">
               {members.map((member) => (
                 <li key={member.id} className="flex justify-between items-center p-1 hover:bg-gray-100 text-sm">
-                  <span>{member.name} {member.lastname} - {member.role}</span>
+                  <span>
+                    {member.name} {member.lastname} - {member.groupRole}
+                  </span>
                   <button
                     onClick={() => handleRemoveMember(member.id)}
                     className="text-red-500 text-xs hover:underline"

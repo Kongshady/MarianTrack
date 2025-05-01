@@ -1,22 +1,40 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc } from "firebase/firestore";
+import { FaPencilAlt } from "react-icons/fa";
 import EmployeeSidebar from "../sidebar/EmployeeSidebar.jsx";
 
 function EmViewGroup() {
   const { groupId } = useParams();
   const [group, setGroup] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [workplan, setWorkplan] = useState([]); 
-  const [activeTable, setActiveTable] = useState("requests"); 
+  const [workplan, setWorkplan] = useState([]);
+  const [activeTable, setActiveTable] = useState("requests");
+  const [groupMembers, setGroupMembers] = useState([]);
+  const [isRemarksModalOpen, setIsRemarksModalOpen] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState(null);
+  const [remarks, setRemarks] = useState("");
 
   useEffect(() => {
     const fetchGroup = async () => {
       try {
         const groupDoc = await getDoc(doc(db, "groups", groupId));
         if (groupDoc.exists()) {
-          setGroup({ id: groupDoc.id, ...groupDoc.data() });
+          const groupData = groupDoc.data();
+
+          const membersWithDetails = await Promise.all(
+            groupData.members.map(async (member) => {
+              const memberDoc = await getDoc(doc(db, "users", member.id));
+              if (memberDoc.exists()) {
+                return { ...member, ...memberDoc.data() };
+              }
+              return member;
+            })
+          );
+
+          setGroup({ id: groupDoc.id, ...groupData });
+          setGroupMembers(membersWithDetails);
         }
       } catch (error) {
         console.error("Error fetching group:", error);
@@ -57,38 +75,24 @@ function EmViewGroup() {
           request.id === requestId ? { ...request, status: newStatus } : request
         )
       );
-
-      const requestDoc = await getDoc(doc(db, "requests", requestId));
-      if (requestDoc.exists()) {
-        const requestData = requestDoc.data();
-
-        const usersQuery = query(
-          collection(db, "users"),
-          where("groupId", "==", requestData.groupId)
-        );
-
-        const usersSnapshot = await getDocs(usersQuery);
-        if (!usersSnapshot.empty) {
-          usersSnapshot.forEach(async (userDoc) => {
-            const userData = userDoc.data();
-
-            let notificationMessage = `<strong style="color: red;">Status Update:</strong> The status of your request for <strong>"${requestData.resourceToolNeeded}"</strong> has been updated to <strong>"${newStatus}".</strong>`;
-
-            if (newStatus === "Done") {
-              notificationMessage += " Kindly ensure you provide a remark.";
-            }
-
-            await addDoc(collection(db, "notifications"), {
-              userId: userDoc.id,
-              message: notificationMessage,
-              createdAt: new Date(),
-              read: false,
-            });
-          });
-        }
-      }
     } catch (error) {
-      console.error("Error updating status or sending notification:", error);
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const handleRemarksSave = async () => {
+    try {
+      await updateDoc(doc(db, "requests", currentRequest.id), { remarks });
+      setRequests((prevRequests) =>
+        prevRequests.map((request) =>
+          request.id === currentRequest.id ? { ...request, remarks } : request
+        )
+      );
+      setIsRemarksModalOpen(false);
+      setCurrentRequest(null);
+      setRemarks("");
+    } catch (error) {
+      console.error("Error saving remarks:", error);
     }
   };
 
@@ -115,10 +119,10 @@ function EmViewGroup() {
         )}
         <div className="mt-2 flex flex-col justify-between items-start w-full gap-4 mb-4">
           {/* Members List */}
-          <div className="">
+          <div>
             <h3 className="font-bold text-md">Members:</h3>
             <ul className="text-sm">
-              {group.members.map((member) => (
+              {groupMembers.map((member) => (
                 <li key={member.id}>
                   {member.name} {member.lastname} - {member.role}
                 </li>
@@ -216,36 +220,69 @@ function EmViewGroup() {
                 </thead>
                 <tbody>
                   {requests.length > 0 ? (
-                    requests.map((request, index) => (
-                      <tr
-                        key={request.id}
-                        className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
-                      >
-                        <td className="p-2">{request.responsibleTeamMember}</td>
-                        <td className="p-2">{request.requestType}</td>
-                        <td className="p-2">{request.description}</td>
-                        <td className="p-2">
-                          {new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}
-                        </td>
-                        <td className="p-2">{request.dateNeeded}</td>
-                        <td className="p-2">{request.resourceToolNeeded}</td>
-                        <td className="p-2">{request.prospectResourcePerson}</td>
-                        <td className="p-2">{request.priorityLevel}</td>
-                        <td className="p-2">{request.remarks}</td>
-                        <td className="p-2">
-                          <select
-                            value={request.status || "Requested"}
-                            onChange={(e) => handleStatusChange(request.id, e.target.value)}
-                            className="p-1 border rounded"
+                    [...requests]
+                      .sort((a, b) => {
+                        const priorityOrder = { HIGH: 1, MEDIUM: 2, LOW: 3 };
+                        if (a.status === "Done" && b.status !== "Done") return 1;
+                        if (a.status !== "Done" && b.status === "Done") return -1;
+                        if (priorityOrder[a.priorityLevel] !== priorityOrder[b.priorityLevel]) {
+                          return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                        }
+                        return new Date(a.dateEntry) - new Date(b.dateEntry);
+                      })
+                      .map((request, index) => (
+                        <tr
+                          key={request.id}
+                          className={`${
+                            request.status === "Done" ? "bg-gray-200 opacity-70" : index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }`}
+                        >
+                          <td className="p-2">{request.responsibleTeamMember}</td>
+                          <td className="p-2">{request.requestType}</td>
+                          <td className="p-2">{request.description}</td>
+                          <td className="p-2">
+                            {new Date(request.dateEntry.seconds * 1000).toLocaleDateString()}
+                          </td>
+                          <td className="p-2">{request.dateNeeded}</td>
+                          <td className="p-2">{request.resourceToolNeeded}</td>
+                          <td className="p-2">{request.prospectResourcePerson}</td>
+                          <td
+                            className={`p-2 font-bold ${
+                              request.priorityLevel === "HIGH"
+                                ? "text-red-500"
+                                : request.priorityLevel === "MEDIUM"
+                                ? "text-yellow-500"
+                                : "text-green-500"
+                            }`}
                           >
-                            <option value="Done">Done</option>
-                            <option value="On-going">On-going</option>
-                            <option value="To be requested">To be requested</option>
-                            <option value="Requested">Requested</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))
+                            {request.priorityLevel}
+                          </td>
+                          <td className="p-2 text-center">
+                            <button
+                              onClick={() => {
+                                setCurrentRequest(request);
+                                setRemarks(request.remarks || "");
+                                setIsRemarksModalOpen(true);
+                              }}
+                              className="text-blue-500 hover:underline"
+                            >
+                              <FaPencilAlt />
+                            </button>
+                          </td>
+                          <td className="p-2">
+                            <select
+                              value={request.status || "Pending"}
+                              onChange={(e) => handleStatusChange(request.id, e.target.value)}
+                              className="p-1 border rounded"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Requested">Requested</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Done">Done</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))
                   ) : (
                     <tr>
                       <td className="p-2 text-center" colSpan="10">
@@ -268,6 +305,7 @@ function EmViewGroup() {
                     <th className="p-2 font-medium text-right">Assigned To</th>
                     <th className="p-2 font-medium">Start Date</th>
                     <th className="p-2 font-medium">End Date</th>
+                    <th className="p-2 font-medium">Priority Level</th> {/* New Priority Level Column */}
                     <th className="p-2 font-medium">Status</th>
                   </tr>
                 </thead>
@@ -276,9 +314,11 @@ function EmViewGroup() {
                     workplan
                       .slice() // Create a shallow copy to avoid mutating the original array
                       .sort((a, b) => {
-                        const dateA = new Date(a.startDate);
-                        const dateB = new Date(b.startDate);
-                        return dateA - dateB; // Sort in ascending order
+                        const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+                        if (priorityOrder[a.priorityLevel] !== priorityOrder[b.priorityLevel]) {
+                          return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                        }
+                        return new Date(a.startDate) - new Date(b.startDate); // Sort by start date if priority is the same
                       })
                       .map((task, index) => (
                         <tr
@@ -306,6 +346,17 @@ function EmViewGroup() {
                               : "N/A"}
                           </td>
                           <td
+                            className={`p-2 font-bold ${
+                              task.priorityLevel === "High"
+                                ? "text-red-500"
+                                : task.priorityLevel === "Medium"
+                                ? "text-yellow-500"
+                                : "text-green-500"
+                            }`}
+                          >
+                            {task.priorityLevel}
+                          </td>
+                          <td
                             className={`p-2 font-semibold ${task.status === "Pending"
                               ? "text-red-500"
                               : task.status === "In Progress"
@@ -321,7 +372,7 @@ function EmViewGroup() {
                       ))
                   ) : (
                     <tr>
-                      <td className="py-2 px-4 text-center" colSpan="5">
+                      <td className="py-2 px-4 text-center" colSpan="6">
                         No tasks found.
                       </td>
                     </tr>
@@ -332,6 +383,34 @@ function EmViewGroup() {
           )}
         </div>
       </div>
+
+      {isRemarksModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
+            <h2 className="text-xl font-bold mb-4 text-center">Edit Remarks</h2>
+            <textarea
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="w-full p-2 border text-sm"
+              placeholder="Enter remarks here..."
+            ></textarea>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setIsRemarksModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white text-sm rounded-sm hover:bg-gray-600 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemarksSave}
+                className="px-4 py-2 bg-primary-color text-white text-sm rounded-sm hover:bg-opacity-80 transition"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

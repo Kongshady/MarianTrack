@@ -88,13 +88,13 @@ function EmDashboard() {
             <EmployeeSidebar />
             <div className="flex flex-col items-start justify-start h-screen w-full p-10 bg-gray-100 overflow-x-auto">
                 <h1 className="text-4xl font-bold">Employee Dashboard</h1>
-                <p className="text-md text-gray-600 mb-4">Summary of all groups and their progress</p>
+                <p className="text-md text-gray-600 mb-4">Summary of all StartUps and their progress</p>
 
                 {/* Overview Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-4 w-full">
                     {/* Total Groups Card */}
                     <div className="p-6 bg-white shadow rounded-sm hover:shadow-lg transition-shadow duration-300">
-                        <h2 className="text-lg font-medium text-gray-800 ">Total Number of Assigned Groups</h2>
+                        <h2 className="text-lg font-medium text-gray-800 ">Total Number of Assigned StartUps</h2>
                         <p className="text-3xl font-bold text-blue-500 mt-4">{totalGroups}</p>
                     </div>
                 </div>
@@ -102,12 +102,12 @@ function EmDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {/* Table of Groups with Number of Requests */}
                     <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Number of Requests</h2>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Number of Requests per StartUps</h2>
                         <div className="max-h-64 overflow-y-auto">
                             <table className="w-full text-sm text-left text-gray-500">
                                 <thead className="text-xs text-gray-700 uppercase bg-gray-100">
                                     <tr>
-                                        <th scope="col" className="px-4 py-2">Group Name</th>
+                                        <th scope="col" className="px-4 py-2">StartUp Name</th>
                                         <th scope="col" className="px-4 py-2">Number of Requests</th>
                                     </tr>
                                 </thead>
@@ -127,12 +127,12 @@ function EmDashboard() {
 
                     {/* Table of Groups with Total Progress Completion */}
                     <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Total Progress Completion</h2>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Total Progress Completion per StartUps</h2>
                         <div className="max-h-64 overflow-y-auto">
                             <table className="w-full text-sm text-left text-gray-500">
                                 <thead className="text-xs text-gray-700 uppercase bg-gray-100">
                                     <tr>
-                                        <th scope="col" className="px-4 py-2">Group Name</th>
+                                        <th scope="col" className="px-4 py-2">StartUp Name</th>
                                         <th scope="col" className="px-4 py-2">Total Progress (%)</th>
                                     </tr>
                                 </thead>

@@ -18,7 +18,7 @@ function AdViewGroups() {
 
   useEffect(() => {
     const fetchGroup = () => {
-      const groupDocRef = doc(db, "groups", groupId); // Correct usage of doc
+      const groupDocRef = doc(db, "groups", groupId);
       const unsubscribeGroup = onSnapshot(groupDocRef, async (docSnapshot) => {
         if (docSnapshot.exists()) {
           const groupData = docSnapshot.data();
@@ -26,10 +26,14 @@ function AdViewGroups() {
           // Fetch member details
           const membersWithDetails = await Promise.all(
             groupData.members.map(async (member) => {
-              const memberDocRef = doc(db, "users", member.id); // Correct usage of doc
+              const memberDocRef = doc(db, "users", member.id);
               const memberDoc = await getDoc(memberDocRef);
               if (memberDoc.exists()) {
-                return { ...member, ...memberDoc.data() }; // Merge member role with user details
+                return {
+                  ...memberDoc.data(),
+                  id: member.id,
+                  groupRole: member.groupRole, // Use groupRole from the group data
+                };
               }
               return member; // Return member as is if user details are not found
             })
@@ -39,7 +43,7 @@ function AdViewGroups() {
 
           // Fetch portfolio manager details
           if (groupData.portfolioManager) {
-            const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id); // Correct usage of doc
+            const portfolioManagerDocRef = doc(db, "users", groupData.portfolioManager.id);
             const portfolioManagerDoc = await getDoc(portfolioManagerDocRef);
             if (portfolioManagerDoc.exists()) {
               setPortfolioManager(portfolioManagerDoc.data());
@@ -51,6 +55,14 @@ function AdViewGroups() {
       return unsubscribeGroup;
     };
 
+    const unsubscribeGroup = fetchGroup();
+
+    return () => {
+      unsubscribeGroup();
+    };
+  }, [groupId]);
+
+  useEffect(() => {
     const fetchRequests = () => {
       const q = query(collection(db, "requests"), where("groupId", "==", groupId));
       const unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
@@ -69,12 +81,10 @@ function AdViewGroups() {
       return unsubscribeWorkplan;
     };
 
-    const unsubscribeGroup = fetchGroup();
     const unsubscribeRequests = fetchRequests();
     const unsubscribeWorkplan = fetchWorkplan();
 
     return () => {
-      unsubscribeGroup();
       unsubscribeRequests();
       unsubscribeWorkplan();
     };
@@ -114,7 +124,7 @@ function AdViewGroups() {
             <ul className="text-sm">
               {group.members.map((member) => (
                 <li key={member.id}>
-                  {member.name} {member.lastname} - {member.role}
+                  {member.name} {member.lastname} - {member.groupRole}
                 </li>
               ))}
             </ul>
@@ -209,56 +219,90 @@ function AdViewGroups() {
             <table className="w-full bg-white border-gray-200 text-xs text-left">
               <thead className="sticky top-0 bg-primary-color text-white">
                 <tr>
-                  <th className="py-2 px-4 ">Responsible Team Member</th>
-                  <th className="py-2 px-4 ">Request Type</th>
-                  <th className="py-2 px-4 ">Description</th>
-                  <th className="py-2 px-4 ">Date Entry</th>
-                  <th className="py-2 px-4 ">Date Needed</th>
-                  <th className="py-2 px-4 ">Resource/Tool Needed</th>
-                  <th className="py-2 px-4 ">Prospect Resource Person</th>
-                  <th className="py-2 px-4 ">Priority Level</th>
-                  <th className="py-2 px-4 ">Remarks</th>
-                  <th className="py-2 px-4 ">Status</th>
+                  <th className="py-2 px-4">Responsible Team Member</th>
+                  <th className="py-2 px-4">Request Type</th>
+                  <th className="py-2 px-4">Description</th>
+                  <th className="py-2 px-4">Date Entry</th>
+                  <th className="py-2 px-4">Date Needed</th>
+                  <th className="py-2 px-4">Resource/Tool Needed</th>
+                  <th className="py-2 px-4">Prospect Resource Person</th>
+                  <th className="py-2 px-4">Priority Level</th>
+                  <th className="py-2 px-4">Remarks</th>
+                  <th className="py-2 px-4">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {requests.length > 0 ? (
-                  requests.map((request, index) => (
-                    <tr
-                      key={request.id}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
-                    >
-                      <td className="py-2 px-4 ">{request.responsibleTeamMember}</td>
-                      <td className="py-2 px-4 ">{request.requestType}</td>
-                      <td className="py-2 px-4 ">{request.description}</td>
-                      <td className="py-2 px-4 ">
-                        {request.dateEntry
-                          ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                          : "N/A"}
-                      </td>
-                      <td className="py-2 px-4 ">
-                        {request.dateNeeded
-                          ? new Date(request.dateNeeded).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                          : "N/A"}
-                      </td>
-                      <td className="py-2 px-4 ">{request.resourceToolNeeded}</td>
-                      <td className="py-2 px-4 ">{request.prospectResourcePerson}</td>
-                      <td className="py-2 px-4 ">{request.priorityLevel}</td>
-                      <td className="py-2 px-4 ">{request.remarks}</td>
-                      <td className="py-2 px-4 ">{request.status}</td>
-                    </tr>
-                  ))
+                  [...requests]
+                    .sort((a, b) => {
+                      const priorityOrder = { HIGH: 1, MEDIUM: 2, LOW: 3 };
+                      if (a.status === "Done" && b.status !== "Done") return 1;
+                      if (a.status !== "Done" && b.status === "Done") return -1;
+                      if (priorityOrder[a.priorityLevel] !== priorityOrder[b.priorityLevel]) {
+                        return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                      }
+                      return new Date(a.dateEntry) - new Date(b.dateEntry); // Sort by date entry if priority and status are the same
+                    })
+                    .map((request, index) => (
+                      <tr
+                        key={request.id}
+                        className={`${
+                          request.status === "Done" ? "bg-gray-200 opacity-70" : index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
+                      >
+                        <td className="py-2 px-4">{request.responsibleTeamMember}</td>
+                        <td className="py-2 px-4">{request.requestType}</td>
+                        <td className="py-2 px-4">{request.description}</td>
+                        <td className="py-2 px-4">
+                          {request.dateEntry
+                            ? new Date(request.dateEntry.seconds * 1000).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                            : "N/A"}
+                        </td>
+                        <td className="py-2 px-4">
+                          {request.dateNeeded
+                            ? new Date(request.dateNeeded).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                            : "N/A"}
+                        </td>
+                        <td className="py-2 px-4">{request.resourceToolNeeded}</td>
+                        <td className="py-2 px-4">{request.prospectResourcePerson}</td>
+                        <td
+                          className={`py-2 px-4 font-bold ${
+                            request.priorityLevel === "HIGH"
+                              ? "text-red-500"
+                              : request.priorityLevel === "MEDIUM"
+                              ? "text-yellow-500"
+                              : "text-green-500"
+                          }`}
+                        >
+                          {request.priorityLevel}
+                        </td>
+                        <td className="py-2 px-4">{request.remarks || "N/A"}</td>
+                        <td
+                          className={`py-2 px-4 font-semibold ${
+                            request.status === "Pending"
+                              ? "text-red-500"
+                              : request.status === "In Progress"
+                              ? "text-yellow-500"
+                              : request.status === "Done"
+                              ? "text-green-500"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {request.status}
+                        </td>
+                      </tr>
+                    ))
                 ) : (
                   <tr>
-                    <td className="py-2 px-4  text-center" colSpan="10">
+                    <td className="py-2 px-4 text-center" colSpan="10">
                       No requests found.
                     </td>
                   </tr>
@@ -280,6 +324,7 @@ function AdViewGroups() {
                   <th className="py-2 px-4">Assigned To</th>
                   <th className="py-2 px-4">Start Date</th>
                   <th className="py-2 px-4">End Date</th>
+                  <th className="py-2 px-4">Priority Level</th> {/* New Priority Level Column */}
                   <th className="py-2 px-4">Status</th>
                 </tr>
               </thead>
@@ -288,14 +333,20 @@ function AdViewGroups() {
                   workplan
                     .slice() // Create a shallow copy to avoid mutating the original array
                     .sort((a, b) => {
-                      const dateA = new Date(a.startDate);
-                      const dateB = new Date(b.startDate);
-                      return dateA - dateB; // Sort in ascending order
+                      const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+                      if (a.status === "Completed" && b.status !== "Completed") return 1;
+                      if (a.status !== "Completed" && b.status === "Completed") return -1;
+                      if (priorityOrder[a.priorityLevel] !== priorityOrder[b.priorityLevel]) {
+                        return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                      }
+                      return new Date(a.startDate) - new Date(b.startDate); // Sort by start date if priority and status are the same
                     })
                     .map((task, index) => (
                       <tr
                         key={task.id}
-                        className={index % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                        className={`${
+                          task.status === "Completed" ? "bg-gray-200 opacity-70" : index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
                       >
                         <td className="p-2 text-left">{task.taskName}</td>
                         <td className="p-2">{task.assignedTo}</td>
@@ -318,14 +369,26 @@ function AdViewGroups() {
                             : "N/A"}
                         </td>
                         <td
-                          className={`p-2 font-semibold ${task.status === "Pending"
-                            ? "text-red-500"
-                            : task.status === "In Progress"
+                          className={`p-2 font-bold ${
+                            task.priorityLevel === "High"
+                              ? "text-red-500"
+                              : task.priorityLevel === "Medium"
+                              ? "text-yellow-500"
+                              : "text-green-500"
+                          }`}
+                        >
+                          {task.priorityLevel}
+                        </td>
+                        <td
+                          className={`p-2 font-semibold ${
+                            task.status === "Pending"
+                              ? "text-red-500"
+                              : task.status === "In Progress"
                               ? "text-yellow-500"
                               : task.status === "Completed"
-                                ? "text-green-500"
-                                : "text-gray-500"
-                            }`}
+                              ? "text-green-500"
+                              : "text-gray-500"
+                          }`}
                         >
                           {task.status}
                         </td>
@@ -333,7 +396,7 @@ function AdViewGroups() {
                     ))
                 ) : (
                   <tr>
-                    <td className="py-2 px-4 text-center" colSpan="5">
+                    <td className="py-2 px-4 text-center" colSpan="6">
                       No tasks found.
                     </td>
                   </tr>

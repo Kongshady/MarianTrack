@@ -52,7 +52,7 @@ function PendingUsersTable({ pendingUsers, filterUsersByRole, handleApproval, se
                                 }));
 
                                 // Create notifications for each admin
-                                const notificationMessage = `<b>New Users</b>There are new pending users awaiting approval.`;
+                                const notificationMessage = `<b>New Users:</b> There are new pending users awaiting for their approval.`;
                                 adminUsers.forEach(async (admin) => {
                                     try {
                                         await addDoc(collection(db, "notifications"), {
@@ -62,7 +62,6 @@ function PendingUsersTable({ pendingUsers, filterUsersByRole, handleApproval, se
                                             read: false,
                                             type: "new_pending_user", // Notification type for filtering if needed
                                         });
-                                        console.log(`Notification sent to ${admin.role} (${admin.name}): ${notificationMessage}`);
                                     } catch (error) {
                                         console.error("Error creating notification:", error);
                                     }

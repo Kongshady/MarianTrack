@@ -19,15 +19,12 @@ function IncuGroups() {
         try {
           const querySnapshot = await getDocs(collection(db, "groups"));
           const filteredGroups = querySnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(group => group.members.some(member => member.email === user.email)); // Check if the user's email exists in the members array
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .filter((group) =>
+              group.members.some((member) => member.id === user.uid) // Check if the user's ID exists in the members array
+            );
 
-          if (filteredGroups.length > 0) {
-            // Automatically navigate to the first group found
-            navigate(`/incubatee/view-group/${filteredGroups[0].id}`);
-          } else {
-            setGroups(filteredGroups);
-          }
+          setGroups(filteredGroups); // Set all filtered groups in the state
         } catch (error) {
           console.error("Error fetching user groups:", error);
         }
@@ -35,19 +32,19 @@ function IncuGroups() {
     };
 
     fetchUserGroups();
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="flex">
       <IncubateeSidebar />
       <div className="flex flex-col items-start h-screen w-full p-10">
-        <h1 className="text-4xl font-bold mb-5">My Group</h1>
+        <h1 className="text-4xl font-bold mb-5">My StartUps</h1>
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.length > 0 ? (
-            groups.map(group => (
-              <div key={group.id} className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-xl font-bold">{group.name}</h2>
-                <p className="text-sm">{group.description}</p>
+            groups.map((group) => (
+              <div key={group.id} className="bg-white p-4 rounded-sm shadow hover:shadow-lg transition border">
+                <h2 className="text-md font-bold">{group.name}</h2>
+                <p className="text-xs">{group.description}</p>
                 {group.imageUrl && (
                   <img
                     src={group.imageUrl}
@@ -59,13 +56,15 @@ function IncuGroups() {
                   <h3 className="font-bold text-sm">Members:</h3>
                   <ul className="text-sm">
                     {group.members.map((member, index) => (
-                      <li key={index}>{member.email}</li>
+                      <li key={index}>
+                        {member.name} {member.lastname}
+                      </li>
                     ))}
                   </ul>
                 </div>
                 <button
                   onClick={() => navigate(`/incubatee/view-group/${group.id}`)}
-                  className="mt-4 bg-secondary-color text-white px-4 py-2 rounded-lg hover:bg-opacity-80 transition"
+                  className="mt-4 bg-secondary-color text-xs text-white px-4 py-2 rounded-sm hover:bg-opacity-80 transition hover:bg-white hover:text-secondary-color border border-secondary-color"
                 >
                   View Group
                 </button>

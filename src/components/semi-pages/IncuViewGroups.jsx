@@ -12,7 +12,6 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
-  getDocs, // Import getDocs
 } from "firebase/firestore";
 import IncubateeSidebar from "../sidebar/IncubateeSidebar.jsx";
 import RequestsTable from "../modals/RequestsTable.jsx";
@@ -27,6 +26,7 @@ function IncuViewGroup() {
   const [requests, setRequests] = useState([]);
   const [workplan, setWorkplan] = useState([]);
   const [groupMembers, setGroupMembers] = useState([]);
+  const [userRole, setUserRole] = useState(""); // Define userRole
   const [requestData, setRequestData] = useState({
     responsibleTeamMember: "",
     requestType: "Technical Request",
@@ -41,7 +41,6 @@ function IncuViewGroup() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState(null);
-  const [userRole, setUserRole] = useState(""); // Add userRole state
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -51,6 +50,15 @@ function IncuViewGroup() {
           const groupData = groupDoc.data();
           setGroup({ id: groupDoc.id, ...groupData });
           setGroupMembers(groupData.members);
+
+          // Determine the logged-in user's groupRole
+          const user = auth.currentUser;
+          if (user) {
+            const userInGroup = groupData.members.find((member) => member.id === user.uid);
+            if (userInGroup) {
+              setUserRole(userInGroup.groupRole); // Set the user's groupRole
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching group:", error);
@@ -59,24 +67,6 @@ function IncuViewGroup() {
 
     fetchGroup();
   }, [groupId]);
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            setUserRole(userDoc.data().role); // Set the userRole
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      }
-    };
-
-    fetchUserRole();
-  }, []);
 
   useEffect(() => {
     if (isRequestsTableOpen) {
@@ -100,86 +90,6 @@ function IncuViewGroup() {
     }
   }, [groupId, isWorkplanTableOpen]);
 
-  useEffect(() => {
-    const checkOverdueTasks = async () => {
-      const q = query(
-        collection(db, "workplan"),
-        where("groupId", "==", groupId),
-        where("status", "in", ["Pending", "In Progress"]) // Check only incomplete tasks
-      );
-
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        querySnapshot.forEach(async (taskDoc) => {
-          const task = taskDoc.data();
-          const taskEndDate = task.endDate ? new Date(task.endDate.seconds * 1000) : null;
-
-          if (taskEndDate && taskEndDate < new Date()) {
-            // Task is overdue
-            const taskRef = doc(db, "workplan", taskDoc.id);
-
-            // Update task status to "Overdue"
-            await updateDoc(taskRef, { status: "Overdue" });
-
-            // Notify the user responsible for the task
-            if (task.assignedTo) {
-              await addDoc(collection(db, "notifications"), {
-                userId: task.assignedTo, // ID of the user responsible for the task
-                message: `Task "${task.taskName}" is overdue.`,
-                timestamp: serverTimestamp(),
-                read: false,
-              });
-            }
-          }
-        });
-      });
-
-      return () => unsubscribe();
-    };
-
-    checkOverdueTasks();
-  }, [groupId]);
-
-  useEffect(() => {
-    const checkGroupCompletion = async () => {
-      if (workplan.length > 0) {
-        const completedTasks = workplan.filter((task) => task.status === "Completed").length;
-        const totalCompletion = Math.round((completedTasks / workplan.length) * 100);
-
-        if (totalCompletion === 100) {
-          try {
-            // Fetch the group details
-            const groupDoc = await getDoc(doc(db, "groups", groupId));
-            if (groupDoc.exists()) {
-              const groupData = groupDoc.data();
-
-              // Notify TBI Manager and TBI Assistant
-              const usersQuery = query(
-                collection(db, "users"),
-                where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
-              );
-
-              const usersSnapshot = await getDocs(usersQuery);
-              usersSnapshot.forEach(async (userDoc) => {
-                await addDoc(collection(db, "notifications"), {
-                  userId: userDoc.id, // Firestore document ID of the user
-                  groupId: groupId, // Add groupId here
-                  message: `<b style="color: green;">Group Progress Update:</b> Great news! <b>${groupData.name}</b> has completed all the tasks in their workplan.`,
-                  type: "group_completion",
-                  timestamp: serverTimestamp(),
-                  read: false,
-                });
-              });
-            }
-          } catch (error) {
-            console.error("Error sending group completion notification:", error);
-          }
-        }
-      }
-    };
-
-    checkGroupCompletion();
-  }, [workplan, groupId]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRequestData((prevData) => ({
@@ -201,51 +111,15 @@ function IncuViewGroup() {
           throw new Error("Group ID is missing. Please try again.");
         }
 
-        // Add the new request to the "requests" collection
         await addDoc(collection(db, "requests"), {
           ...requestData,
-          dateEntry: serverTimestamp(), // Use serverTimestamp for Firestore
-          groupId, // Ensure groupId is included
+          dateEntry: serverTimestamp(),
+          groupId,
         });
-
-        // Fetch the group details
-        const groupDoc = await getDoc(doc(db, "groups", groupId));
-        if (groupDoc.exists()) {
-          const groupData = groupDoc.data();
-          const portfolioManagerId = groupData.portfolioManager.id;
-
-          // Notify the portfolio manager
-          await addDoc(collection(db, "notifications"), {
-            userId: portfolioManagerId,
-            groupId: groupId, // Add groupId here
-            message: `<b>Group Request:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
-            timestamp: serverTimestamp(),
-            read: false,
-          });
-
-          // Notify TBI Manager and TBI Assistant
-          const usersQuery = query(
-            collection(db, "users"),
-            where("role", "in", ["TBI Manager", "TBI Assistant"]) // Query for TBI Manager and Assistant roles
-          );
-
-          const usersSnapshot = await getDocs(usersQuery);
-          usersSnapshot.forEach(async (userDoc) => {
-            await addDoc(collection(db, "notifications"), {
-              userId: userDoc.id, // Firestore document ID of the user
-              groupId: groupId, // Add groupId here
-              message: `<b style="color: red;">Group Needs:</b> A new request has been submitted from the group <b>"${groupData.name}"</b>.`,
-              timestamp: serverTimestamp(),
-              type: "group_request",
-              read: false,
-            });
-          });
-        }
 
         alert("Request submitted successfully!");
       }
 
-      // Reset modal and form state
       setIsModalOpen(false);
       setIsEditing(false);
       setCurrentRequestId(null);
@@ -270,6 +144,48 @@ function IncuViewGroup() {
     } catch (error) {
       console.error("Error deleting request:", error);
       alert("Error deleting request. Please try again.");
+    }
+  };
+
+  const handleAddTask = async (newTask) => {
+    try {
+      await addDoc(collection(db, "workplan"), {
+        ...newTask,
+        groupId,
+        status: "Pending",
+      });
+      alert("Task added successfully!");
+    } catch (error) {
+      console.error("Error adding task:", error);
+    }
+  };
+
+  const handleEditTask = async (updatedTask) => {
+    try {
+      const taskDoc = doc(db, "workplan", updatedTask.id);
+      await updateDoc(taskDoc, updatedTask);
+      alert("Task updated successfully!");
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const taskDoc = doc(db, "workplan", taskId);
+      await deleteDoc(taskDoc);
+      alert("Task deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const handleUpdateStatus = async (taskId, newStatus) => {
+    try {
+      const taskDoc = doc(db, "workplan", taskId);
+      await updateDoc(taskDoc, { status: newStatus });
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -300,59 +216,57 @@ function IncuViewGroup() {
             <ul className="text-sm">
               {group.members.map((member) => (
                 <li key={member.id}>
-                  {member.name} {member.lastname} - {member.role}
+                  {member.name} {member.lastname} - {member.groupRole}
                 </li>
               ))}
             </ul>
           </div>
+
           {/* Cards for workplan statistics */}
           <div className="flex justify-end gap-2">
-            {/* Card for total number of tasks */}
             <div className="bg-blue-500 text-white text-center p-2 rounded-sm shadow-md ">
               <h3 className="text-xs">No. of Tasks</h3>
               <p className="text-md font-semibold mt-1">{workplan.length}</p>
             </div>
-            {/* Card for pending tasks */}
             <div className="bg-yellow-500 text-white text-center p-2 rounded-sm shadow-md ">
               <h3 className="text-xs">Pending Tasks</h3>
               <p className="text-md font-semibold mt-1">
                 {workplan.filter((task) => task.status === "Pending").length}
               </p>
             </div>
-            {/* Card for completed tasks */}
             <div className="bg-green-500 text-white text-center p-2 rounded-sm shadow-md ">
               <h3 className="text-xs">Completed Tasks</h3>
               <p className="text-md font-semibold mt-1">
                 {workplan.filter((task) => task.status === "Completed").length}
               </p>
             </div>
-            {/* Card for overall workplan completion */}
             <div
-              className={`text-white text-center p-2 rounded-sm shadow-md  ${workplan.length > 0
-                ? Math.round(
-                  (workplan.filter((task) => task.status === "Completed").length /
-                    workplan.length) *
-                  100
-                ) >= 75
-                  ? "bg-green-500"
-                  : Math.round(
-                    (workplan.filter((task) => task.status === "Completed").length /
-                      workplan.length) *
-                    100
-                  ) >= 50
+              className={`text-white text-center p-2 rounded-sm shadow-md  ${
+                workplan.length > 0
+                  ? Math.round(
+                      (workplan.filter((task) => task.status === "Completed").length /
+                        workplan.length) *
+                        100
+                    ) >= 75
+                    ? "bg-green-500"
+                    : Math.round(
+                        (workplan.filter((task) => task.status === "Completed").length /
+                          workplan.length) *
+                          100
+                      ) >= 50
                     ? "bg-yellow-500"
                     : "bg-red-500"
-                : "bg-gray-500"
-                }`}
+                  : "bg-gray-500"
+              }`}
             >
               <h3 className="text-xs">Total Progress Completion</h3>
               <p className="text-md font-semibold mt-1">
                 {workplan.length > 0
                   ? `${Math.round(
-                    (workplan.filter((task) => task.status === "Completed").length /
-                      workplan.length) *
-                    100
-                  )}%`
+                      (workplan.filter((task) => task.status === "Completed").length /
+                        workplan.length) *
+                        100
+                    )}%`
                   : "0%"}
               </p>
             </div>
@@ -361,25 +275,27 @@ function IncuViewGroup() {
         <div className="flex flex-row-reverse mt-4">
           <button
             onClick={() => {
-              setIsRequestsTableOpen(true); // Open Requests Table
-              setIsWorkplanTableOpen(false); // Close Workplan Table
+              setIsRequestsTableOpen(true);
+              setIsWorkplanTableOpen(false);
             }}
-            className={`${isRequestsTableOpen
-              ? "bg-secondary-color text-white"
-              : "bg-white border border-secondary-color"
-              } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+            className={`${
+              isRequestsTableOpen
+                ? "bg-secondary-color text-white"
+                : "bg-white border border-secondary-color"
+            } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
           >
             Group Requests
           </button>
           <button
             onClick={() => {
-              setIsWorkplanTableOpen(true); // Open Workplan Table
-              setIsRequestsTableOpen(false); // Close Requests Table
+              setIsWorkplanTableOpen(true);
+              setIsRequestsTableOpen(false);
             }}
-            className={`${isWorkplanTableOpen
-              ? "bg-secondary-color text-white"
-              : "bg-white border border-secondary-color"
-              } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
+            className={`${
+              isWorkplanTableOpen
+                ? "bg-secondary-color text-white"
+                : "bg-white border border-secondary-color"
+            } text-secondary-color px-4 py-2 text-xs hover:bg-opacity-80 transition`}
           >
             Workplan
           </button>
@@ -405,39 +321,18 @@ function IncuViewGroup() {
               setIsModalOpen(true);
               setIsEditing(false);
             }}
-            userRole={userRole} // Pass the userRole prop
+            groupRole={userRole} // Pass the user's groupRole
           />
         )}
         {isWorkplanTableOpen && (
           <WorkplanTable
             workplan={workplan}
             groupMembers={groupMembers}
-            handleAddTask={(newTask) => {
-              addDoc(collection(db, "workplan"), {
-                ...newTask,
-                groupId,
-                status: "Pending", // Default status
-              })
-                .then(() => alert("Task added successfully!"))
-                .catch((error) => console.error("Error adding task:", error));
-            }}
-            handleEditTask={(updatedTask) => {
-              const taskDoc = doc(db, "workplan", updatedTask.id);
-              updateDoc(taskDoc, updatedTask)
-                .then(() => alert("Task updated successfully!"))
-                .catch((error) => console.error("Error updating task:", error));
-            }}
-            handleDeleteTask={(taskId) => {
-              const taskDoc = doc(db, "workplan", taskId);
-              deleteDoc(taskDoc)
-                .then(() => alert("Task deleted successfully!"))
-                .catch((error) => console.error("Error deleting task:", error));
-            }}
-            handleUpdateStatus={(taskId, newStatus) => {
-              const taskDoc = doc(db, "workplan", taskId);
-              updateDoc(taskDoc, { status: newStatus })
-                .catch((error) => console.error("Error updating status:", error));
-            }}
+            handleAddTask={handleAddTask}
+            handleEditTask={handleEditTask}
+            handleDeleteTask={handleDeleteTask}
+            handleUpdateStatus={handleUpdateStatus}
+            groupRole={userRole} // Pass the user's groupRole
           />
         )}
       </div>
@@ -499,9 +394,7 @@ function IncuViewGroup() {
                 />
               </div>
               <div className="col-span-2">
-                <label className="block mb-1 text-sm">
-                  Description
-                </label>
+                <label className="block mb-1 text-sm">Description</label>
                 <textarea
                   name="description"
                   value={requestData.description}
@@ -512,9 +405,7 @@ function IncuViewGroup() {
               </div>
 
               <div>
-                <label className="block mb-1 text-sm">
-                  Date Entry
-                </label>
+                <label className="block mb-1 text-sm">Date Entry</label>
                 <input
                   type="date"
                   name="dateEntry"
@@ -560,22 +451,10 @@ function IncuViewGroup() {
                   className="w-full p-2 border text-sm"
                 >
                   <option value="">Select Priority Level</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
                 </select>
-              </div>
-              <div className="col-span-2">
-                <label className="block mb-1 text-sm">
-                  Remarks
-                </label>
-                <textarea
-                  name="remarks"
-                  value={requestData.remarks}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border text-sm"
-                  placeholder="Optional remarks or additional information"
-                ></textarea>
               </div>
               <div className="col-span-2 flex justify-end gap-2">
                 <button
@@ -594,14 +473,15 @@ function IncuViewGroup() {
                     !requestData.dateNeeded ||
                     !requestData.priorityLevel
                   }
-                  className={`px-4 py-2 text-white text-sm rounded-sm transition ${!requestData.responsibleTeamMember ||
-                      !requestData.requestType ||
-                      !requestData.resourceToolNeeded ||
-                      !requestData.dateNeeded ||
-                      !requestData.priorityLevel
+                  className={`px-4 py-2 text-white text-sm rounded-sm transition ${
+                    !requestData.responsibleTeamMember ||
+                    !requestData.requestType ||
+                    !requestData.resourceToolNeeded ||
+                    !requestData.dateNeeded ||
+                    !requestData.priorityLevel
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-secondary-color hover:bg-opacity-80"
-                    }`}
+                  }`}
                 >
                   {isEditing ? "Update Request" : "Submit Request"}
                 </button>
@@ -615,5 +495,3 @@ function IncuViewGroup() {
 }
 
 export default IncuViewGroup;
-
-// if the user did not complete the task on time the status will be changed to overdue and the user will be notified

@@ -36,24 +36,27 @@ function AdGroups() {
         const users = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         const groups = groupsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-        // Collect IDs of users already assigned to a group
-        const assignedUserIds = new Set();
+        // Collect IDs of users who are already Project Managers in any group
+        const projectManagerIds = new Set();
         groups.forEach((group) => {
-          if (group.portfolioManager) assignedUserIds.add(group.portfolioManager.id);
-          if (group.members) {
-            group.members.forEach((member) => assignedUserIds.add(member.id));
-          }
+          group.members.forEach((member) => {
+            if (member.role === "Project Manager") {
+              projectManagerIds.add(member.id);
+            }
+          });
         });
 
-        // Filter users for each role
+        // Filter users for the dropdown
         const availableUsers = users.filter((user) => user.status === "approved");
         setAvailableManagers(availableUsers.filter((user) => user.role === "Portfolio Manager"));
         setAvailableAdditionalMembers(
-          availableUsers.filter(
-            (user) =>
-              user.role === "Incubatee" && // Only incubatees
-              !assignedUserIds.has(user.id) // Exclude already assigned users
-          )
+          availableUsers.filter((user) => {
+            // Allow all incubatees but prevent users who are already Project Managers in another startup
+            return (
+              user.role === "Incubatee" &&
+              (!projectManagerIds.has(user.id) || user.role !== "Project Manager")
+            );
+          })
         );
 
         // Set groups (filter out archived ones and sort alphabetically by name)
@@ -115,12 +118,12 @@ function AdGroups() {
       const portfolioManagerDoc = await getDoc(doc(db, "users", portfolioManager));
       const portfolioManagerDetails = { id: portfolioManager, ...portfolioManagerDoc.data() };
 
-      // Prepare members with roles
+      // Prepare members with group roles
       const members = incubateeDropdowns
         .filter((dropdown) => dropdown.value && dropdown.role) // Only include valid selections
         .map((dropdown) => ({
-          id: dropdown.value,
-          role: dropdown.role,
+          id: dropdown.value, // User ID
+          groupRole: dropdown.role, // Role specific to this group
         }));
 
       const groupDocRef = await addDoc(collection(db, "groups"), {
@@ -128,15 +131,9 @@ function AdGroups() {
         description,
         imageUrl: uploadedImageUrl,
         portfolioManager: portfolioManagerDetails,
-        members, // Add members with roles
+        members, // Add members with group roles
         createdAt: serverTimestamp(),
       });
-
-      // Update roles of incubatees in Firestore
-      for (const member of members) {
-        const userDocRef = doc(db, "users", member.id);
-        await updateDoc(userDocRef, { role: member.role, groupId: groupDocRef.id });
-      }
 
       // Create a notification for the portfolio manager
       await addDoc(collection(db, "notifications"), {
@@ -386,7 +383,7 @@ function AdGroups() {
                 onClick={handleCreateGroup}
                 className="px-4 py-2 bg-primary-color text-white rounded-lg hover:bg-opacity-80 transition"
               >
-                Create Group
+                Create Startup
               </button>
             </div>
           </div>

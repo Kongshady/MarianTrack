@@ -135,7 +135,7 @@ function IncubateeSidebar({ onUserFetched = () => {} }) {
       <nav className="mt-6">
         <ul className="space-y-1">
           <MenuItem to={"/incubatee-dashboard"} icon={<MdDashboard />} text="Dashboard" />
-          <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="MyGroup" />
+          <MenuItem to={"/incubatee-group"} icon={<MdGroups />} text="MyStartUps" />
           <MenuItem
             to={"/incubatee-notification"}
             icon={<IoMdNotifications />}
