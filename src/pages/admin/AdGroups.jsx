@@ -91,7 +91,6 @@ function AdGroups() {
       return;
     }
 
-    // Check if at least one incubatee has the role of "Project Manager"
     const hasProjectManager = incubateeDropdowns.some(
       (dropdown) => dropdown.role === "Project Manager"
     );
@@ -101,8 +100,8 @@ function AdGroups() {
       return;
     }
 
-    setError(""); // Clear any previous errors
-    setValidationError(""); // Clear validation error
+    setError("");
+    setValidationError("");
 
     let uploadedImageUrl = "";
 
@@ -118,20 +117,28 @@ function AdGroups() {
       const portfolioManagerDoc = await getDoc(doc(db, "users", portfolioManager));
       const portfolioManagerDetails = { id: portfolioManager, ...portfolioManagerDoc.data() };
 
-      // Prepare members with group roles
-      const members = incubateeDropdowns
-        .filter((dropdown) => dropdown.value && dropdown.role) // Only include valid selections
-        .map((dropdown) => ({
-          id: dropdown.value, // User ID
-          groupRole: dropdown.role, // Role specific to this group
-        }));
+      // Fetch full details of each incubatee
+      const members = await Promise.all(
+        incubateeDropdowns
+          .filter((dropdown) => dropdown.value && dropdown.role) // Only include valid selections
+          .map(async (dropdown) => {
+            const memberDoc = await getDoc(doc(db, "users", dropdown.value));
+            const memberData = memberDoc.data();
+            return {
+              id: dropdown.value, // User ID
+              name: memberData.name, // Member's name
+              lastname: memberData.lastname, // Member's lastname
+              groupRole: dropdown.role, // Role specific to this group
+            };
+          })
+      );
 
       const groupDocRef = await addDoc(collection(db, "groups"), {
         name: groupName,
         description,
         imageUrl: uploadedImageUrl,
         portfolioManager: portfolioManagerDetails,
-        members, // Add members with group roles
+        members, // Add members with full details
         createdAt: serverTimestamp(),
       });
 
@@ -141,15 +148,15 @@ function AdGroups() {
         message: `<b style="color:green">You’ve been assigned</b> as the Portfolio Manager for the Group <b>"${groupName}"</b>. Get ready to lead and make an impact!`,
         timestamp: serverTimestamp(),
         read: false,
-        groupId: groupDocRef.id, // Add groupId to the notification
-        type: "manager", // Notification type for portfolio manager
+        groupId: groupDocRef.id,
+        type: "manager",
       });
 
       setGroupName("");
       setDescription("");
       setImage(null);
       setPortfolioManager("");
-      setIncubateeDropdowns([{ id: Date.now(), value: "", role: "" }]); // Reset incubatee dropdowns
+      setIncubateeDropdowns([{ id: Date.now(), value: "", role: "" }]);
       setIsPopupOpen(false);
 
       // Fetch the updated list of groups
@@ -157,7 +164,6 @@ function AdGroups() {
       const groupsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setGroups(groupsData.filter((group) => !group.archived));
 
-      // Navigate to the newly created group's details page
       navigate(`/admin/view-group/${groupDocRef.id}`);
     } catch (error) {
       console.error("Error creating group:", error);

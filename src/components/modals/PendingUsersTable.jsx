@@ -52,7 +52,7 @@ function PendingUsersTable({ pendingUsers, filterUsersByRole, handleApproval, se
                                 }));
 
                                 // Create notifications for each admin
-                                const notificationMessage = `<b>New Users:</b> There are new pending users awaiting for their approval.`;
+                                const notificationMessage = `<b style="color:violet">New Users:</b> There are new pending users awaiting for their approval.`;
                                 adminUsers.forEach(async (admin) => {
                                     try {
                                         await addDoc(collection(db, "notifications"), {

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { db } from "../../config/marian-config"; // Import Firestore configuration
+import { addDoc, collection, serverTimestamp } from "firebase/firestore"; // Import Firestore methods
 
 const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, handleDeleteTask, handleUpdateStatus, groupRole }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,6 +45,46 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
     setTaskData(task);
     setIsEditing(true);
     setIsModalOpen(true);
+  };
+
+  const notifyAssignedMember = async (task) => {
+    try {
+      // Find the assigned member
+      const assignedMember = groupMembers.find(
+        (member) => `${member.name} ${member.lastname}` === task.assignedTo
+      );
+
+      if (assignedMember) {
+        // Create a notification for the assigned member
+        await addDoc(collection(db, "notifications"), {
+          userId: assignedMember.id, // ID of the assigned member
+          message: `<b style="color:red">Task Update:</b> Your task <b>${task.taskName}</b> has been marked as <b style="color:green">Completed</b> by your Project Manager.`,
+          createdAt: serverTimestamp(), // Use Firestore's serverTimestamp
+          read: false,
+          type: "task-status",
+          groupId: task.groupId,
+        });
+      }
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  };
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    try {
+      // Update the task status
+      await handleUpdateStatus(taskId, newStatus);
+
+      // Check if the new status is "Completed"
+      if (newStatus === "Completed") {
+        const task = workplan.find((task) => task.id === taskId);
+        if (task) {
+          await notifyAssignedMember(task); // Notify the assigned member
+        }
+      }
+    } catch (error) {
+      console.error("Error updating task status or sending notification:", error);
+    }
   };
 
   return (
@@ -130,7 +172,7 @@ const WorkplanTable = ({ workplan, groupMembers, handleAddTask, handleEditTask, 
                     {groupRole === "Project Manager" || task.assignedTo === groupMembers.find((member) => member.name === task.assignedTo)?.name ? (
                       <select
                         value={task.status}
-                        onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
+                        onChange={(e) => handleStatusChange(task.id, e.target.value)}
                         className="w-full p-1 border text-xs text-center"
                       >
                         <option value="Pending">Pending</option>

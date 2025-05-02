@@ -41,35 +41,49 @@ function IncuGroups() {
         <h1 className="text-4xl font-bold mb-5">My StartUps</h1>
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.length > 0 ? (
-            groups.map((group) => (
-              <div key={group.id} className="bg-white p-4 rounded-sm shadow hover:shadow-lg transition border">
-                <h2 className="text-md font-bold">{group.name}</h2>
-                <p className="text-xs">{group.description}</p>
-                {group.imageUrl && (
-                  <img
-                    src={group.imageUrl}
-                    alt={group.name}
-                    className="mt-2 w-full h-40 object-cover rounded-lg"
-                  />
-                )}
-                <div className="mt-2">
-                  <h3 className="font-bold text-sm">Members:</h3>
-                  <ul className="text-sm">
-                    {group.members.map((member, index) => (
-                      <li key={index}>
-                        {member.name} {member.lastname}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <button
-                  onClick={() => navigate(`/incubatee/view-group/${group.id}`)}
-                  className="mt-4 bg-secondary-color text-xs text-white px-4 py-2 rounded-sm hover:bg-opacity-80 transition hover:bg-white hover:text-secondary-color border border-secondary-color"
+            [...groups]
+              .sort((a, b) => {
+                // Sort archived groups to the bottom
+                if (a.archived && !b.archived) return 1;
+                if (!a.archived && b.archived) return -1;
+
+                // Sort alphabetically by name for non-archived groups
+                return a.name.localeCompare(b.name);
+              })
+              .map((group) => (
+                <div
+                  key={group.id}
+                  className={`p-4 rounded-sm shadow-sm border hover:shadow-lg transition-shadow duration-300 relative ${
+                    group.archived ? "bg-gray-200 opacity-70" : "bg-white"
+                  }`}
                 >
-                  View Group
-                </button>
-              </div>
-            ))
+                  <h2 className="text-md font-bold">{group.name}</h2>
+                  <p className="text-xs">{group.description}</p>
+                  {group.imageUrl && (
+                    <img
+                      src={group.imageUrl}
+                      alt={group.name}
+                      className="mt-2 w-full h-40 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="mt-2">
+                    <h3 className="font-bold text-sm">Members:</h3>
+                    <ul className="text-sm">
+                      {group.members.map((member, index) => (
+                        <li key={index}>
+                          {member.name} {member.lastname}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/incubatee/view-group/${group.id}`)}
+                    className="mt-4 bg-secondary-color text-xs text-white px-4 py-2 rounded-sm hover:bg-opacity-80 transition hover:bg-white hover:text-secondary-color border border-secondary-color"
+                  >
+                    View Group
+                  </button>
+                </div>
+              ))
           ) : (
             <p className="text-gray-500">You are not assigned to any group.</p>
           )}

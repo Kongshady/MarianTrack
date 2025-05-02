@@ -98,10 +98,18 @@ function EditGroupModal({ isOpen, onClose, group, onSave }) {
   };
 
   const handleArchiveGroup = async () => {
-    // Archive the group by setting isArchived to true in Firestore
-    const groupDocRef = doc(db, "groups", group.id);
-    await updateDoc(groupDocRef, { archived: true });
-    onClose(); // Close the modal after archiving
+    try {
+      // Archive the group by setting `archived` to true in Firestore
+      const groupDocRef = doc(db, "groups", group.id);
+      await updateDoc(groupDocRef, { archived: true });
+
+      // Redirect the user to the archives page
+      navigate("/admin-groups/archives");
+    } catch (error) {
+      console.error("Error archiving group:", error);
+    } finally {
+      onClose(); // Close the modal after archiving
+    }
   };
 
   if (!isOpen) return null;

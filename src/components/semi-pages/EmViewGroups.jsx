@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../../config/marian-config.js";
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { FaPencilAlt } from "react-icons/fa";
 import EmployeeSidebar from "../sidebar/EmployeeSidebar.jsx";
 
@@ -68,15 +68,37 @@ function EmViewGroup() {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
+      // Update the request status in Firestore
       await updateDoc(doc(db, "requests", requestId), { status: newStatus });
 
+      // Update the local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId ? { ...request, status: newStatus } : request
         )
       );
+
+      // Find the Project Manager of the group
+      const projectManager = groupMembers.find(
+        (member) => member.groupRole === "Project Manager"
+      );
+
+      // Find the request details
+      const request = requests.find((req) => req.id === requestId);
+
+      if (projectManager && request) {
+        // Notify the Project Manager
+        await addDoc(collection(db, "notifications"), {
+          userId: projectManager.id, // ID of the Project Manager
+          message: `<b style="color:blue">Request Update:</b> The status of a request <b>${request.resourceToolNeeded || "N/A"}</b> in your group <b>${group.name}</b> has been updated to <b style="color:green">${newStatus}</b>.`,
+          createdAt: serverTimestamp(), // Use Firestore's serverTimestamp
+          read: false,
+          type: "request-status-update",
+          groupId: groupId,
+        });
+      }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Error updating status or sending notification:", error);
     }
   };
 
@@ -124,7 +146,7 @@ function EmViewGroup() {
             <ul className="text-sm">
               {groupMembers.map((member) => (
                 <li key={member.id}>
-                  {member.name} {member.lastname} - {member.role}
+                  {member.name} {member.lastname} - {member.groupRole} {/* Display group role instead of actual role */}
                 </li>
               ))}
             </ul>

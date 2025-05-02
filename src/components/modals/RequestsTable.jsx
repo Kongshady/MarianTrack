@@ -28,7 +28,10 @@ const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openR
             <th className="py-2 font-medium px-4">Priority Level</th>
             <th className="py-2 font-medium px-4">Status</th>
             <th className="py-2 font-medium px-4">Remarks</th>
-            <th className="py-2 px-4">Actions</th>
+            {/* Conditionally render the Actions column */}
+            {groupRole !== "System Analyst" && groupRole !== "Developer" && (
+              <th className="py-2 px-4">Actions</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -73,25 +76,28 @@ const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openR
                   </td>
                   <td className="py-2 px-4 font-bold text-secondary-color">{request.status}</td>
                   <td className="py-2 px-4">{request.remarks || "N/A"}</td>
-                  <td className="py-2 px-4 flex flex-wrap gap-1 items-center justify-center">
-                    <button
-                      onClick={() => handleEditRequest(request.id)}
-                      className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRequest(request.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition ml-2"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
+                  {/* Conditionally render the Actions buttons */}
+                  {groupRole !== "System Analyst" && groupRole !== "Developer" && (
+                    <td className="py-2 px-4 flex flex-wrap gap-1 items-center justify-center">
+                      <button
+                        onClick={() => handleEditRequest(request.id)}
+                        className="bg-secondary-color text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRequest(request.id)}
+                        className="bg-red-500 text-white px-2 py-1 rounded-sm hover:bg-opacity-80 transition ml-2"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
           ) : (
             <tr>
-              <td className="py-2 px-4 text-center" colSpan="10">
+              <td className="py-2 px-4 text-center" colSpan={groupRole !== "System Analyst" && groupRole !== "Developer" ? 10 : 9}>
                 No requests found.
               </td>
             </tr>

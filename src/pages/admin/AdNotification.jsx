@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import AdminSidebar from "../../components/sidebar/AdminSidebar.jsx";
 import { FaCheckCircle, FaBell, FaUserCheck } from "react-icons/fa"; // Import icons
 import { HiDotsVertical } from "react-icons/hi"; // Import vertical dots icon
+import { FaUsers } from "react-icons/fa6";
 import { LiaHandsHelpingSolid } from "react-icons/lia";
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import { db, auth } from "../../config/marian-config.js"; // Adjust the import based on your project structure
@@ -14,6 +15,8 @@ const getIconForType = (type, sizeClass = "text-xl") => {
       return <LiaHandsHelpingSolid className={`text-red-500 ${sizeClass}`} />;
     case "group_completion":
       return <FaCheckCircle className={`text-green-500 ${sizeClass}`} />;
+    case "new_pending_user":
+      return <FaUsers className={`text-violet-500 ${sizeClass}`} />;
     default:
       return <FaBell className={`text-gray-500 ${sizeClass}`} />;
   }
@@ -166,9 +169,8 @@ function AdNotification() {
             notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${
-                  notification.read ? "bg-gray-200" : "bg-white"
-                }`}
+                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${notification.read ? "bg-gray-200" : "bg-white"
+                  }`}
               >
                 <div className="flex-shrink-0">
                   {getIconForType(notification.type, "text-3xl")}
@@ -184,13 +186,13 @@ function AdNotification() {
                   <p className="text-xs text-gray-500">
                     {notification.timestamp
                       ? new Date(notification.timestamp.seconds * 1000).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
                       : "Unknown"}
                   </p>
                 </div>

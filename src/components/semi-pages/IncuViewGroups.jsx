@@ -456,7 +456,7 @@ function IncuViewGroup() {
                   <option value="HIGH">High</option>
                 </select>
               </div>
-              <div className="col-span-2 flex justify-end gap-2">
+              <div className="col-span-2 flex justify-end gap-2 mt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

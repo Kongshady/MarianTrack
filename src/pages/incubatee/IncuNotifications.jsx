@@ -1,25 +1,26 @@
 import React, { useEffect, useState, useRef } from "react";
 import { auth, db } from "../../config/marian-config";
-import { collection, query, where, getDocs, updateDoc, deleteDoc, doc, writeBatch } from "firebase/firestore";
+import { collection, query, where, onSnapshot, updateDoc, deleteDoc, doc, writeBatch, getDocs } from "firebase/firestore";
 import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
-import { FaUserCheck, FaBell } from "react-icons/fa"; // Import icons
+import { FaUserCheck, FaBell, FaClipboardList, FaFileSignature } from "react-icons/fa"; // Import icons
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function IncuNotification() {
     const [notifications, setNotifications] = useState([]);
     const [dropdownOpen, setDropdownOpen] = useState(null); // Track which dropdown is open
     const dropdownRef = useRef(null);
+    const navigate = useNavigate(); // Initialize navigate
 
     useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const user = auth.currentUser;
-                if (user) {
-                    const notificationsQuery = query(
-                        collection(db, "notifications"),
-                        where("userId", "==", user.uid)
-                    );
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                const notificationsQuery = query(
+                    collection(db, "notifications"),
+                    where("userId", "==", user.uid)
+                );
 
-                    const querySnapshot = await getDocs(notificationsQuery);
+                // Use onSnapshot for real-time updates
+                const unsubscribeSnapshot = onSnapshot(notificationsQuery, (querySnapshot) => {
                     const notificationsData = querySnapshot.docs.map((doc) => ({
                         id: doc.id,
                         ...doc.data(),
@@ -33,13 +34,13 @@ function IncuNotification() {
                     });
 
                     setNotifications(sortedNotifications);
-                }
-            } catch (error) {
-                console.error("Error fetching notifications:", error);
-            }
-        };
+                });
 
-        fetchNotifications();
+                return () => unsubscribeSnapshot(); // Cleanup the snapshot listener
+            }
+        });
+
+        return () => unsubscribe(); // Cleanup the auth listener
     }, []);
 
     useEffect(() => {
@@ -86,10 +87,10 @@ function IncuNotification() {
                     where("userId", "==", user.uid)
                 );
 
-                const querySnapshot = await getDocs(notificationsQuery);
+                const querySnapshot = await getDocs(notificationsQuery); // Fetch notifications
 
                 // Delete each notification from Firestore
-                const batch = writeBatch(db);
+                const batch = writeBatch(db); // Use a batch for efficient deletion
                 querySnapshot.forEach((doc) => {
                     batch.delete(doc.ref);
                 });
@@ -112,9 +113,9 @@ function IncuNotification() {
                 prev.map((notif) =>
                     notif.id === id
                         ? {
-                              ...notif,
-                              read: true,
-                          }
+                            ...notif,
+                            read: true,
+                        }
                         : notif
                 )
             );
@@ -141,10 +142,22 @@ function IncuNotification() {
         switch (type) {
             case "welcome":
                 return <FaUserCheck className="text-green-500" size={30} />;
-            case "manager":
-                return <FaBell className="text-blue-500" size={30} />;
+            case "task-status":
+                return <FaClipboardList className="text-red-500" size={30} />;
+            case "request-status-update":
+                return <FaFileSignature  className="text-blue-500" size={30} />;
             default:
                 return <FaBell className="text-gray-500" size={30} />;
+        }
+    };
+
+    const handleViewNotification = (notificationId, groupId) => {
+        // Mark the notification as read
+        handleMarkAsRead(notificationId);
+
+        // Redirect to the group page
+        if (groupId) {
+            navigate(`/incubatee/view-group/${groupId}`);
         }
     };
 
@@ -174,9 +187,11 @@ function IncuNotification() {
                         {notifications.map((notification) => (
                             <li
                                 key={notification.id}
-                                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${
-                                    notification.read ? "bg-gray-200" : "bg-white"
-                                }`}
+                                className={`p-4 shadow-md hover:shadow-lg transition duration-200 relative flex gap-4 items-center ${notification.read ? "bg-gray-200" : "bg-white"
+                                    }`}
+                                onClick={() =>
+                                    handleViewNotification(notification.id, notification.groupId)
+                                } // Add click handler
                             >
                                 {/* Display icon based on type */}
                                 <div className="flex-shrink-0">
@@ -187,20 +202,23 @@ function IncuNotification() {
                                     <p className="text-xs text-gray-500">
                                         {notification.createdAt
                                             ? new Date(notification.createdAt.toDate()).toLocaleString("en-US", {
-                                                  year: "numeric",
-                                                  month: "long",
-                                                  day: "numeric",
-                                                  hour: "2-digit",
-                                                  minute: "2-digit",
-                                                  hour12: true,
-                                              })
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })
                                             : "Unknown"}
                                     </p>
                                 </div>
                                 {/* Vertical Dots */}
                                 <div className="absolute top-4 right-4">
                                     <button
-                                        onClick={() => toggleDropdown(notification.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering the list click
+                                            toggleDropdown(notification.id);
+                                        }}
                                         className="text-gray-500 hover:text-gray-700"
                                     >
                                         &#x22EE;
