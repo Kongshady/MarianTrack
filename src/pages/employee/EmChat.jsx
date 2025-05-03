@@ -24,31 +24,31 @@ function EmChat() {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 const userData = userDoc.data();
 
-                if (userData.role === "Portfolio Manager") {
-                    const groupsQuery = query(collection(db, "groups"), where("portfolioManager.id", "==", user.uid));
-                    const groupsSnapshot = await getDocs(groupsQuery);
-                    const groupsList = groupsSnapshot.docs.map((doc) => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    }));
+                // Fetch TBI Assistant and TBI Manager
+                const tbiQuery = query(collection(db, "users"), where("role", "in", ["TBI Manager", "TBI Assistant"]));
+                const tbiSnapshot = await getDocs(tbiQuery);
+                const tbiUsers = tbiSnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
 
-                    const projectManagers = [];
-                    for (const group of groupsList) {
-                        const projectManager = group.members.find((member) => member.role === "Project Manager");
-                        if (projectManager) {
-                            projectManagers.push({ ...projectManager, groupName: group.name });
-                        }
+                // Fetch groups and filter Project Managers
+                const groupsQuery = query(collection(db, "groups"));
+                const groupsSnapshot = await getDocs(groupsQuery);
+                const projectManagers = [];
+                groupsSnapshot.docs.forEach((groupDoc) => {
+                    const groupData = groupDoc.data();
+                    const projectManager = groupData.members.find((member) => member.groupRole === "Project Manager");
+                    if (projectManager) {
+                        projectManagers.push({
+                            ...projectManager,
+                            groupName: groupData.name, // Include group name for context
+                        });
                     }
+                });
 
-                    const tbiQuery = query(collection(db, "users"), where("role", "in", ["TBI Manager", "TBI Assistant"]));
-                    const tbiSnapshot = await getDocs(tbiQuery);
-                    const tbiUsers = tbiSnapshot.docs.map((doc) => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    }));
-
-                    setUsers([...projectManagers, ...tbiUsers]);
-                }
+                // Combine TBI users and Project Managers
+                setUsers([...tbiUsers, ...projectManagers]);
             }
         };
 
@@ -231,7 +231,9 @@ function EmChat() {
                                             <span className="font-bold text-sm">
                                                 {user.name} {user.lastname}
                                             </span>
-                                            <span className="text-xs text-gray-500">{user.role}</span>
+                                            <span className="text-xs text-gray-500">
+                                                {user.role || user.groupRole} {/* Display role or groupRole */}
+                                            </span>
                                             {user.groupName && (
                                                 <span className="text-xs text-gray-400">{user.groupName}</span>
                                             )}

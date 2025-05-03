@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../../config/marian-config"; // Import Firebase auth and Firestore
 import { doc, getDoc, collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { FaEye } from "react-icons/fa";
 import IncubateeSidebar from "../../components/sidebar/IncubateeSidebar.jsx";
 
 function IncuDashboard() {
@@ -8,9 +9,8 @@ function IncuDashboard() {
     const [tasks, setTasks] = useState([]);
     const [userGroupId, setUserGroupId] = useState(null); // State to store the user's group ID
     const [totalRequests, setTotalRequests] = useState(0); // State for total requests
-    const [ongoingRequests, setOngoingRequests] = useState(0); // State for ongoing requests
-    const [toBeRequestedRequests, setToBeRequestedRequests] = useState(0); // State for "To be Requested" requests
-    const [requestedRequests, setRequestedRequests] = useState(0); // State for "Requested" requests
+    const [groupTasks, setGroupTasks] = useState([]); // State to store tasks from all groups
+    const [groupRequests, setGroupRequests] = useState([]); // State to store requests from all groups
 
     useEffect(() => {
         document.title = "Incubatee | Dashboard"; // Set the page title
@@ -45,86 +45,145 @@ function IncuDashboard() {
             );
 
             const querySnapshot = await getDocs(workplanQuery);
-            const tasksData = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
+            const tasksData = querySnapshot.docs
+                .map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }))
+                .filter((task) => task.status !== "Completed"); // Exclude completed tasks
+
             setTasks(tasksData); // Set the tasks in state
-
-            // Check for tasks due this week and add notifications
-            const { startOfWeek, endOfWeek } = getCurrentWeekRange();
-            const dueTasks = tasksData.filter((task) => {
-                const taskDueDate = task.endDate ? new Date(task.endDate) : null;
-                return (
-                    taskDueDate &&
-                    taskDueDate >= startOfWeek &&
-                    taskDueDate <= endOfWeek &&
-                    task.status !== "Completed"
-                );
-            });
-
-            if (dueTasks.length > 0) {
-                await addNotification();
-            }
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
     };
 
-    const addNotification = async () => {
+    const fetchRequests = async () => {
         try {
-            const user = auth.currentUser;
-            if (user) {
-                const notificationQuery = query(
-                    collection(db, "notifications"),
-                    where("userId", "==", user.uid),
-                    where("type", "==", "task_due_this_week")
-                );
+            const requestsQuery = query(collection(db, "requests"));
+            const querySnapshot = await getDocs(requestsQuery);
 
-                const existingNotifications = await getDocs(notificationQuery);
+            const requestsData = querySnapshot.docs
+                .map((doc) => doc.data())
+                .filter((request) => request.responsibleTeamMember === userName); // Filter requests by user name
 
-                // Avoid duplicate notifications
-                if (existingNotifications.empty) {
-                    await addDoc(collection(db, "notifications"), {
-                        userId: user.uid,
-                        type: "task_due_this_week",
-                        message: `<strong style="color: green;">Weekly Update:</strong> <span>This week's tasks are nearly finished. If there are any changes or progress, kindly update them.</span>`,
-                        createdAt: new Date(),
-                      });
-                }
-            }
+            setTotalRequests(requestsData.length); // Set the total requests count
         } catch (error) {
-            console.error("Error adding notification:", error);
+            console.error("Error fetching requests:", error);
         }
     };
 
-    const fetchRequests = async () => {
+    const fetchGroupTasks = async () => {
         try {
-            if (!userGroupId) return; // Wait until the user's group ID is fetched
+            const user = auth.currentUser; // Get the currently logged-in user
+            if (!user) return;
 
-            const requestsQuery = query(
-                collection(db, "requests"),
-                where("groupId", "==", userGroupId) // Fetch requests belonging to the user's group
+            const userDocRef = doc(db, "users", user.uid); // Reference to the user's document
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) return;
+
+            const userData = userDoc.data();
+            const userName = `${userData.name} ${userData.lastname}`; // Get the user's full name
+
+            // Fetch all groups where the user is a member
+            const groupsQuery = query(collection(db, "groups"));
+            const groupsSnapshot = await getDocs(groupsQuery);
+
+            const groupIds = groupsSnapshot.docs
+                .filter((groupDoc) =>
+                    groupDoc.data().members.some((member) => member.name === userData.name && member.lastname === userData.lastname)
+                )
+                .map((groupDoc) => ({
+                    id: groupDoc.id,
+                    name: groupDoc.data().name || "Unknown Group",
+                }));
+
+            if (groupIds.length === 0) {
+                setGroupTasks([]); // No groups found
+                return;
+            }
+
+            // Fetch all tasks for the user's groups in a single query
+            const tasksQuery = query(
+                collection(db, "workplan"),
+                where("groupId", "in", groupIds.map((group) => group.id)) // Fetch tasks for all group IDs
             );
 
-            const querySnapshot = await getDocs(requestsQuery);
+            const tasksSnapshot = await getDocs(tasksQuery);
+            const tasksData = tasksSnapshot.docs
+                .map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    groupName: groupIds.find((group) => group.id === doc.data().groupId)?.name || "Unknown Group",
+                }))
+                .filter(
+                    (task) =>
+                        task.assignedTo === userName && task.status !== "Completed" // Filter tasks assigned to the user and exclude completed tasks
+                );
 
-            const requestsData = querySnapshot.docs.map((doc) => doc.data());
-            setTotalRequests(requestsData.length); // Total number of group requests
+            // Sort tasks by priority: High > Medium > Low
+            const sortedTasks = tasksData.sort((a, b) => {
+                const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+                return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+            });
 
-            // Filter ongoing requests (e.g., status is "On-going")
-            const ongoing = requestsData.filter((request) => request.status === "On-going");
-            setOngoingRequests(ongoing.length); // Set the number of ongoing requests
-
-            // Filter "To be Requested" requests
-            const toBeRequested = requestsData.filter((request) => request.status === "To be requested");
-            setToBeRequestedRequests(toBeRequested.length); // Set the number of "To be Requested" requests
-
-            // Filter "Requested" requests
-            const requested = requestsData.filter((request) => request.status === "Requested");
-            setRequestedRequests(requested.length); // Set the number of "Requested" requests
+            setGroupTasks(sortedTasks); // Set all group tasks in state
         } catch (error) {
-            console.error("Error fetching requests:", error);
+            console.error("Error fetching group tasks:", error);
+        }
+    };
+
+    const fetchGroupRequests = async () => {
+        try {
+            const user = auth.currentUser; // Get the currently logged-in user
+            if (!user) return;
+
+            const userDocRef = doc(db, "users", user.uid); // Reference to the user's document
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) return;
+
+            const userData = userDoc.data();
+            const userName = `${userData.name} ${userData.lastname}`; // Get the user's full name
+
+            // Fetch all groups where the user is a member
+            const groupsQuery = query(collection(db, "groups"));
+            const groupsSnapshot = await getDocs(groupsQuery);
+
+            const groupIds = groupsSnapshot.docs
+                .filter((groupDoc) =>
+                    groupDoc.data().members.some((member) => member.name === userData.name && member.lastname === userData.lastname)
+                )
+                .map((groupDoc) => ({
+                    id: groupDoc.id,
+                    name: groupDoc.data().name || "Unknown Group",
+                }));
+
+            if (groupIds.length === 0) {
+                setGroupRequests([]); // No groups found
+                setTotalRequests(0); // Set total requests to 0
+                return;
+            }
+
+            // Fetch all requests for the user's groups
+            const requestsQuery = query(collection(db, "requests"));
+            const requestsSnapshot = await getDocs(requestsQuery);
+
+            const requestsData = requestsSnapshot.docs
+                .map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    groupName: groupIds.find((group) => group.id === doc.data().groupId)?.name || "Unknown Group",
+                }))
+                .filter((request) => request.responsibleTeamMember === userName) // Filter requests by responsible team member
+                .sort((a, b) => {
+                    const priorityOrder = { HIGH: 1, MEDIUM: 2, LOW: 3 };
+                    return priorityOrder[a.priorityLevel] - priorityOrder[b.priorityLevel];
+                }); // Sort requests by priority level
+
+            setGroupRequests(requestsData); // Set all group requests in state
+            setTotalRequests(requestsData.length); // Update the total requests count
+        } catch (error) {
+            console.error("Error fetching group requests:", error);
         }
     };
 
@@ -135,100 +194,76 @@ function IncuDashboard() {
         }
     }, [userGroupId]); // Fetch tasks and requests only after the user's group ID is available
 
-    // Helper function to get the start and end of the current week
-    const getCurrentWeekRange = () => {
-        const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 (Sunday) to 6 (Saturday)
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Set to Monday
-        startOfWeek.setHours(0, 0, 0, 0); // Start of the day
+    useEffect(() => {
+        fetchGroupTasks();
+        fetchGroupRequests();
+    }, []);
 
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6); // Set to Sunday
-        endOfWeek.setHours(23, 59, 59, 999); // End of the day
-
-        return { startOfWeek, endOfWeek };
-    };
-
-    // Filter tasks to only include those due this week and not completed
-    const filteredTasks = tasks.filter((task) => {
-        const { startOfWeek, endOfWeek } = getCurrentWeekRange();
-        const taskDueDate = task.endDate ? new Date(task.endDate) : null;
-
-        return (
-            taskDueDate &&
-            taskDueDate >= startOfWeek &&
-            taskDueDate <= endOfWeek &&
-            task.status !== "Completed"
-        );
-    });
+    useEffect(() => {
+        fetchGroupRequests();
+    }, []);
 
     return (
         <div className="flex">
             <IncubateeSidebar />
-            <div className="flex flex-col h-screen w-full p-10 bg-gray-100">
+            <div className="flex flex-col h-screen w-full p-10 bg-gray-100 overflow-y-auto">
                 {/* Welcome Section */}
                 <h1 className="text-3xl font-bold">Welcome, {userName || "User"}!</h1>
-                <p className="text-sm text-gray-600 mb-6">Here's an overview of your tasks for the week.</p>
+                <p className="text-sm text-gray-600 mb-6">Here's an overview of your tasks and groups.</p>
 
                 {/* Overview Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     {/* Total Tasks Card */}
                     <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                        <h3 className="text-lg font-medium text-gray-700">Total Tasks</h3>
-                        <p className="text-3xl font-bold text-blue-500 mt-2">{tasks.length}</p>
+                        <h3 className="text-lg font-medium text-gray-700">Total StartUp Tasks</h3>
+                        <p className="text-3xl font-bold text-blue-500 mt-2">{groupTasks.length}</p>
                     </div>
 
                     {/* Total Requests Card */}
                     <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                        <h3 className="text-lg font-medium text-gray-700">Total Requests</h3>
+                        <h3 className="text-lg font-medium text-gray-700">Total StartUp Requests</h3>
                         <p className="text-3xl font-bold text-green-500 mt-2">{totalRequests}</p>
-                    </div>
-
-                    {/* Ongoing Requests Card */}
-                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                        <h3 className="text-lg font-medium text-gray-700">Ongoing Requests</h3>
-                        <p className="text-3xl font-bold text-orange-500 mt-2">{ongoingRequests}</p>
-                    </div>
-
-                    {/* To be Requested Requests Card */}
-                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                        <h3 className="text-lg font-medium text-gray-700">To be Requested</h3>
-                        <p className="text-3xl font-bold text-purple-500 mt-2">{toBeRequestedRequests}</p>
-                    </div>
-
-                    {/* Requested Requests Card */}
-                    <div className="p-4 bg-white rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                        <h3 className="text-lg font-medium text-gray-700">Requested</h3>
-                        <p className="text-3xl font-bold text-teal-500 mt-2">{requestedRequests}</p>
                     </div>
                 </div>
 
-                {/* Tasks Due This Week */}
+                {/* All Tasks by Group */}
                 <div className="bg-white p-4 rounded-sm shadow-md hover:shadow-lg transition duration-200">
-                    <h3 className="text-lg font-medium mb-4">Tasks Due This Week</h3>
-                    {filteredTasks.length > 0 ? (
+                    <h3 className="text-lg font-medium mb-4">Startup-Based Task List</h3>
+                    {groupTasks.length > 0 ? (
                         <table className="w-full text-sm text-left text-gray-500">
                             <thead className="text-xs text-gray-700 uppercase bg-gray-100">
                                 <tr>
                                     <th scope="col" className="px-4 py-2">Task Name</th>
-                                    <th scope="col" className="px-4 py-2">Assigned Member</th>
+                                    <th scope="col" className="px-4 py-2">Startup Name</th>
+                                    <th scope="col" className="px-4 py-2">Priority Level</th>
                                     <th scope="col" className="px-4 py-2">Status</th>
                                     <th scope="col" className="px-4 py-2">Due Date</th>
+                                    <th scope="col" className="px-4 py-2 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredTasks.map((task) => (
+                                {groupTasks.map((task) => (
                                     <tr key={task.id} className="border-b last:border-b-0">
                                         <td className="px-4 py-2">{task.taskName}</td>
-                                        <td className="px-4 py-2">{task.assignedTo || "Unassigned"}</td>
+                                        <td className="px-4 py-2">{task.groupName}</td>
+                                        <td
+                                            className={`px-4 py-2 font-bold ${
+                                                task.priorityLevel === "High"
+                                                    ? "text-red-500"
+                                                    : task.priorityLevel === "Medium"
+                                                    ? "text-yellow-500"
+                                                    : "text-green-500"
+                                            }`}
+                                        >
+                                            {task.priorityLevel || "N/A"}
+                                        </td>
                                         <td className="px-4 py-2">
                                             <span
                                                 className={`px-2 py-1 rounded text-white text-xs ${
                                                     task.status === "Pending"
-                                                        ? "bg-orange-500"
-                                                        : task.status === "In Progress"
-                                                        ? "bg-blue-500"
+                                                        ? "bg-red-500"
+                                                        : task.status === "Completed"
+                                                        ? "bg-green-500"
                                                         : "bg-gray-500"
                                                 }`}
                                             >
@@ -244,12 +279,86 @@ function IncuDashboard() {
                                                   })
                                                 : "No Deadline"}
                                         </td>
+                                        <td className="px-4 py-2 text-center">
+                                            <button
+                                                onClick={() => window.location.href = `/incubatee/view-group/${task.groupId}`}
+                                                className="text-blue-500 hover:text-blue-700"
+                                                title="View"
+                                            >
+                                                <FaEye />
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     ) : (
-                        <p className="text-gray-500">No tasks due this week.</p>
+                        <p className="text-gray-500">No tasks assigned to you in any group.</p>
+                    )}
+                </div>
+
+                {/* Startup-Based Requests List */}
+                <div className="bg-white p-4 rounded-sm shadow-md hover:shadow-lg transition duration-200 mt-4">
+                    <h3 className="text-lg font-medium mb-4">Startup-Based Requests List</h3>
+                    {groupRequests.length > 0 ? (
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" className="px-4 py-2">Specific Needs</th>
+                                    <th scope="col" className="px-4 py-2">Startup Name</th>
+                                    <th scope="col" className="px-4 py-2">Priority Level</th>
+                                    <th scope="col" className="px-4 py-2">Status</th>
+                                    <th scope="col" className="px-4 py-2">Remarks</th>
+                                    <th scope="col" className="px-4 py-2 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {groupRequests.map((request) => (
+                                    <tr key={request.id} className="border-b last:border-b-0">
+                                        <td className="px-4 py-2">{request.resourceToolNeeded || "N/A"}</td>
+                                        <td className="px-4 py-2">{request.groupName}</td>
+                                        <td
+                                            className={`px-4 py-2 font-bold ${
+                                                request.priorityLevel === "HIGH"
+                                                    ? "text-red-500"
+                                                    : request.priorityLevel === "MEDIUM"
+                                                    ? "text-yellow-500"
+                                                    : "text-green-500"
+                                            }`}
+                                        >
+                                            {request.priorityLevel || "N/A"}
+                                        </td>
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className={`px-2 py-1 rounded text-white text-xs ${
+                                                    request.status === "Pending"
+                                                        ? "bg-red-500"
+                                                        : request.status === "Requested"
+                                                        ? "bg-orange-500"
+                                                        : request.status === "In Progress"
+                                                        ? "bg-green-500"
+                                                        : "bg-gray-500"
+                                                }`}
+                                            >
+                                                {request.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2">{request.remarks || "No Remarks"}</td>
+                                        <td className="px-4 py-2 text-center">
+                                            <button
+                                                onClick={() => window.location.href = `/incubatee/view-group/${request.groupId}`}
+                                                className="text-blue-500 hover:text-blue-700"
+                                                title="View"
+                                            >
+                                                <FaEye />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p className="text-gray-500">No requests assigned to you in any group.</p>
                     )}
                 </div>
             </div>

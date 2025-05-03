@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openRequestModal, groupRole }) => {
   return (
-    <div className="overflow-y-auto mt-2 w-full">
+    <div className="mt-2 w-full">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg">Requests</h3>
         {/* Restrict "Request Needs" button for System Analyst and Developer */}
@@ -23,7 +23,7 @@ const RequestsTable = ({ requests, handleEditRequest, handleDeleteRequest, openR
             <th className="py-2 font-medium px-4">Request Type</th>
             <th className="py-2 font-medium px-4">Date Entry</th>
             <th className="py-2 font-medium px-4">Date Needed</th>
-            <th className="py-2 font-medium px-4">Resource/Tool Needed</th>
+            <th className="py-2 font-medium px-4">Specific Needs</th>
             <th className="py-2 font-medium px-4">Prospect Resource Person</th>
             <th className="py-2 font-medium px-4">Priority Level</th>
             <th className="py-2 font-medium px-4">Status</th>

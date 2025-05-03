@@ -87,17 +87,17 @@ function AdGroups() {
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
     if (!portfolioManager) {
-      setError("Please assign a Portfolio Manager.");
-      return;
+        setError("Please assign a Portfolio Manager.");
+        return;
     }
 
     const hasProjectManager = incubateeDropdowns.some(
-      (dropdown) => dropdown.role === "Project Manager"
+        (dropdown) => dropdown.role === "Project Manager"
     );
 
     if (!hasProjectManager) {
-      setValidationError("You need a Project Manager to create a startup.");
-      return;
+        setValidationError("You need a Project Manager to create a startup.");
+        return;
     }
 
     setError("");
@@ -106,70 +106,70 @@ function AdGroups() {
     let uploadedImageUrl = "";
 
     try {
-      if (image) {
-        const imageRef = ref(storage, `groupImages/${image.name}`);
-        await uploadBytes(imageRef, image);
-        uploadedImageUrl = await getDownloadURL(imageRef);
-        setImageUrl(uploadedImageUrl);
-      }
+        if (image) {
+            const imageRef = ref(storage, `groupImages/${image.name}`);
+            await uploadBytes(imageRef, image);
+            uploadedImageUrl = await getDownloadURL(imageRef);
+            setImageUrl(uploadedImageUrl);
+        }
 
-      // Fetch portfolio manager details
-      const portfolioManagerDoc = await getDoc(doc(db, "users", portfolioManager));
-      const portfolioManagerDetails = { id: portfolioManager, ...portfolioManagerDoc.data() };
+        // Fetch portfolio manager details
+        const portfolioManagerDoc = await getDoc(doc(db, "users", portfolioManager));
+        const portfolioManagerDetails = { id: portfolioManager, ...portfolioManagerDoc.data() };
 
-      // Fetch full details of each incubatee
-      const members = await Promise.all(
-        incubateeDropdowns
-          .filter((dropdown) => dropdown.value && dropdown.role) // Only include valid selections
-          .map(async (dropdown) => {
-            const memberDoc = await getDoc(doc(db, "users", dropdown.value));
-            const memberData = memberDoc.data();
-            return {
-              id: dropdown.value, // User ID
-              name: memberData.name, // Member's name
-              lastname: memberData.lastname, // Member's lastname
-              groupRole: dropdown.role, // Role specific to this group
-            };
-          })
-      );
+        // Fetch full details of each incubatee
+        const members = await Promise.all(
+            incubateeDropdowns
+                .filter((dropdown) => dropdown.value && dropdown.role) // Only include valid selections
+                .map(async (dropdown) => {
+                    const memberDoc = await getDoc(doc(db, "users", dropdown.value));
+                    const memberData = memberDoc.data();
+                    return {
+                        id: dropdown.value, // User ID
+                        name: memberData.name, // Member's name
+                        lastname: memberData.lastname, // Member's lastname
+                        groupRole: dropdown.role, // Role specific to this group
+                    };
+                })
+        );
 
-      const groupDocRef = await addDoc(collection(db, "groups"), {
-        name: groupName,
-        description,
-        imageUrl: uploadedImageUrl,
-        portfolioManager: portfolioManagerDetails,
-        members, // Add members with full details
-        createdAt: serverTimestamp(),
-      });
+        const groupDocRef = await addDoc(collection(db, "groups"), {
+            name: groupName,
+            description,
+            imageUrl: uploadedImageUrl,
+            portfolioManager: portfolioManagerDetails,
+            members, // Add members with full details
+            createdAt: serverTimestamp(),
+        });
 
-      // Create a notification for the portfolio manager
-      await addDoc(collection(db, "notifications"), {
-        userId: portfolioManager,
-        message: `<b style="color:green">You’ve been assigned</b> as the Portfolio Manager for the Group <b>"${groupName}"</b>. Get ready to lead and make an impact!`,
-        timestamp: serverTimestamp(),
-        read: false,
-        groupId: groupDocRef.id,
-        type: "manager",
-      });
+        // Create a notification for the portfolio manager
+        await addDoc(collection(db, "notifications"), {
+            userId: portfolioManager,
+            message: `<b style="color:green">You’ve been assigned</b> as the Portfolio Manager for the Group <b>"${groupName}"</b>. Get ready to lead and make an impact!`,
+            timestamp: serverTimestamp(),
+            read: false,
+            groupId: groupDocRef.id,
+            type: "manager",
+        });
 
-      setGroupName("");
-      setDescription("");
-      setImage(null);
-      setPortfolioManager("");
-      setIncubateeDropdowns([{ id: Date.now(), value: "", role: "" }]);
-      setIsPopupOpen(false);
+        setGroupName("");
+        setDescription("");
+        setImage(null);
+        setPortfolioManager("");
+        setIncubateeDropdowns([{ id: Date.now(), value: "", role: "" }]);
+        setIsPopupOpen(false);
 
-      // Fetch the updated list of groups
-      const querySnapshot = await getDocs(collection(db, "groups"));
-      const groupsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setGroups(groupsData.filter((group) => !group.archived));
+        // Fetch the updated list of groups
+        const querySnapshot = await getDocs(collection(db, "groups"));
+        const groupsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setGroups(groupsData.filter((group) => !group.archived));
 
-      navigate(`/admin/view-group/${groupDocRef.id}`);
+        navigate(`/admin/view-group/${groupDocRef.id}`);
     } catch (error) {
-      console.error("Error creating group:", error);
-      setError("An error occurred while creating the group. Please try again.");
+        console.error("Error creating group:", error);
+        setError("An error occurred while creating the group. Please try again.");
     }
-  };
+};
 
   const handleNavigateToArchives = () => {
     navigate("/admin-groups/archives");
@@ -210,12 +210,26 @@ function AdGroups() {
   };
 
   const handleDropdownChange = (id, value) => {
-    setIncubateeDropdowns(
-      incubateeDropdowns.map((dropdown) =>
-        dropdown.id === id ? { ...dropdown, value } : dropdown
-      )
+    const selectedUser = availableAdditionalMembers.find((user) => user.id === value);
+
+    // Check if the selected user is already a Project Manager in another startup
+    const isAlreadyProjectManager = groups.some((group) =>
+        group.members.some(
+            (member) => member.id === value && member.groupRole === "Project Manager"
+        )
     );
-  };
+
+    // Update the dropdown value and store the "isAlreadyProjectManager" flag
+    setIncubateeDropdowns(
+        incubateeDropdowns.map((dropdown) =>
+            dropdown.id === id
+                ? { ...dropdown, value, isAlreadyProjectManager }
+                : dropdown
+        )
+    );
+
+    setValidationError(""); // Clear any previous validation errors
+};
 
   const handleRoleChange = (id, role) => {
     // Update the role in the local state
@@ -350,7 +364,9 @@ function AdGroups() {
                     className="w-full p-2 border rounded"
                   >
                     <option value="">Select Role</option>
-                    <option value="Project Manager">Project Manager</option>
+                    <option value="Project Manager" disabled={dropdown.isAlreadyProjectManager}>
+                        Project Manager
+                    </option>
                     <option value="System Analyst">System Analyst</option>
                     <option value="Developer">Developer</option>
                   </select>

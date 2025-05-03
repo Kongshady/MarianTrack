@@ -176,7 +176,7 @@ function AdDashboard() {
 
           {/* Completed Groups Card */}
           <div className="p-6 bg-white shadow hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-md font-medium text-gray-800">Completed Groups</h2>
+            <h2 className="text-md font-medium text-gray-800">Completed Startups</h2>
             <p className="text-xl font-bold text-blue-500 mt-4">{completedGroups}</p>
           </div>
 
@@ -191,7 +191,7 @@ function AdDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-4 ">
           {/* Table of Groups with Number of Requests */}
           <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Number of Requests</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Startups and Number of Requests</h2>
             <div className="max-h-64 overflow-y-auto">
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-100">
@@ -216,7 +216,7 @@ function AdDashboard() {
 
           {/* Table of Groups with Total Progress Completion */}
           <div className="bg-white p-4 rounded-sm shadow w-full hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Groups and Total Progress Completion</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Startups and Total Progress Completion</h2>
             <div className="max-h-64 overflow-y-auto">
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-100">

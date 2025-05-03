@@ -92,7 +92,7 @@ function AdArchives() {
           {/* Make "Incubatees" clickable and redirect to the previous page */}
           <h1 className="text-4xl">
             <button
-              onClick={() => navigate(-1)} // Navigate to the previous page
+              onClick={() => navigate(-2)} // Navigate to the previous page
               className="text-black hover:text-primary-color transition"
             >
               Incubatees

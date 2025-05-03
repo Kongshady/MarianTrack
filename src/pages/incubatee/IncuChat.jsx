@@ -45,33 +45,42 @@ function IncuChat() {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const querySnapshot = await getDocs(collection(db, "users"));
-      const usersList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const usersList = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
 
-      let filteredUsers;
+        let filteredUsers = [];
 
-      if (currentUserGroup) {
-        filteredUsers = usersList.filter(user =>
-          (currentUserGroup.members.some(member => member.email === user.email) ||
-          (currentUserRole === "Project Manager" && currentUserGroup.portfolioManager.email === user.email) ||
-          (currentUserRole === "Project Manager" && ["TBI Manager", "TBI Assistant"].includes(user.role))) &&
-          user.id !== auth.currentUser.uid 
-        );
-      } else {
-        filteredUsers = usersList.filter(user =>
-          ["TBI Manager", "TBI Assistant"].includes(user.role) &&
-          user.id !== auth.currentUser.uid 
-        );
-      }
+        if (currentUserGroup) {
+            const currentUserGroupRole = currentUserGroup.members.find(
+                (member) => member.email === auth.currentUser.email
+            )?.groupRole;
 
-      setUsers(filteredUsers);
+            if (currentUserGroupRole === "Project Manager") {
+                // Project Manager can chat with Portfolio Manager and group members
+                filteredUsers = usersList.filter(
+                    (user) =>
+                        (currentUserGroup.portfolioManager.email === user.email ||
+                            currentUserGroup.members.some((member) => member.email === user.email)) &&
+                        user.id !== auth.currentUser.uid
+                );
+            } else if (["System Analyst", "Developer"].includes(currentUserGroupRole)) {
+                // System Analyst and Developer can only chat with group members
+                filteredUsers = usersList.filter(
+                    (user) =>
+                        currentUserGroup.members.some((member) => member.email === user.email) &&
+                        user.id !== auth.currentUser.uid
+                );
+            }
+        }
+
+        setUsers(filteredUsers);
     };
 
     fetchUsers();
-  }, [currentUserGroup, currentUserRole]);
+}, [currentUserGroup]);
 
   useEffect(() => {
     if (selectedUser) {

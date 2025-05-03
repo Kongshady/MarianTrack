@@ -7,6 +7,7 @@ import EmployeeSidebar from "../../components/sidebar/EmployeeSidebar.jsx";
 function EmGroups() {
   const [groups, setGroups] = useState([]);
   const [user, setUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,7 +27,7 @@ function EmGroups() {
 
         if (q) {
           unsubscribe = onSnapshot(q, (querySnapshot) => {
-            setGroups(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setGroups(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
           });
         }
       } catch (error) {
@@ -49,14 +50,30 @@ function EmGroups() {
     navigate(`/employee/view-group/${groupId}`);
   };
 
+  // Filter groups based on the search term
+  const filteredGroups = groups.filter(
+    (group) =>
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex">
       <EmployeeSidebar onUserFetched={setUser} />
       <div className="flex flex-col items-start h-screen w-full p-10">
-        <h1 className="text-4xl font-bold mb-5">Incubatees</h1>
+        <div className="flex justify-between items-center w-full mb-5">
+          <h1 className="text-4xl font-bold">Incubatees</h1>
+          <input
+            type="text"
+            placeholder="Search startups..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border rounded-sm text-sm w-64"
+          />
+        </div>
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {groups.length > 0 ? (
-            [...groups]
+          {filteredGroups.length > 0 ? (
+            [...filteredGroups]
               .sort((a, b) => {
                 // Sort archived groups to the bottom
                 if (a.archived && !b.archived) return 1;

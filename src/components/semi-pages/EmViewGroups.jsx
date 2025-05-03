@@ -233,7 +233,7 @@ function EmViewGroup() {
                     <th className="p-2 font-medium">Description</th>
                     <th className="p-2 font-medium">Date Entry</th>
                     <th className="p-2 font-medium">Date Needed</th>
-                    <th className="p-2 font-medium">Resource/Tool Needed</th>
+                    <th className="p-2 font-medium">Specific Needs</th>
                     <th className="p-2 font-medium">Prospect Resource Person</th>
                     <th className="p-2 font-medium">Priority Level</th>
                     <th className="p-2 font-medium">Remarks</th>

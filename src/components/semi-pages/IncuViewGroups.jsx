@@ -93,10 +93,18 @@ function IncuViewGroup() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setRequestData((prevData) => ({
-      ...prevData,
-      [name]: value,
+        ...prevData,
+        [name]: value,
+        ...(name === "requestType" && { resourceToolNeeded: "" }), // Reset resourceToolNeeded when requestType changes
     }));
-  };
+};
+
+// Options for Resource/Tool Needed based on Request Type
+const resourceToolOptions = {
+    "Human Resource": ["Business Expert", "Legal Expert", "Technical Expert"],
+    "Financial Resource": ["Save Money"],
+    "Other Resource": ["Equipment", "Subscription", "Platform Tools", "Other Needs"],
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -376,22 +384,30 @@ function IncuViewGroup() {
                   className="w-full p-2 border text-sm"
                 >
                   <option value="">Select Request Type</option>
-                  <option value="Technical Request">Technical Request</option>
-                  <option value="Expert Request">Expert Request</option>
+                  <option value="Human Resource">Human Resource</option>
+                  <option value="Financial Resource">Financial Request</option>
+                  <option value="Other Resource">Other Request</option>
                 </select>
               </div>
               <div className="col-span-2">
                 <label className="block mb-1 text-sm">
-                  Resource/Tool Needed <span className="text-red-500">*</span>
+                  Specific Needs <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="resourceToolNeeded"
-                  value={requestData.resourceToolNeeded}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border text-sm"
-                  placeholder="Enter the resource or tool needed"
-                />
+                <select
+                    name="resourceToolNeeded"
+                    value={requestData.resourceToolNeeded}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border text-sm"
+                    disabled={!requestData.requestType} // Disable if no requestType is selected
+                >
+                    <option value="">Select Resource/Tool Needed</option>
+                    {requestData.requestType &&
+                        resourceToolOptions[requestData.requestType]?.map((option, index) => (
+                            <option key={index} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                </select>
               </div>
               <div className="col-span-2">
                 <label className="block mb-1 text-sm">Description</label>
@@ -400,7 +416,7 @@ function IncuViewGroup() {
                   value={requestData.description}
                   onChange={handleInputChange}
                   className="w-full p-2 border text-sm"
-                  placeholder="Describe the request in detail (Optional)"
+                  placeholder="Describe the request in detail"
                 ></textarea>
               </div>
 

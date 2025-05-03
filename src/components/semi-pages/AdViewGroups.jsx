@@ -214,7 +214,7 @@ function AdViewGroups() {
 
         {/* Requests Table */}
         {isRequestsTableOpen && (
-          <div className="overflow-y-auto h-96 mt-3 w-full">
+          <div className="mt-3 w-full">
             <p className="font-bold mb-2">Requested Needs</p>
             <table className="w-full bg-white border-gray-200 text-xs text-left">
               <thead className="sticky top-0 bg-primary-color text-white">
@@ -224,7 +224,7 @@ function AdViewGroups() {
                   <th className="py-2 px-4">Description</th>
                   <th className="py-2 px-4">Date Entry</th>
                   <th className="py-2 px-4">Date Needed</th>
-                  <th className="py-2 px-4">Resource/Tool Needed</th>
+                  <th className="py-2 px-4">Specific Needs</th>
                   <th className="py-2 px-4">Prospect Resource Person</th>
                   <th className="py-2 px-4">Priority Level</th>
                   <th className="py-2 px-4">Remarks</th>
